@@ -68,14 +68,14 @@ public abstract class ExecutionOptions implements Serializable {
 
 
     protected ExecutionOptions(String graphSpace,
-                               String executeStatement, List<String> returnFields,
+                               String executeStatement, List<String> fields,
                                List<Integer> positions,
                                boolean allCols, int limit, long startTime, long endTime, long batch,
                                PolicyEnum policy) {
         this.graphSpace = graphSpace;
 
         this.executeStatement = executeStatement;
-        this.fields = returnFields;
+        this.fields = fields;
         this.positions = positions;
         this.allCols = allCols;
         this.limit = limit;

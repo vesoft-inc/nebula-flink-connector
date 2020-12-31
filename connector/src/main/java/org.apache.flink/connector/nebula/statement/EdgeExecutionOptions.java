@@ -38,13 +38,13 @@ public class EdgeExecutionOptions extends ExecutionOptions {
 
 
     private EdgeExecutionOptions(String graphSpace,
-                                 String executeStatement, List<String> returnFields,
+                                 String executeStatement, List<String> fields,
                                  List<Integer> positions,
                                  boolean allCols, int limit, long startTime, long endTime,
                                  long batch,
                                  PolicyEnum policy, String edge, int srcIndex, int dstIndex,
                                  int rankIndex) {
-        super(graphSpace, executeStatement, returnFields, positions, allCols, limit, startTime,
+        super(graphSpace, executeStatement, fields, positions, allCols, limit, startTime,
                 endTime, batch, policy);
         this.edge = edge;
         this.srcIndex = srcIndex;

@@ -27,12 +27,12 @@ public class VertexExecutionOptions extends ExecutionOptions {
     private int idIndex;
 
     public VertexExecutionOptions(String graphSpace,
-                                  String executeStatement, List<String> returnFields,
+                                  String executeStatement, List<String> fields,
                                   List<Integer> positions,
                                   boolean allCols, int limit, long startTime, long endTime,
                                   long batch,
                                   PolicyEnum policy, String tag, int idIndex) {
-        super(graphSpace, executeStatement, returnFields, positions, allCols, limit, startTime,
+        super(graphSpace, executeStatement, fields, positions, allCols, limit, startTime,
                 endTime, batch, policy);
         this.tag = tag;
         this.idIndex = idIndex;

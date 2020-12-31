@@ -64,8 +64,8 @@ public class FlinkConnectorExample {
      */
     public static void sinkVertexData(StreamExecutionEnvironment env, DataStream<List<String>> playerSource) {
         NebulaClientOptions nebulaClientOptions = new NebulaClientOptions.NebulaClientOptionsBuilder()
-                .setGraphAddress("192.168.8.172:3799")
-                .setMetaAddress("192.168.8.172:45509")
+                .setGraphAddress("127.0.0.1:3699")
+                .setMetaAddress("127.0.0.1:45500")
                 .build();
         NebulaGraphConnectionProvider graphConnectionProvider = new NebulaGraphConnectionProvider(nebulaClientOptions);
         NebulaMetaConnectionProvider metaConnectionProvider = new NebulaMetaConnectionProvider(nebulaClientOptions);
@@ -126,8 +126,8 @@ public class FlinkConnectorExample {
      */
     public static void sinkEdgeData(StreamExecutionEnvironment env, DataStream<List<String>> playerSource) {
         NebulaClientOptions nebulaClientOptions = new NebulaClientOptions.NebulaClientOptionsBuilder()
-                .setGraphAddress("192.168.8.172:3799")
-                .setMetaAddress("192.168.8.172:45509")
+                .setGraphAddress("127.0.0.1:3699")
+                .setMetaAddress("127.0.0.1:45500")
                 .build();
         NebulaGraphConnectionProvider graphConnectionProvider = new NebulaGraphConnectionProvider(nebulaClientOptions);
         NebulaMetaConnectionProvider metaConnectionProvider = new NebulaMetaConnectionProvider(nebulaClientOptions);

@@ -3,31 +3,39 @@ Flink Connector for Nebula Graph
 
 
 ![](https://img.shields.io/badge/language-java-orange.svg)
-  [![GitHub stars](https://img.shields.io/github/stars/vesoft-inc/nebula-flink-connector.svg?color=brightgreen)](https://GitHub.com/vesoft-inc/nebula-flink-connector/stargazers/)
-  [![GitHub fork](https://img.shields.io/github/forks/vesoft-inc/nebula-flink-connector.svg?color=brightgreen)](https://GitHub.com/vesoft-inc/nebula-flink-connector/forks/)
+[![GitHub stars](https://img.shields.io/github/stars/vesoft-inc/nebula-flink-connector.svg?color=brightgreen)](https://GitHub.com/vesoft-inc/nebula-flink-connector/stargazers/)
+[![GitHub fork](https://img.shields.io/github/forks/vesoft-inc/nebula-flink-connector.svg?color=brightgreen)](https://GitHub.com/vesoft-inc/nebula-flink-connector/forks/)
 
-Nebula-Flink-Connector 2.0 is a connector that helps flink users to easily access Nebula Graph 2.0. If you want to access Nebula Graph 1.x with Flink, please refer to [Nebula-Flink-Connector 1.0](https://github.com/vesoft-inc/nebula-java/tree/v1.0/tools/nebula-flink) .
+Nebula-Flink-Connector 2.0 is a connector that helps Flink users to easily access Nebula Graph 2.0. If you want to access Nebula Graph 1.x with Flink, please refer to [Nebula-Flink-Connector 1.0](https://github.com/vesoft-inc/nebula-java/tree/v1.0/tools/nebula-flink).
 
-## Quit start
+## Quick start
 
-### Build Nebula-Flink-Connector
+### Prerequisites
 
-* install the lastest java client
-```
-$ git clone https://github.com/vesoft-inc/nebula-java.git
-$ cd nebula-java
-$ mvn clean install -Dmaven.test.skip=true -Dgpg.skip -Dmaven.javadoc.skip=true  
-```
+To use Nebula Flink Connector, do a check of these:
 
-* package nebula-flink-connector
+- Java 8 or a higher version is installed.
+- Nebula Graph v2.0 is deployed. For more information, see [Deployment and installation of Nebula Graph](https://docs.nebula-graph.io/2.0/4.deployment-and-installation/1.resource-preparations/ "Click to go to Nebula Graph website").
 
-```
-$ git clone https://github.com/vesoft-inc/nebula-flink-connector.git
-$ cd nebula-flink-connector/connector
-$ mvn clean package -Dmaven.test.skip=true -Dgpg.skip -Dmaven.javadoc.skip=true
-```
+### Build Nebula Flink Connector
 
-### Use in maven
+1. Install the lastest java client 2.0.
+    ```
+    $ git clone https://github.com/vesoft-inc/nebula-java.git
+    $ cd nebula-java
+    $ mvn clean install -Dmaven.test.skip=true -Dgpg.skip -Dmaven.javadoc.skip=true  
+    ```
+
+2. Package Nebula Flink Connector.
+
+    ```
+    $ git clone https://github.com/vesoft-inc/nebula-flink-connector.git
+    $ cd nebula-flink-connector/connector
+    $ mvn clean package -Dmaven.test.skip=true -Dgpg.skip -Dmaven.javadoc.skip=true
+    ```
+
+### Use in Maven
+Add the dependency to your pom.xml.
 
 ```
 <dependency>
@@ -37,16 +45,10 @@ $ mvn clean package -Dmaven.test.skip=true -Dgpg.skip -Dmaven.javadoc.skip=true
 </dependency>
 ```
 
-## Prerequisites
-
-To use Nebula-Flink-Connector, do a check of these:
-
-- Java 8 or a later version is installed.
-- Nebula Graph v2.0 is deployed. For more information, see [Deployment and installation of Nebula Graph](https://docs.nebula-graph.io/2.0/4.deployment-and-installation/1.resource-preparations/ "Click to go to Nebula Graph website").
 
 ## Example
 
-To write data into Nebula Graph using Flink:
+To write data into Nebula Graph using Flink.
 ```
 StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 NebulaClientOptions nebulaClientOptions = new NebulaClientOptions.NebulaClientOptionsBuilder()

@@ -100,6 +100,10 @@ public class NebulaClientOptions implements Serializable {
         }
 
         public NebulaClientOptions build() {
+            if (metaAddress == null || metaAddress.trim().isEmpty()) {
+                throw new IllegalArgumentException("meta address can not be empty.");
+            }
+
             return new NebulaClientOptions(
                     metaAddress,
                     graphAddress,

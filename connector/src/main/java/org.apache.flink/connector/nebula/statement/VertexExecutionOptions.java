@@ -137,10 +137,12 @@ public class VertexExecutionOptions extends ExecutionOptions {
         }
 
         public ExecutionOptions builder() {
-            assert (graphSpace != null & !graphSpace.trim().isEmpty() && tag != null
-                    && !tag.trim().isEmpty());
-            assert (fields != null && positions != null && fields.size() == positions.size());
-
+            if (graphSpace == null || graphSpace.trim().isEmpty()) {
+                throw new IllegalArgumentException("graph space can not be empty.");
+            }
+            if (tag == null || tag.trim().isEmpty()) {
+                throw new IllegalArgumentException("tag can not be empty.");
+            }
             return new VertexExecutionOptions(graphSpace, executeStatement, fields,
                     positions, allCols, limit, startTime, endTime, batch, policy, tag, idIndex);
         }

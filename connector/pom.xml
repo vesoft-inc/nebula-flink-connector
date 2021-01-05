@@ -86,8 +86,12 @@
                     <includeTestSourceDirectory>true</includeTestSourceDirectory>
                     <maxAllowedViolations>0</maxAllowedViolations>
                     <violationSeverity>warning</violationSeverity>
-                    <suppressionsLocation>${project.parent.basedir}/checkstyle-suppressions.xml</suppressionsLocation>
-                    <suppressionsFileExpression>checkstyle.suppressions.file</suppressionsFileExpression>
+                    <suppressionsLocation>
+                        ${project.parent.basedir}/checkstyle-suppressions.xml
+                    </suppressionsLocation>
+                    <suppressionsFileExpression>
+                        checkstyle.suppressions.file
+                    </suppressionsFileExpression>
                     <excludes>${project.basedir}/src/</excludes>
                 </configuration>
                 <executions>
@@ -110,5 +114,13 @@
         </plugins>
     </build>
 
+    <repositories>
+        <repository>
+            <id>apache snapshots</id>
+            <name>apache snapshot</name>
+            <url>https://repository.apache.org/snapshots/</url>
+            <layout>default</layout>
+        </repository>
+    </repositories>
 
 </project>

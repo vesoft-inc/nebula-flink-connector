@@ -6,7 +6,11 @@
 
 package org.apache.flink.connector.nebula.connection;
 
+import com.vesoft.nebula.client.graph.data.HostAddress;
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+import org.apache.flink.connector.nebula.utils.NebulaConstant;
 
 public class NebulaClientOptions implements Serializable {
 
@@ -34,8 +38,13 @@ public class NebulaClientOptions implements Serializable {
         this.connectRetry = connectRetry;
     }
 
-    public String getMetaAddress() {
-        return metaAddress;
+    public List<HostAddress> getMetaAddress() {
+        List<HostAddress> addresses = new ArrayList<>();
+        for (String address : metaAddress.split(NebulaConstant.COMMA)) {
+            String[] hostAndPort = address.split(NebulaConstant.COLON);
+            addresses.add(new HostAddress(hostAndPort[0], Integer.parseInt(hostAndPort[1])));
+        }
+        return addresses;
     }
 
     public String getGraphAddress() {

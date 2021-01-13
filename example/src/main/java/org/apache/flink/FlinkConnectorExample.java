@@ -37,7 +37,8 @@ public class FlinkConnectorExample {
     /**
      * construct flink data source
      */
-    public static DataStream<List<String>> constructVertexSourceData(StreamExecutionEnvironment env) {
+    public static DataStream<List<String>> constructVertexSourceData(
+            StreamExecutionEnvironment env) {
         List<List<String>> player = new ArrayList<>();
         List<String> fields1 = Arrays.asList("15", "Bob", "18");
         List<String> fields2 = Arrays.asList("16", "Tina", "19");
@@ -62,13 +63,17 @@ public class FlinkConnectorExample {
     /**
      * sink Nebula Graph
      */
-    public static void sinkVertexData(StreamExecutionEnvironment env, DataStream<List<String>> playerSource) {
-        NebulaClientOptions nebulaClientOptions = new NebulaClientOptions.NebulaClientOptionsBuilder()
+    public static void sinkVertexData(StreamExecutionEnvironment env,
+                                      DataStream<List<String>> playerSource) {
+        NebulaClientOptions nebulaClientOptions =
+                new NebulaClientOptions.NebulaClientOptionsBuilder()
                 .setGraphAddress("127.0.0.1:3699")
                 .setMetaAddress("127.0.0.1:45500")
                 .build();
-        NebulaGraphConnectionProvider graphConnectionProvider = new NebulaGraphConnectionProvider(nebulaClientOptions);
-        NebulaMetaConnectionProvider metaConnectionProvider = new NebulaMetaConnectionProvider(nebulaClientOptions);
+        NebulaGraphConnectionProvider graphConnectionProvider =
+                new NebulaGraphConnectionProvider(nebulaClientOptions);
+        NebulaMetaConnectionProvider metaConnectionProvider =
+                new NebulaMetaConnectionProvider(nebulaClientOptions);
 
         ExecutionOptions executionOptions = new VertexExecutionOptions.ExecutionOptionBuilder()
                 .setGraphSpace("flinkSink")
@@ -124,13 +129,17 @@ public class FlinkConnectorExample {
     /**
      * sink Nebula Graph
      */
-    public static void sinkEdgeData(StreamExecutionEnvironment env, DataStream<List<String>> playerSource) {
-        NebulaClientOptions nebulaClientOptions = new NebulaClientOptions.NebulaClientOptionsBuilder()
+    public static void sinkEdgeData(StreamExecutionEnvironment env,
+                                    DataStream<List<String>> playerSource) {
+        NebulaClientOptions nebulaClientOptions =
+                new NebulaClientOptions.NebulaClientOptionsBuilder()
                 .setGraphAddress("127.0.0.1:3699")
                 .setMetaAddress("127.0.0.1:45500")
                 .build();
-        NebulaGraphConnectionProvider graphConnectionProvider = new NebulaGraphConnectionProvider(nebulaClientOptions);
-        NebulaMetaConnectionProvider metaConnectionProvider = new NebulaMetaConnectionProvider(nebulaClientOptions);
+        NebulaGraphConnectionProvider graphConnectionProvider =
+                new NebulaGraphConnectionProvider(nebulaClientOptions);
+        NebulaMetaConnectionProvider metaConnectionProvider =
+                new NebulaMetaConnectionProvider(nebulaClientOptions);
 
         ExecutionOptions executionOptions = new EdgeExecutionOptions.ExecutionOptionBuilder()
                 .setGraphSpace("flinkSink")

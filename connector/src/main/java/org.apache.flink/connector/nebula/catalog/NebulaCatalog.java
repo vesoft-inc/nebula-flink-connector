@@ -145,7 +145,7 @@ public class NebulaCatalog extends AbstractNebulaCatalog {
 
     @Override
     public CatalogBaseTable getTable(ObjectPath tablePath) throws TableNotExistException,
-            CatalogException {
+            org.apache.flink.table.catalog.exceptions.CatalogException {
         if (!tableExists(tablePath)) {
             throw new TableNotExistException(getName(), tablePath);
         }

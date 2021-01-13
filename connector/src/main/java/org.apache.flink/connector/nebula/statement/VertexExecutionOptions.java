@@ -27,19 +27,21 @@ public class VertexExecutionOptions extends ExecutionOptions {
     private int idIndex;
 
     public VertexExecutionOptions(String graphSpace,
-                                  String executeStatement, List<String> fields,
+                                  String executeStatement,
+                                  List<String> fields,
                                   List<Integer> positions,
-                                  boolean allCols, int limit, long startTime, long endTime,
+                                  boolean noColumn,
+                                  int limit,
+                                  long startTime,
+                                  long endTime,
                                   long batch,
-                                  PolicyEnum policy, String tag, int idIndex) {
-        super(graphSpace, executeStatement, fields, positions, allCols, limit, startTime,
+                                  PolicyEnum policy,
+                                  String tag,
+                                  int idIndex) {
+        super(graphSpace, executeStatement, fields, positions, noColumn, limit, startTime,
                 endTime, batch, policy);
         this.tag = tag;
         this.idIndex = idIndex;
-    }
-
-    public String getTag() {
-        return tag;
     }
 
     public int getIdIndex() {
@@ -62,7 +64,7 @@ public class VertexExecutionOptions extends ExecutionOptions {
         private String tag;
         private List<String> fields;
         private List<Integer> positions;
-        private boolean allCols = false;
+        private boolean noColumn = false;
         private int limit = DEFAULT_SCAN_LIMIT;
         private long startTime = 0;
         private long endTime = Long.MAX_VALUE;
@@ -99,8 +101,8 @@ public class VertexExecutionOptions extends ExecutionOptions {
             return this;
         }
 
-        public ExecutionOptionBuilder setAllCols(boolean allCols) {
-            this.allCols = allCols;
+        public ExecutionOptionBuilder setNoColumn(boolean noColumn) {
+            this.noColumn = noColumn;
             return this;
         }
 
@@ -144,7 +146,7 @@ public class VertexExecutionOptions extends ExecutionOptions {
                 throw new IllegalArgumentException("tag can not be empty.");
             }
             return new VertexExecutionOptions(graphSpace, executeStatement, fields,
-                    positions, allCols, limit, startTime, endTime, batch, policy, tag, idIndex);
+                    positions, noColumn, limit, startTime, endTime, batch, policy, tag, idIndex);
         }
     }
 }

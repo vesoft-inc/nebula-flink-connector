@@ -6,14 +6,13 @@
 
 package org.apache.flink.connector.nebula.source;
 
-
 import com.vesoft.nebula.client.storage.data.BaseTableRow;
-import java.io.UnsupportedEncodingException;
 
-/**
- * converter to convert Nebula Data to [T]
- */
-public interface NebulaConverter<T> {
+public class NebulaBaseTableRowConverter implements NebulaConverter<BaseTableRow> {
 
-    public T convert(BaseTableRow record) throws UnsupportedEncodingException;
+    @Override
+    public BaseTableRow convert(BaseTableRow row) {
+        return row;
+    }
+
 }

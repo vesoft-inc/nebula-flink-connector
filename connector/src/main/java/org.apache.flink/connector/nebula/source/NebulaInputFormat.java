@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
  * @see NebulaStorageConnectionProvider
  * @see ExecutionOptions
  */
-public class NebulaInputFormat extends RichInputFormat<Row, InputSplit> {
+abstract class NebulaInputFormat<T> extends RichInputFormat<T, InputSplit> {
     protected static final Logger LOG = LoggerFactory.getLogger(NebulaInputFormat.class);
     private static final long serialVersionUID = 902031944252613459L;
 
@@ -48,7 +48,7 @@ public class NebulaInputFormat extends RichInputFormat<Row, InputSplit> {
     protected List<BaseTableRow> rows;
 
     private NebulaSource nebulaSource;
-    private NebulaConverter<Row> nebulaConverter;
+    protected NebulaConverter<T> nebulaConverter;
 
     private long scannedRows;
     private int times = 0; // todo rm
@@ -118,7 +118,6 @@ public class NebulaInputFormat extends RichInputFormat<Row, InputSplit> {
                 throw new IOException("scan error, ", e);
             }
         }
-        nebulaConverter = new NebulaRowConverter();
     }
 
     @Override
@@ -127,7 +126,7 @@ public class NebulaInputFormat extends RichInputFormat<Row, InputSplit> {
     }
 
     @Override
-    public Row nextRecord(Row reuse) throws IOException {
+    public T nextRecord(T reuse) throws IOException {
         if (!hasNext) {
             return null;
         }

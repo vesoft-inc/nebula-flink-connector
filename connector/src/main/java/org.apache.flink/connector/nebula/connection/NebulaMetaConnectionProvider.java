@@ -35,11 +35,7 @@ public class NebulaMetaConnectionProvider implements Serializable {
     }
 
     public MetaClient getMetaClient() throws TException {
-        List<HostAddress> addresses = new ArrayList<>();
-        for (String address : nebulaClientOptions.getMetaAddress().split(NebulaConstant.COMMA)) {
-            String[] hostAndPort = address.split(NebulaConstant.COLON);
-            addresses.add(new HostAddress(hostAndPort[0], Integer.parseInt(hostAndPort[1])));
-        }
+        List<HostAddress> addresses = nebulaClientOptions.getMetaAddress();
         MetaClient metaClient = new MetaClient(addresses);
         metaClient.connect();
         return metaClient;

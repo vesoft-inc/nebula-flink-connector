@@ -61,18 +61,18 @@ public class NebulaCatalog extends AbstractNebulaCatalog {
 
     @Override
     public List<String> listDatabases() throws CatalogException {
-        Map<String, Integer> spaceMap = new HashMap<>();
+        List<String> spaceNames = new ArrayList<>();
         try {
             metaClient.connect();
             List<IdName> spaces = metaClient.getSpaces();
             for (IdName space : spaces) {
-                spaceMap.put(new String(space.getName()), space.getId().getSpace_id());
+                spaceNames.add(new String(space.getName()));
             }
         } catch (TException e) {
-            LOG.error(String.format("failed to connect meta service vis %s ", address), e);
+            LOG.error("failed to connect meta service vis {} ", address, e);
             throw new CatalogException("nebula meta service connect failed.", e);
         }
-        return new ArrayList<>(spaceMap.keySet());
+        return spaceNames;
     }
 
     @Override
@@ -126,7 +126,7 @@ public class NebulaCatalog extends AbstractNebulaCatalog {
         try {
             metaClient.connect();
         } catch (TException e) {
-            LOG.error(String.format("failed to connect meta service vis %s ", address), e);
+            LOG.error("failed to connect meta service vis {} ", address, e);
             throw new CatalogException("nebula meta service connect failed.", e);
         }
         List<String> tables = new ArrayList<>();
@@ -145,7 +145,7 @@ public class NebulaCatalog extends AbstractNebulaCatalog {
 
     @Override
     public CatalogBaseTable getTable(ObjectPath tablePath) throws TableNotExistException,
-            CatalogException {
+            org.apache.flink.table.catalog.exceptions.CatalogException {
         if (!tableExists(tablePath)) {
             throw new TableNotExistException(getName(), tablePath);
         }
@@ -162,7 +162,7 @@ public class NebulaCatalog extends AbstractNebulaCatalog {
         try {
             metaClient.connect();
         } catch (TException e) {
-            LOG.error(String.format("failed to connect meta service vis %s ", address), e);
+            LOG.error("failed to connect meta service vis {} ", address, e);
             throw new CatalogException("nebula meta service connect failed.", e);
         }
 
@@ -232,9 +232,8 @@ public class NebulaCatalog extends AbstractNebulaCatalog {
             case PropertyType.UNKNOWN:
                 return DataTypes.NULL();
             default:
-                throw new UnsupportedOperationException(
-                        String.format("Doesn't support nebula type '%s' yet",
-                                columns.get(colIndex).getType()));
+                throw new UnsupportedOperationException(String.format("Doesn't support nebula "
+                        + "type '%s' yet", columns.get(colIndex).getType()));
         }
     }
 }

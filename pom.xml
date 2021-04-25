@@ -58,7 +58,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <flink.version>1.11-SNAPSHOT</flink.version>
-        <nebula.version>2.0.0-beta</nebula.version>
+        <nebula.version>2.0.0-rc1</nebula.version>
         <scala.binary.version>2.11</scala.binary.version>
         <compiler.source.version>1.8</compiler.source.version>
         <compiler.target.version>1.8</compiler.target.version>

@@ -20,7 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class NebulaBatchExecutor<T> {
-    private static final Logger LOG = LoggerFactory.getLogger(NebulaBatchOutputFormat.class);
+    private static final Logger LOG = LoggerFactory.getLogger(NebulaBatchExecutor.class);
 
     private final ExecutionOptions executionOptions;
     private final NebulaBufferedRow nebulaBufferedRow;
@@ -45,13 +45,11 @@ public class NebulaBatchExecutor<T> {
     void addToBatch(T record) {
         NebulaOutputFormatConverter converter;
         if (isVertex) {
-            converter =
-                    new NebulaRowVertexOutputFormatConverter(
-                            (VertexExecutionOptions) executionOptions, vidType, schema);
+            converter = new NebulaRowVertexOutputFormatConverter(
+                    (VertexExecutionOptions) executionOptions, vidType, schema);
         } else {
-            converter =
-                    new NebulaRowEdgeOutputFormatConverter(
-                            (EdgeExecutionOptions) executionOptions, vidType, schema);
+            converter = new NebulaRowEdgeOutputFormatConverter(
+                    (EdgeExecutionOptions) executionOptions, vidType, schema);
         }
         String value = converter.createValue(record, executionOptions.getPolicy());
         if (value == null) {
@@ -85,7 +83,7 @@ public class NebulaBatchExecutor<T> {
         if (execResult.isSucceeded()) {
             LOG.debug("insert success");
         } else {
-            LOG.error("insert failed: " + execResult.getErrorMessage());
+            LOG.error("insert failed: {}", execResult.getErrorMessage());
             nebulaBufferedRow.clean();
             return exec;
         }

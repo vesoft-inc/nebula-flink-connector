@@ -37,14 +37,11 @@ public class EdgeExecutionOptions extends ExecutionOptions {
     private int rankIndex;
 
 
-    private EdgeExecutionOptions(String graphSpace,
-                                 String executeStatement, List<String> fields,
-                                 List<Integer> positions,
-                                 boolean allCols, int limit, long startTime, long endTime,
-                                 long batch,
-                                 PolicyEnum policy, String edge, int srcIndex, int dstIndex,
-                                 int rankIndex) {
-        super(graphSpace, executeStatement, fields, positions, allCols, limit, startTime,
+    private EdgeExecutionOptions(String graphSpace, String executeStatement, List<String> fields,
+                                 List<Integer> positions, boolean noColumn, int limit,
+                                 long startTime, long endTime, long batch, PolicyEnum policy,
+                                 String edge, int srcIndex, int dstIndex, int rankIndex) {
+        super(graphSpace, executeStatement, fields, positions, noColumn, limit, startTime,
                 endTime, batch, policy);
         this.edge = edge;
         this.srcIndex = srcIndex;
@@ -84,7 +81,7 @@ public class EdgeExecutionOptions extends ExecutionOptions {
         private String edge;
         private List<String> fields;
         private List<Integer> positions;
-        private boolean allCols = false;
+        private boolean noColumn = false;
         private int limit = DEFAULT_SCAN_LIMIT;
         private long startTime = 0;
         private long endTime = Long.MAX_VALUE;
@@ -119,8 +116,8 @@ public class EdgeExecutionOptions extends ExecutionOptions {
             return this;
         }
 
-        public ExecutionOptionBuilder setAllCols(boolean allCols) {
-            this.allCols = allCols;
+        public ExecutionOptionBuilder setNoColumn(boolean noColumn) {
+            this.noColumn = noColumn;
             return this;
         }
 
@@ -167,12 +164,14 @@ public class EdgeExecutionOptions extends ExecutionOptions {
         }
 
         public ExecutionOptions builder() {
-            assert (graphSpace != null & !graphSpace.trim().isEmpty() && edge != null
-                    && !edge.trim().isEmpty());
-            assert (fields != null && positions != null && fields.size() == positions.size());
-
+            if (graphSpace == null || graphSpace.trim().isEmpty()) {
+                throw new IllegalArgumentException("graph space can not be empty.");
+            }
+            if (edge == null || edge.trim().isEmpty()) {
+                throw new IllegalArgumentException("edge can not be empty.");
+            }
             return new EdgeExecutionOptions(graphSpace, executeStatement, fields, positions,
-                    allCols, limit, startTime, endTime, batch, policy, edge, srcIndex, dstIndex,
+                    noColumn, limit, startTime, endTime, batch, policy, edge, srcIndex, dstIndex,
                     rankIndex);
         }
     }

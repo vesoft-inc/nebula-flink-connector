@@ -12,7 +12,7 @@
     <artifactId>nebula-flink-connector</artifactId>
 
     <properties>
-        <nebula.version>2.0.0-rc1</nebula.version>
+        <nebula.version>2.0.0</nebula.version>
         <flink.version>1.11-SNAPSHOT</flink.version>
         <scala.binary.version>2.11</scala.binary.version>
         <compiler.source.version>1.8</compiler.source.version>

@@ -113,7 +113,8 @@ public class NebulaBatchOutputFormat<T> extends RichOutputFormat<T> implements F
             if (errorExec != null) {
                 errorBuffer.add(errorExec);
             }
-            numPendingRow.compareAndSet(executionOptions.getBatch(), 0);
+            long pendingRow = numPendingRow.get();
+            numPendingRow.compareAndSet(pendingRow, 0);
         } else {
             LOG.error("switch space failed, ", resultSet.getErrorMessage());
         }

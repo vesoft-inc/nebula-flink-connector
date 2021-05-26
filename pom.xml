@@ -63,10 +63,6 @@
         <junit.version>4.13.1</junit.version>
     </properties>
 
-    <dependencies>
-
-    </dependencies>
-
     <build>
         <plugins>
             <plugin>

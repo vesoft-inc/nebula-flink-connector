@@ -52,6 +52,7 @@ public class NebulaRowVertexOutputFormatConverter implements NebulaOutputFormatC
         }
         Object id = row.getField(idIndex);
         if (id == null) {
+            Log.error("wrong id, your id is null ");
             return null;
         }
         List<String> vertexProps = new ArrayList<>();
@@ -80,6 +81,5 @@ public class NebulaRowVertexOutputFormatConverter implements NebulaOutputFormatC
             return String.format(NebulaConstant.VERTEX_VALUE_TEMPLATE_WITH_POLICY,
                     policy.policy(), formatId, String.join(",", vertexProps));
         }
-
     }
 }

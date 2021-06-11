@@ -70,7 +70,8 @@ public class NebulaRowVertexOutputFormatConverter implements NebulaOutputFormatC
 
         if (policy == null) {
             if (vidType == VidTypeEnum.STRING) {
-                formatId = NebulaUtils.mkString(formatId, "\"", "", "\"");
+                formatId = NebulaUtils.mkString(NebulaUtils.escapeUtil(String.valueOf(formatId)),
+                        "\"", "", "\"");
             } else {
                 assert (NebulaUtils.isNumeric(formatId));
             }

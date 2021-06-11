@@ -74,7 +74,7 @@ public class NebulaUtils {
     }
 
 
-    private static String escapeUtil(String value) {
+    public static String escapeUtil(String value) {
         String s = value;
         if (s.contains("\\")) {
             s = s.replaceAll("\\\\", "\\\\\\\\");

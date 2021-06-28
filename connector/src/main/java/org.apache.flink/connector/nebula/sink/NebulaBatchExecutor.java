@@ -10,6 +10,7 @@ import com.vesoft.nebula.client.graph.data.ResultSet;
 import com.vesoft.nebula.client.graph.exception.IOErrorException;
 import com.vesoft.nebula.client.graph.net.Session;
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
 import org.apache.flink.connector.nebula.statement.EdgeExecutionOptions;
 import org.apache.flink.connector.nebula.statement.ExecutionOptions;
@@ -27,6 +28,9 @@ public class NebulaBatchExecutor<T> {
     private final boolean isVertex;
     private final Map<String, Integer> schema;
     private final VidTypeEnum vidType;
+    private Class<? extends NebulaOutputFormatConverter<T>> converterClazz;
+    private NebulaOutputFormatConverter converter;
+
 
     public NebulaBatchExecutor(ExecutionOptions executionOptions, boolean isVertex,
                                VidTypeEnum vidType, Map<String, Integer> schema) {
@@ -35,6 +39,65 @@ public class NebulaBatchExecutor<T> {
         this.isVertex = isVertex;
         this.vidType = vidType;
         this.schema = schema;
+        init0();
+    }
+
+    public NebulaBatchExecutor(ExecutionOptions executionOptions, boolean isVertex,
+                               VidTypeEnum vidType, Map<String, Integer> schema, Class<? extends NebulaOutputFormatConverter<T>> converterClazz)
+            throws NoSuchMethodException,  SecurityException, IllegalAccessException, InvocationTargetException,
+            IllegalArgumentException, InstantiationException, Exception {
+        this.executionOptions = executionOptions;
+        this.nebulaBufferedRow = new NebulaBufferedRow();
+        this.isVertex = isVertex;
+        this.vidType = vidType;
+        this.schema = schema;
+        this.converterClazz = converterClazz;
+        init();
+    }
+
+    /**
+     * create a specified converter with input converter class by reflection
+     *
+     * @throws NoSuchMethodException
+     * @throws SecurityException
+     * @throws IllegalAccessException
+     * @throws InvocationTargetException
+     * @throws IllegalArgumentException
+     * @throws InstantiationException
+     * @throws Exception
+     */
+    private void init() throws NoSuchMethodException,  SecurityException, IllegalAccessException, InvocationTargetException, IllegalArgumentException, InstantiationException, Exception {
+        if (converterClazz != null){
+            if (!NebulaOutputFormatConverter.class.isAssignableFrom(converterClazz)){
+                throw new Exception("The converter class must implement NebulaOutputFormatConverter");
+            }
+            if (isVertex) {
+                converter = converterClazz
+                        .getConstructor(VertexExecutionOptions.class, VidTypeEnum.class, Map.class)
+                        .newInstance(executionOptions, vidType, schema);
+            } else {
+                converter = converterClazz
+                        .getConstructor(EdgeExecutionOptions.class, VidTypeEnum.class, Map.class)
+                        .newInstance(executionOptions, vidType, schema);
+            }
+            return;
+        }
+
+        init0();
+    }
+
+    /**
+     * use a default Row converter when no explicit converter is set
+     */
+    private void init0(){
+        // Moved from addToBatch method. No need to create a converter instance once per row
+        if (isVertex) {
+            converter = new NebulaRowVertexOutputFormatConverter(
+                    (VertexExecutionOptions) executionOptions, vidType, schema);
+        } else {
+            converter = new NebulaRowEdgeOutputFormatConverter(
+                    (EdgeExecutionOptions) executionOptions, vidType, schema);
+        }
     }
 
     /**
@@ -43,14 +106,6 @@ public class NebulaBatchExecutor<T> {
      * @param record represent vertex or edge
      */
     void addToBatch(T record) {
-        NebulaOutputFormatConverter converter;
-        if (isVertex) {
-            converter = new NebulaRowVertexOutputFormatConverter(
-                    (VertexExecutionOptions) executionOptions, vidType, schema);
-        } else {
-            converter = new NebulaRowEdgeOutputFormatConverter(
-                    (EdgeExecutionOptions) executionOptions, vidType, schema);
-        }
         String value = converter.createValue(record, executionOptions.getPolicy());
         if (value == null) {
             return;

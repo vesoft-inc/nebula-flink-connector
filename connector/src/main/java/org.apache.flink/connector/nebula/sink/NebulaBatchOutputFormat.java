@@ -15,6 +15,7 @@ import com.vesoft.nebula.client.graph.net.Session;
 import com.vesoft.nebula.client.meta.MetaClient;
 import java.io.Flushable;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -40,6 +41,7 @@ public class NebulaBatchOutputFormat<T> extends RichOutputFormat<T> implements F
     private NebulaMetaConnectionProvider metaProvider;
     private ExecutionOptions executionOptions;
     private List<String> errorBuffer = new ArrayList<>();
+    private Class<? extends NebulaOutputFormatConverter<T>> converterClazz = null;
 
     public NebulaBatchOutputFormat(NebulaGraphConnectionProvider graphProvider,
                                    NebulaMetaConnectionProvider metaProvider) {
@@ -81,7 +83,20 @@ public class NebulaBatchOutputFormat<T> extends RichOutputFormat<T> implements F
             schema = metaProvider.getEdgeSchema(metaClient, executionOptions.getGraphSpace(),
                     executionOptions.getLabel());
         }
-        nebulaBatchExecutor = new NebulaBatchExecutor(executionOptions, isVertex, vidType, schema);
+
+        try{
+            nebulaBatchExecutor = new NebulaBatchExecutor(executionOptions, isVertex, vidType, schema, converterClazz);
+        } catch (NoSuchMethodException | SecurityException e){
+            LOG.error("failed to get NebulaOutputFormatConverter constructor: ParameterType: (ExecutionOptions, VidTypeEnum, Map<String, Integer>)", e);
+            throw new IOException("get NebulaOutputFormatConverter constructor error", e);
+        } catch (IllegalAccessException | InvocationTargetException | IllegalArgumentException | InstantiationException e) {
+            LOG.error("failed to get NebulaOutputFormatConverter instance", e);
+            throw new IOException("get NebulaOutputFormatConverter instance error", e);
+        } catch (Exception e) {
+            LOG.error("failed to provide a legitimate NebulaOutputFormatConverter implementation", e);
+            throw new IOException("get NebulaOutputFormatConverter implementation error", e);
+        }
+
     }
 
     /**
@@ -146,6 +161,17 @@ public class NebulaBatchOutputFormat<T> extends RichOutputFormat<T> implements F
 
     public NebulaBatchOutputFormat<T> setExecutionOptions(ExecutionOptions executionOptions) {
         this.executionOptions = executionOptions;
+        return this;
+    }
+
+    /**
+     * customize your own NebulaOutputFormatConverter implementation that converts data into queries
+     *
+     * @param converterClazz
+     * @return
+     */
+    public NebulaBatchOutputFormat<T> setConverterClazz(Class<? extends NebulaOutputFormatConverter<T>> converterClazz) {
+        this.converterClazz = converterClazz;
         return this;
     }
 }

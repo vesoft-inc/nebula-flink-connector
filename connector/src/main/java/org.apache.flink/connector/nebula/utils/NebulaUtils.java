@@ -20,13 +20,22 @@ public class NebulaUtils {
         List<HostAddress> hostAndPortList = new ArrayList<>();
         for (String addr : address.split(NebulaConstant.COMMA)) {
             String[] hostPort = addr.split(NebulaConstant.COLON);
+            if (hostPort.length < 2) {
+                throw new IllegalArgumentException("wrong address");
+            }
             hostAndPortList.add(new HostAddress(hostPort[0], Integer.parseInt(hostPort[1])));
         }
         return hostAndPortList;
     }
 
     public static boolean isNumeric(String str) {
-        for (char c : str.toCharArray()) {
+        String newStr = null;
+        if (str.startsWith("-")) {
+            newStr = str.substring(1);
+        } else {
+            newStr = str;
+        }
+        for (char c : newStr.toCharArray()) {
             if (!Character.isDigit(c)) {
                 return false;
             }
@@ -36,6 +45,9 @@ public class NebulaUtils {
 
 
     public static String extraValue(Object value, int type) {
+        if (value == null) {
+            return null;
+        }
         switch (type) {
             case PropertyType.STRING:
             case PropertyType.FIXED_STRING:
@@ -46,13 +58,23 @@ public class NebulaUtils {
                 return "time(\"" + value + "\")";
             case PropertyType.DATETIME:
                 return "datetime(\"" + value + "\")";
-            default:
+            case PropertyType.TIMESTAMP: {
+                if (isNumeric(String.valueOf(value))) {
+                    return String.valueOf(value);
+                } else {
+                    return "timestamp(\"" + value + "\")";
+                }
+            }
+            default: {
                 return String.valueOf(value);
+
+            }
+
         }
     }
 
 
-    private static String escapeUtil(String value) {
+    public static String escapeUtil(String value) {
         String s = value;
         if (s.contains("\\")) {
             s = s.replaceAll("\\\\", "\\\\\\\\");
@@ -83,7 +105,7 @@ public class NebulaUtils {
         boolean first = true;
         builder.append(start);
         for (char c : value.toCharArray()) {
-            if (first = true) {
+            if (first) {
                 builder.append(c);
                 first = false;
             } else {

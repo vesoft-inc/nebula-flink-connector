@@ -7,9 +7,7 @@
 package org.apache.flink.connector.nebula.sink;
 
 import com.vesoft.nebula.client.graph.data.ResultSet;
-import com.vesoft.nebula.client.graph.exception.IOErrorException;
 import com.vesoft.nebula.client.graph.net.Session;
-import java.io.UnsupportedEncodingException;
 import java.util.Map;
 import org.apache.flink.connector.nebula.statement.EdgeExecutionOptions;
 import org.apache.flink.connector.nebula.statement.ExecutionOptions;
@@ -72,12 +70,10 @@ public class NebulaBatchExecutor<T> {
         ResultSet execResult = null;
         try {
             execResult = session.execute(exec);
-        } catch (IOErrorException e) {
+        } catch (Exception e) {
             LOG.error("insert error:", e);
             nebulaBufferedRow.clean();
             return exec;
-        } catch (UnsupportedEncodingException e) {
-            LOG.error("insert error: ", e);
         }
 
         if (execResult.isSucceeded()) {

@@ -51,11 +51,11 @@ public class NebulaMetaConnectionProvider implements Serializable {
         SpaceItem spaceItem;
         try {
             spaceItem = metaClient.getSpace(space);
-        } catch (TException e) {
+        } catch (TException | ExecuteFailedException e) {
             LOG.error("get space info error, ", e);
             return null;
         }
-        int vidType = spaceItem.getProperties().getVid_type().getType();
+        PropertyType vidType = spaceItem.getProperties().getVid_type().getType();
         if (vidType == PropertyType.FIXED_STRING) {
             return VidTypeEnum.STRING;
         } else {
@@ -81,7 +81,7 @@ public class NebulaMetaConnectionProvider implements Serializable {
         }
         List<ColumnDef> columnDefs = tagSchema.getColumns();
         for (ColumnDef col : columnDefs) {
-            schema.put(new String(col.getName()), col.getType().getType());
+            schema.put(new String(col.getName()), col.getType().getType().getValue());
         }
         return schema;
     }
@@ -104,7 +104,7 @@ public class NebulaMetaConnectionProvider implements Serializable {
         }
         List<ColumnDef> columnDefs = edgeSchema.getColumns();
         for (ColumnDef col : columnDefs) {
-            schema.put(new String(col.getName()), col.getType().getType());
+            schema.put(new String(col.getName()), col.getType().getType().getValue());
         }
         return schema;
     }

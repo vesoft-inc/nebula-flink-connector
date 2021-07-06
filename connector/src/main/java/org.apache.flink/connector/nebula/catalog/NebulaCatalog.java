@@ -68,7 +68,7 @@ public class NebulaCatalog extends AbstractNebulaCatalog {
             for (IdName space : spaces) {
                 spaceNames.add(new String(space.getName()));
             }
-        } catch (TException e) {
+        } catch (TException | ExecuteFailedException e) {
             LOG.error("failed to connect meta service vis {} ", address, e);
             throw new CatalogException("nebula meta service connect failed.", e);
         }
@@ -83,7 +83,7 @@ public class NebulaCatalog extends AbstractNebulaCatalog {
             try {
                 props.put("spaceId",
                         String.valueOf(metaClient.getSpace(databaseName).getSpace_id()));
-            } catch (TException e) {
+            } catch (TException | ExecuteFailedException e) {
                 LOG.error("get spaceId error, ", e);
             }
             return new CatalogDatabaseImpl(props, databaseName);
@@ -206,30 +206,30 @@ public class NebulaCatalog extends AbstractNebulaCatalog {
      * @see PropertyType
      */
     private DataType fromNebulaType(List<ColumnDef> columns, int colIndex) {
-        int type = columns.get(colIndex).getType().type;
+        int type = columns.get(colIndex).getType().type.getValue();
 
-        switch (type) {
-            case PropertyType.INT8:
-            case PropertyType.INT16:
-            case PropertyType.INT32:
-            case PropertyType.INT64:
-            case PropertyType.VID:
+        switch (PropertyType.findByValue(type)) {
+            case INT8:
+            case INT16:
+            case INT32:
+            case INT64:
+            case VID:
                 return DataTypes.BIGINT();
-            case PropertyType.BOOL:
+            case BOOL:
                 return DataTypes.BOOLEAN();
-            case PropertyType.FLOAT:
+            case FLOAT:
                 return DataTypes.FLOAT();
-            case PropertyType.DOUBLE:
+            case DOUBLE:
                 return DataTypes.DOUBLE();
-            case PropertyType.TIMESTAMP:
+            case TIMESTAMP:
                 return DataTypes.TIMESTAMP();
-            case PropertyType.DATE:
-            case PropertyType.TIME:
-            case PropertyType.DATETIME:
-            case PropertyType.STRING:
-            case PropertyType.FIXED_STRING:
+            case DATE:
+            case TIME:
+            case DATETIME:
+            case STRING:
+            case FIXED_STRING:
                 return DataTypes.STRING();
-            case PropertyType.UNKNOWN:
+            case UNKNOWN:
                 return DataTypes.NULL();
             default:
                 throw new UnsupportedOperationException(String.format("Doesn't support nebula "

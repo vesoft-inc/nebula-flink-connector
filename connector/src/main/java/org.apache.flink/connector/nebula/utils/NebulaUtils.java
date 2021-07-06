@@ -48,17 +48,17 @@ public class NebulaUtils {
         if (value == null) {
             return null;
         }
-        switch (type) {
-            case PropertyType.STRING:
-            case PropertyType.FIXED_STRING:
+        switch (PropertyType.findByValue(type)) {
+            case STRING:
+            case FIXED_STRING:
                 return mkString(escapeUtil(String.valueOf(value)), "\"", "", "\"");
-            case PropertyType.DATE:
+            case DATE:
                 return "date(\"" + value + "\")";
-            case PropertyType.TIME:
+            case TIME:
                 return "time(\"" + value + "\")";
-            case PropertyType.DATETIME:
+            case DATETIME:
                 return "datetime(\"" + value + "\")";
-            case PropertyType.TIMESTAMP: {
+            case TIMESTAMP: {
                 if (isNumeric(String.valueOf(value))) {
                     return String.valueOf(value);
                 } else {

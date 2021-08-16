@@ -17,16 +17,11 @@ To use Nebula Flink Connector, do a check of these:
 - Java 8 or a higher version is installed.
 - Nebula Graph v2.0 is deployed. For more information, see [Deployment and installation of Nebula Graph](https://docs.nebula-graph.io/2.0/4.deployment-and-installation/1.resource-preparations/ "Click to go to Nebula Graph website").
 
-### Build Nebula Flink Connector
+### Get Nebula Flink Connector
+* Download from maven repository.
 
-1. Install the lastest java client 2.0.
-    ```
-    $ git clone https://github.com/vesoft-inc/nebula-java.git
-    $ cd nebula-java
-    $ mvn clean install -Dmaven.test.skip=true -Dgpg.skip -Dmaven.javadoc.skip=true  
-    ```
-
-2. Package Nebula Flink Connector.
+  https://repo1.maven.org/maven2/com/vesoft/nebula-flink-connector/
+*  Package Nebula Flink Connector.
 
     ```
     $ git clone https://github.com/vesoft-inc/nebula-flink-connector.git

@@ -128,6 +128,7 @@
                             <goal>jar</goal>
                         </goals>
                         <configuration>
+                            <sourcepath>src/main/java</sourcepath>
                             <encoding>UTF-8</encoding>
                             <charset>UTF-8</charset>
                             <doclint>none</doclint>
@@ -204,7 +205,8 @@
                                     <exclude>javax.inject:javax.inject</exclude>
                                     <exclude>org.spark-project.hive:hive-exec</exclude>
                                     <exclude>stax:stax-api</exclude>
-                                    <exclude>org.glassfish.hk2.external:aopalliance-repackaged</exclude>
+                                    <exclude>org.glassfish.hk2.external:aopalliance-repackaged
+                                    </exclude>
                                 </excludes>
                             </artifactSet>
                             <filters>

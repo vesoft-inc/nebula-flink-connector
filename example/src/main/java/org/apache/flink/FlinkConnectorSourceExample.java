@@ -53,7 +53,7 @@ public class FlinkConnectorSourceExample {
     public static void initConfig() {
         NebulaClientOptions nebulaClientOptions =
                 new NebulaClientOptions.NebulaClientOptionsBuilder()
-                        .setMetaAddress("127.0.0.1:45500")
+                        .setMetaAddress("127.0.0.1:9559")
                         .build();
         storageConnectionProvider =
                 new NebulaStorageConnectionProvider(nebulaClientOptions);

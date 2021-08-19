@@ -36,17 +36,17 @@ public class NebulaUtilsTest extends TestCase {
     }
 
     public void testExtraValue() {
-        assert (null == NebulaUtils.extraValue(null, PropertyType.STRING));
-        assert ("\"\"".equals(NebulaUtils.extraValue("", PropertyType.STRING)));
-        assert ("\"\"".equals(NebulaUtils.extraValue("", PropertyType.FIXED_STRING)));
-        assert ("1".equals(NebulaUtils.extraValue(1, PropertyType.INT8)));
+        assert (null == NebulaUtils.extraValue(null, PropertyType.STRING.getValue()));
+        assert ("\"\"".equals(NebulaUtils.extraValue("", PropertyType.STRING.getValue())));
+        assert ("\"\"".equals(NebulaUtils.extraValue("", PropertyType.FIXED_STRING.getValue())));
+        assert ("1".equals(NebulaUtils.extraValue(1, PropertyType.INT8.getValue())));
         assert ("timestamp(\"2021-01-01T12:12:12\")".equals(
-                NebulaUtils.extraValue("2021-01-01T12:12:12", PropertyType.TIMESTAMP)));
+                NebulaUtils.extraValue("2021-01-01T12:12:12", PropertyType.TIMESTAMP.getValue())));
         assert ("datetime(\"2021-01-01T12:12:12\")".equals(
-                NebulaUtils.extraValue("2021-01-01T12:12:12", PropertyType.DATETIME)));
+                NebulaUtils.extraValue("2021-01-01T12:12:12", PropertyType.DATETIME.getValue())));
         assert ("date(\"2021-01-01\")".equals(NebulaUtils.extraValue("2021-01-01",
-                PropertyType.DATE)));
-        assert ("time(\"12:12:12\")".equals(NebulaUtils.extraValue("12:12:12", PropertyType.TIME)));
+                PropertyType.DATE.getValue())));
+        assert ("time(\"12:12:12\")".equals(NebulaUtils.extraValue("12:12:12", PropertyType.TIME.getValue())));
     }
 
     public void testMkString() {

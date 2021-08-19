@@ -46,7 +46,8 @@ public class NebulaUtilsTest extends TestCase {
                 NebulaUtils.extraValue("2021-01-01T12:12:12", PropertyType.DATETIME.getValue())));
         assert ("date(\"2021-01-01\")".equals(NebulaUtils.extraValue("2021-01-01",
                 PropertyType.DATE.getValue())));
-        assert ("time(\"12:12:12\")".equals(NebulaUtils.extraValue("12:12:12", PropertyType.TIME.getValue())));
+        assert ("time(\"12:12:12\")".equals(NebulaUtils.extraValue("12:12:12",
+                PropertyType.TIME.getValue())));
     }
 
     public void testMkString() {

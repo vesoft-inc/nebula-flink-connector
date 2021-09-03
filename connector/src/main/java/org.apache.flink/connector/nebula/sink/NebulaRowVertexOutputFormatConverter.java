@@ -60,7 +60,7 @@ public class NebulaRowVertexOutputFormatConverter implements NebulaOutputFormatC
             String propName = pos2Field.get(i);
             if (propName == null || !schema.containsKey(propName)) {
                 throw new IllegalArgumentException("position " + i + " or field " + propName
-                        + "does not exist.");
+                        + " does not exist.");
             }
             int type = schema.get(propName);
             vertexProps.add(NebulaUtils.extraValue(row.getField(i), type));

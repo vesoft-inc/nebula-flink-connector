@@ -27,16 +27,16 @@ public class NebulaOutputFormatConverterTest {
 
     @Before
     public void before() {
-        schema.put("src", PropertyType.STRING);
-        schema.put("dst", PropertyType.STRING);
-        schema.put("degree", PropertyType.DOUBLE);
-        schema.put("date", PropertyType.DATE);
-        schema.put("datetime", PropertyType.DATETIME);
-        schema.put("time", PropertyType.TIME);
-        schema.put("name", PropertyType.STRING);
-        schema.put("age", PropertyType.INT16);
-        schema.put("aaa", PropertyType.DOUBLE);
-        schema.put("bbb", PropertyType.INT16);
+        schema.put("src", PropertyType.STRING.getValue());
+        schema.put("dst", PropertyType.STRING.getValue());
+        schema.put("degree", PropertyType.DOUBLE.getValue());
+        schema.put("date", PropertyType.DATE.getValue());
+        schema.put("datetime", PropertyType.DATETIME.getValue());
+        schema.put("time", PropertyType.TIME.getValue());
+        schema.put("name", PropertyType.STRING.getValue());
+        schema.put("age", PropertyType.INT16.getValue());
+        schema.put("aaa", PropertyType.DOUBLE.getValue());
+        schema.put("bbb", PropertyType.INT16.getValue());
 
         row.setField(0, 2);
         row.setField(1, "Tom");

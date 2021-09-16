@@ -17,12 +17,16 @@ import org.apache.flink.connector.nebula.sink.NebulaSinkFunction;
 import org.apache.flink.connector.nebula.statement.EdgeExecutionOptions;
 import org.apache.flink.connector.nebula.statement.ExecutionOptions;
 import org.apache.flink.connector.nebula.statement.VertexExecutionOptions;
+import org.apache.flink.connector.nebula.utils.WriteModeEnum;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.types.Row;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * make sure your nebula graph has create Space
+ */
 public class FlinkConnectorExample {
     private static final Logger LOG = LoggerFactory.getLogger(FlinkConnectorExample.class);
 
@@ -30,6 +34,8 @@ public class FlinkConnectorExample {
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         DataStream<List<String>> playerSource = constructVertexSourceData(env);
         sinkVertexData(env, playerSource);
+        updateVertexData(env, playerSource);
+        deleteVertexData(env, playerSource);
         DataStream<List<String>> friendSource = constructEdgeSourceData(env);
         sinkEdgeData(env, friendSource);
     }
@@ -40,14 +46,14 @@ public class FlinkConnectorExample {
     public static DataStream<List<String>> constructVertexSourceData(
             StreamExecutionEnvironment env) {
         List<List<String>> player = new ArrayList<>();
-        List<String> fields1 = Arrays.asList("15", "Bob", "18");
-        List<String> fields2 = Arrays.asList("16", "Tina", "19");
-        List<String> fields3 = Arrays.asList("17", "Jena", "20");
-        List<String> fields4 = Arrays.asList("18", "Tom", "20");
-        List<String> fields5 = Arrays.asList("19", "Viki", "55");
-        List<String> fields6 = Arrays.asList("20", "Jime", "32");
-        List<String> fields7 = Arrays.asList("21", "Jhon", "76");
-        List<String> fields8 = Arrays.asList("22", "Crea", "10");
+        List<String> fields1 = Arrays.asList("15", "Bob", "38");
+        List<String> fields2 = Arrays.asList("16", "Tina", "39");
+        List<String> fields3 = Arrays.asList("17", "Jena", "30");
+        List<String> fields4 = Arrays.asList("18", "Tom", "30");
+        List<String> fields5 = Arrays.asList("19", "Viki", "35");
+        List<String> fields6 = Arrays.asList("20", "Jime", "33");
+        List<String> fields7 = Arrays.asList("21", "Jhon", "36");
+        List<String> fields8 = Arrays.asList("22", "Crea", "30");
         player.add(fields1);
         player.add(fields2);
         player.add(fields3);
@@ -61,15 +67,15 @@ public class FlinkConnectorExample {
     }
 
     /**
-     * sink Nebula Graph
+     * sink Nebula Graph with default INSERT mode
      */
     public static void sinkVertexData(StreamExecutionEnvironment env,
                                       DataStream<List<String>> playerSource) {
         NebulaClientOptions nebulaClientOptions =
                 new NebulaClientOptions.NebulaClientOptionsBuilder()
-                .setGraphAddress("127.0.0.1:3699")
-                .setMetaAddress("127.0.0.1:45500")
-                .build();
+                        .setGraphAddress("127.0.0.1:9669")
+                        .setMetaAddress("127.0.0.1:9559")
+                        .build();
         NebulaGraphConnectionProvider graphConnectionProvider =
                 new NebulaGraphConnectionProvider(nebulaClientOptions);
         NebulaMetaConnectionProvider metaConnectionProvider =
@@ -104,6 +110,96 @@ public class FlinkConnectorExample {
         }
     }
 
+    /**
+     * sink Nebula Graph with UPDATE mode
+     */
+    public static void updateVertexData(StreamExecutionEnvironment env,
+                                        DataStream<List<String>> playerSource) {
+        NebulaClientOptions nebulaClientOptions =
+                new NebulaClientOptions.NebulaClientOptionsBuilder()
+                        .setGraphAddress("127.0.0.1:9669")
+                        .setMetaAddress("127.0.0.1:9559")
+                        .build();
+        NebulaGraphConnectionProvider graphConnectionProvider =
+                new NebulaGraphConnectionProvider(nebulaClientOptions);
+        NebulaMetaConnectionProvider metaConnectionProvider =
+                new NebulaMetaConnectionProvider(nebulaClientOptions);
+
+        ExecutionOptions executionOptions = new VertexExecutionOptions.ExecutionOptionBuilder()
+                .setGraphSpace("flinkSink")
+                .setTag("player")
+                .setIdIndex(0)
+                .setFields(Arrays.asList("name", "age"))
+                .setPositions(Arrays.asList(1, 2))
+                .setWriteMode(WriteModeEnum.UPDATE)
+                .setBatch(2)
+                .builder();
+
+        NebulaBatchOutputFormat outPutFormat =
+                new NebulaBatchOutputFormat(graphConnectionProvider, metaConnectionProvider)
+                        .setExecutionOptions(executionOptions);
+        NebulaSinkFunction nebulaSinkFunction = new NebulaSinkFunction(outPutFormat);
+        DataStream<Row> dataStream = playerSource.map(row -> {
+            org.apache.flink.types.Row record = new org.apache.flink.types.Row(row.size());
+            for (int i = 0; i < row.size(); i++) {
+                record.setField(i, row.get(i));
+            }
+            return record;
+        });
+        dataStream.addSink(nebulaSinkFunction);
+        try {
+            env.execute("Update Nebula Vertex");
+        } catch (Exception e) {
+            LOG.error("error when update Nebula Graph Vertex, ", e);
+            System.exit(-1);
+        }
+    }
+
+    /**
+     * sink Nebula Graph with DELETE mode
+     */
+    public static void deleteVertexData(StreamExecutionEnvironment env,
+                                        DataStream<List<String>> playerSource) {
+        NebulaClientOptions nebulaClientOptions =
+                new NebulaClientOptions.NebulaClientOptionsBuilder()
+                        .setGraphAddress("127.0.0.1:9669")
+                        .setMetaAddress("127.0.0.1:9559")
+                        .build();
+        NebulaGraphConnectionProvider graphConnectionProvider =
+                new NebulaGraphConnectionProvider(nebulaClientOptions);
+        NebulaMetaConnectionProvider metaConnectionProvider =
+                new NebulaMetaConnectionProvider(nebulaClientOptions);
+
+        ExecutionOptions executionOptions = new VertexExecutionOptions.ExecutionOptionBuilder()
+                .setGraphSpace("flinkSink")
+                .setTag("player")
+                .setIdIndex(0)
+                .setFields(Arrays.asList("name", "age"))
+                .setPositions(Arrays.asList(1, 2))
+                .setWriteMode(WriteModeEnum.DELETE)
+                .setBatch(2)
+                .builder();
+
+        NebulaBatchOutputFormat outPutFormat =
+                new NebulaBatchOutputFormat(graphConnectionProvider, metaConnectionProvider)
+                        .setExecutionOptions(executionOptions);
+        NebulaSinkFunction nebulaSinkFunction = new NebulaSinkFunction(outPutFormat);
+        DataStream<Row> dataStream = playerSource.map(row -> {
+            org.apache.flink.types.Row record = new org.apache.flink.types.Row(row.size());
+            for (int i = 0; i < row.size(); i++) {
+                record.setField(i, row.get(i));
+            }
+            return record;
+        });
+        dataStream.addSink(nebulaSinkFunction);
+        try {
+            env.execute("Update Nebula Vertex");
+        } catch (Exception e) {
+            LOG.error("error when update Nebula Graph Vertex, ", e);
+            System.exit(-1);
+        }
+    }
+
 
     /**
      * construct flink data source
@@ -133,9 +229,9 @@ public class FlinkConnectorExample {
                                     DataStream<List<String>> playerSource) {
         NebulaClientOptions nebulaClientOptions =
                 new NebulaClientOptions.NebulaClientOptionsBuilder()
-                .setGraphAddress("127.0.0.1:3699")
-                .setMetaAddress("127.0.0.1:45500")
-                .build();
+                        .setGraphAddress("127.0.0.1:9669")
+                        .setMetaAddress("127.0.0.1:9559")
+                        .build();
         NebulaGraphConnectionProvider graphConnectionProvider =
                 new NebulaGraphConnectionProvider(nebulaClientOptions);
         NebulaMetaConnectionProvider metaConnectionProvider =

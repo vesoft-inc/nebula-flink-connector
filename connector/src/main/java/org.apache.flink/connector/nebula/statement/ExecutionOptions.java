@@ -10,6 +10,7 @@ import java.io.Serializable;
 import java.util.List;
 import org.apache.flink.connector.nebula.utils.DataTypeEnum;
 import org.apache.flink.connector.nebula.utils.PolicyEnum;
+import org.apache.flink.connector.nebula.utils.WriteModeEnum;
 import org.apache.flink.types.Row;
 
 /**
@@ -126,6 +127,11 @@ public abstract class ExecutionOptions implements Serializable {
      */
     private PolicyEnum policy;
 
+    /**
+     * write mode
+     */
+    private WriteModeEnum writeMode;
+
 
     protected ExecutionOptions(String graphSpace,
                                String executeStatement,
@@ -136,7 +142,8 @@ public abstract class ExecutionOptions implements Serializable {
                                long startTime,
                                long endTime,
                                long batch,
-                               PolicyEnum policy) {
+                               PolicyEnum policy,
+                               WriteModeEnum writeMode) {
         this.graphSpace = graphSpace;
 
         this.executeStatement = executeStatement;
@@ -148,6 +155,7 @@ public abstract class ExecutionOptions implements Serializable {
         this.endTime = endTime;
         this.batch = batch;
         this.policy = policy;
+        this.writeMode = writeMode;
     }
 
     public String getGraphSpace() {
@@ -194,6 +202,10 @@ public abstract class ExecutionOptions implements Serializable {
 
     public abstract DataTypeEnum getDataType();
 
+    public WriteModeEnum getWriteMode() {
+        return writeMode;
+    }
+
     @Override
     public String toString() {
         return "ExecutionOptions{"
@@ -206,8 +218,8 @@ public abstract class ExecutionOptions implements Serializable {
                 + ", startTime=" + startTime
                 + ", endTime=" + endTime
                 + ", batch=" + batch
-                + ", policy="
-                + policy
+                + ", policy=" + policy
+                + ", mode=" + writeMode
                 + '}';
     }
 }

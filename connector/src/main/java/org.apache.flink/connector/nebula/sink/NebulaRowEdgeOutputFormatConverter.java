@@ -7,18 +7,20 @@
 package org.apache.flink.connector.nebula.sink;
 
 import com.esotericsoftware.minlog.Log;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.apache.flink.connector.nebula.statement.EdgeExecutionOptions;
 import org.apache.flink.connector.nebula.utils.NebulaConstant;
+import org.apache.flink.connector.nebula.utils.NebulaEdge;
 import org.apache.flink.connector.nebula.utils.NebulaUtils;
 import org.apache.flink.connector.nebula.utils.PolicyEnum;
 import org.apache.flink.connector.nebula.utils.VidTypeEnum;
 import org.apache.flink.types.Row;
 
-public class NebulaRowEdgeOutputFormatConverter implements NebulaOutputFormatConverter<Row> {
+public class NebulaRowEdgeOutputFormatConverter implements Serializable {
 
     private final int srcIdIndex;
     private final int dstIdIndex;
@@ -44,18 +46,19 @@ public class NebulaRowEdgeOutputFormatConverter implements NebulaOutputFormatCon
         }
     }
 
-    @Override
-    public String createValue(Row row, PolicyEnum policy) {
+
+    public NebulaEdge createEdge(Row row, PolicyEnum policy) {
+        // check row data
         if (row == null || row.getArity() == 0) {
             Log.error("empty row");
             return null;
         }
-
         Object srcId = row.getField(srcIdIndex);
         Object dstId = row.getField(dstIdIndex);
         if (srcId == null || dstId == null) {
             return null;
         }
+        // extract edge properties
         List<String> edgeProps = new ArrayList<>();
         for (int i : positions) {
             String propName = pos2Field.get(i);
@@ -63,6 +66,7 @@ public class NebulaRowEdgeOutputFormatConverter implements NebulaOutputFormatCon
             edgeProps.add(NebulaUtils.extraValue(row.getField(i), type));
         }
 
+        // format edge source id and target id
         String srcFormatId = srcId.toString();
         String dstFormatId = dstId.toString();
 
@@ -76,20 +80,19 @@ public class NebulaRowEdgeOutputFormatConverter implements NebulaOutputFormatCon
             }
         } else {
             assert (vidType == VidTypeEnum.INT);
-            srcFormatId = String.format(NebulaConstant.ENDPOINT_TEMPLATE, policy.policy(),
-                    srcId.toString());
-            dstFormatId = String.format(NebulaConstant.ENDPOINT_TEMPLATE, policy.policy(),
-                    dstId.toString());
         }
 
+        // extract edge rank
+        Long rank = null;
         if (rankIndex >= 0) {
-            assert row.getField(rankIndex) != null;
-            Long rank = Long.parseLong(row.getField(rankIndex).toString());
-            return String.format(NebulaConstant.EDGE_VALUE_TEMPLATE, srcFormatId, dstFormatId,
-                    rank, String.join(NebulaConstant.COMMA, edgeProps));
-        } else {
-            return String.format(NebulaConstant.EDGE_VALUE_WITHOUT_RANKING_TEMPLATE, srcFormatId,
-                    dstFormatId, String.join(NebulaConstant.COMMA, edgeProps));
+            if (row.getField(rankIndex) == null) {
+                rank = 0L;
+            } else {
+                rank = Long.parseLong(row.getField(rankIndex).toString());
+            }
         }
+
+        NebulaEdge edge = new NebulaEdge(srcFormatId, dstFormatId, rank, edgeProps);
+        return edge;
     }
 }

@@ -4,7 +4,7 @@
  * attached with Common Clause Condition 1.0, found in the LICENSES directory.
  */
 
-package org.apache.flink.sink;
+package org.apache.flink.connector.nebula.sink;
 
 import com.vesoft.nebula.meta.PropertyType;
 import java.util.Arrays;
@@ -67,9 +67,9 @@ public class NebulaOutputFormatConverterTest {
                         schema);
 
         NebulaVertex vertex = helper.createVertex(row, null);
-        assert(vertex.getVid().equals("\"2\""));
-        assert(vertex.getPropValues().size() == 2);
-        assert(vertex.getPropValuesString().equals("\"Tom\",11"));
+        assert (vertex.getVid().equals("\"2\""));
+        assert (vertex.getPropValues().size() == 2);
+        assert (vertex.getPropValuesString().equals("\"Tom\",11"));
     }
 
     @Test
@@ -88,8 +88,8 @@ public class NebulaOutputFormatConverterTest {
 
         NebulaVertex vertex = helper.createVertex(row, null);
         assert (vertex.getVid().equals("\"2\""));
-        assert (vertex.getPropValuesString().equals("\"Tom\",date(\"2020-01-01\"),datetime" +
-                "(\"2020-01-01 12:12:12:0000\"),time(\"12:12:12:0000\"),11"));
+        assert (vertex.getPropValuesString().equals("\"Tom\",date(\"2020-01-01\"),datetime"
+                + "(\"2020-01-01 12:12:12:0000\"),time(\"12:12:12:0000\"),11"));
     }
 
     @Test
@@ -159,8 +159,8 @@ public class NebulaOutputFormatConverterTest {
         assert (edge.getTarget().equals("\"Jena\""));
         assert (edge.getRank() == null);
         assert (edge.getPropValues().size() == 4);
-        assert (edge.getPropValuesString().equals("12.0,date(\"2020-01-01\"),datetime" +
-                "(\"2020-01-01 12:12:12:0000\"),time(\"12:12:12:0000\")"));
+        assert (edge.getPropValuesString().equals("12.0,date(\"2020-01-01\"),datetime"
+                + "(\"2020-01-01 12:12:12:0000\"),time(\"12:12:12:0000\")"));
     }
 
     @Test
@@ -180,10 +180,10 @@ public class NebulaOutputFormatConverterTest {
                         schema);
 
         NebulaEdge edge = helper.createEdge(row, PolicyEnum.HASH);
-        assert(edge.getSource().equals("HASH(\"Tom\")"));
-        assert(edge.getTarget().equals("HASH(\"Jena\")"));
-        assert(edge.getRank() == null);
-        assert(edge.getPropValues().size() == 1);
-        assert(edge.getPropValuesString().equals("12.0"));
+        assert (edge.getSource().equals("HASH(\"Tom\")"));
+        assert (edge.getTarget().equals("HASH(\"Jena\")"));
+        assert (edge.getRank() == null);
+        assert (edge.getPropValues().size() == 1);
+        assert (edge.getPropValuesString().equals("12.0"));
     }
 }

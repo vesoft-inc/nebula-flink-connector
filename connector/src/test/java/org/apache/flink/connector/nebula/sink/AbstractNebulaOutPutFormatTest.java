@@ -4,7 +4,7 @@
  * attached with Common Clause Condition 1.0, found in the LICENSES directory.
  */
 
-package org.apache.flink.sink;
+package org.apache.flink.connector.nebula.sink;
 
 import com.vesoft.nebula.client.graph.NebulaPoolConfig;
 import com.vesoft.nebula.client.graph.data.HostAddress;
@@ -18,7 +18,6 @@ import junit.framework.TestCase;
 import org.apache.flink.connector.nebula.connection.NebulaClientOptions;
 import org.apache.flink.connector.nebula.connection.NebulaGraphConnectionProvider;
 import org.apache.flink.connector.nebula.connection.NebulaMetaConnectionProvider;
-import org.apache.flink.connector.nebula.sink.NebulaBatchOutputFormat;
 import org.apache.flink.connector.nebula.statement.ExecutionOptions;
 import org.apache.flink.connector.nebula.statement.VertexExecutionOptions;
 import org.apache.flink.types.Row;

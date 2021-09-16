@@ -180,8 +180,8 @@ public class NebulaOutputFormatConverterTest {
                         schema);
 
         NebulaEdge edge = helper.createEdge(row, PolicyEnum.HASH);
-        assert (edge.getSource().equals("HASH(\"Tom\")"));
-        assert (edge.getTarget().equals("HASH(\"Jena\")"));
+        assert (edge.getSource().equals("Tom"));
+        assert (edge.getTarget().equals("Jena"));
         assert (edge.getRank() == null);
         assert (edge.getPropValues().size() == 1);
         assert (edge.getPropValuesString().equals("12.0"));

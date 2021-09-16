@@ -214,6 +214,7 @@ public class NebulaVertexBatchExecutorTest {
      */
     @Test
     public void testExecuteBatchWithUpdate() {
+        testExecuteBatch();
         ExecutionOptions options = builder
                 .setGraphSpace("test_int")
                 .setPolicy("HASH")
@@ -305,6 +306,7 @@ public class NebulaVertexBatchExecutorTest {
      */
     @Test
     public void testExecuteBatchWithStringVidAndUpdate() {
+        testExecuteBatchWithStringVidAndInsert();
         ExecutionOptions options = builder
                 .setGraphSpace("test_string")
                 .setWriteMode(WriteModeEnum.UPDATE)

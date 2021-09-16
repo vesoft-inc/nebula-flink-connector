@@ -15,6 +15,8 @@ import org.apache.flink.connector.nebula.sink.NebulaRowVertexOutputFormatConvert
 import org.apache.flink.connector.nebula.statement.EdgeExecutionOptions;
 import org.apache.flink.connector.nebula.statement.ExecutionOptions;
 import org.apache.flink.connector.nebula.statement.VertexExecutionOptions;
+import org.apache.flink.connector.nebula.utils.NebulaEdge;
+import org.apache.flink.connector.nebula.utils.NebulaVertex;
 import org.apache.flink.connector.nebula.utils.PolicyEnum;
 import org.apache.flink.connector.nebula.utils.VidTypeEnum;
 import org.apache.flink.types.Row;
@@ -64,8 +66,10 @@ public class NebulaOutputFormatConverterTest {
                         VidTypeEnum.STRING,
                         schema);
 
-        String value = helper.createValue(row, null);
-        assert "\"2\": (\"Tom\",11)".equals(value);
+        NebulaVertex vertex = helper.createVertex(row, null);
+        assert(vertex.getVid().equals("\"2\""));
+        assert(vertex.getPropValues().size() == 2);
+        assert(vertex.getPropValuesString().equals("\"Tom\",11"));
     }
 
     @Test
@@ -82,9 +86,10 @@ public class NebulaOutputFormatConverterTest {
                         VidTypeEnum.STRING,
                         schema);
 
-        String value = helper.createValue(row, null);
-        assert (("\"2\": (\"Tom\",date(\"2020-01-01\"),datetime(\"2020-01-01 12:12:12:0000\"),"
-                + "time(\"12:12:12:0000\"),11)").equals(value));
+        NebulaVertex vertex = helper.createVertex(row, null);
+        assert (vertex.getVid().equals("\"2\""));
+        assert (vertex.getPropValuesString().equals("\"Tom\",date(\"2020-01-01\"),datetime" +
+                "(\"2020-01-01 12:12:12:0000\"),time(\"12:12:12:0000\"),11"));
     }
 
     @Test
@@ -101,8 +106,10 @@ public class NebulaOutputFormatConverterTest {
                         VidTypeEnum.INT,
                         schema);
 
-        String value = helper.createValue(row, PolicyEnum.HASH);
-        assert ("HASH(\"Tom\"): (\"Tom\",11)".equals(value));
+        NebulaVertex vertex = helper.createVertex(row, PolicyEnum.HASH);
+        assert (vertex.getVid().equals("Tom"));
+        assert (vertex.getPropValues().size() == 2);
+        assert (vertex.getPropValuesString().equals("\"Tom\",11"));
     }
 
 
@@ -122,8 +129,12 @@ public class NebulaOutputFormatConverterTest {
                 new NebulaRowEdgeOutputFormatConverter((EdgeExecutionOptions) rowInfoConfig,
                         VidTypeEnum.STRING,
                         schema);
-        String value = helper.createValue(row, null);
-        assert ("\"Tom\"->\"Jena\"@2: (\"Tom\",\"Jena\",12.0)".equals(value));
+        NebulaEdge edge = helper.createEdge(row, null);
+        assert (edge.getSource().equals("\"Tom\""));
+        assert (edge.getTarget().equals("\"Jena\""));
+        assert (edge.getRank() == 2);
+        assert (edge.getPropValues().size() == 3);
+        assert (edge.getPropValuesString().equals("\"Tom\",\"Jena\",12.0"));
     }
 
 
@@ -143,9 +154,13 @@ public class NebulaOutputFormatConverterTest {
                         VidTypeEnum.STRING,
                         schema);
 
-        String value = helper.createValue(row, null);
-        assert (("\"Tom\"->\"Jena\": (12.0,date(\"2020-01-01\"),datetime(\"2020-01-01 "
-                + "12:12:12:0000\"),time(\"12:12:12:0000\"))").equals(value));
+        NebulaEdge edge = helper.createEdge(row, null);
+        assert (edge.getSource().equals("\"Tom\""));
+        assert (edge.getTarget().equals("\"Jena\""));
+        assert (edge.getRank() == null);
+        assert (edge.getPropValues().size() == 4);
+        assert (edge.getPropValuesString().equals("12.0,date(\"2020-01-01\"),datetime" +
+                "(\"2020-01-01 12:12:12:0000\"),time(\"12:12:12:0000\")"));
     }
 
     @Test
@@ -164,7 +179,11 @@ public class NebulaOutputFormatConverterTest {
                         VidTypeEnum.INT,
                         schema);
 
-        String value = helper.createValue(row, PolicyEnum.HASH);
-        assert ("HASH(\"Tom\")->HASH(\"Jena\"): (12.0)".equals(value));
+        NebulaEdge edge = helper.createEdge(row, PolicyEnum.HASH);
+        assert(edge.getSource().equals("HASH(\"Tom\")"));
+        assert(edge.getTarget().equals("HASH(\"Jena\")"));
+        assert(edge.getRank() == null);
+        assert(edge.getPropValues().size() == 1);
+        assert(edge.getPropValuesString().equals("12.0"));
     }
 }

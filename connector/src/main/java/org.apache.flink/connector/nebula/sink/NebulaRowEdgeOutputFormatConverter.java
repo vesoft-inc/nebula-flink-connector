@@ -56,6 +56,7 @@ public class NebulaRowEdgeOutputFormatConverter implements Serializable {
         Object srcId = row.getField(srcIdIndex);
         Object dstId = row.getField(dstIdIndex);
         if (srcId == null || dstId == null) {
+            Log.error("null srcId or dstId");
             return null;
         }
         // extract edge properties

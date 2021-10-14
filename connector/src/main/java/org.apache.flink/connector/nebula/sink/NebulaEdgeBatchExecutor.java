@@ -63,7 +63,7 @@ public class NebulaEdgeBatchExecutor<T> extends NebulaBatchExecutor<T> {
                 statement = nebulaEdges.getDeleteStatement();
                 break;
             default:
-                throw new IllegalArgumentException("write mode {} is not supported");
+                throw new IllegalArgumentException("write mode is not supported");
         }
         LOG.debug("write statement={}", statement);
 

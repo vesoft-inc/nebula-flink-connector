@@ -13,6 +13,7 @@ import static org.apache.flink.connector.nebula.utils.NebulaConstant.DEFAULT_WRI
 import java.util.List;
 import org.apache.flink.connector.nebula.utils.DataTypeEnum;
 import org.apache.flink.connector.nebula.utils.PolicyEnum;
+import org.apache.flink.connector.nebula.utils.WriteModeEnum;
 
 public class VertexExecutionOptions extends ExecutionOptions {
 
@@ -36,10 +37,11 @@ public class VertexExecutionOptions extends ExecutionOptions {
                                   long endTime,
                                   long batch,
                                   PolicyEnum policy,
+                                  WriteModeEnum mode,
                                   String tag,
                                   int idIndex) {
         super(graphSpace, executeStatement, fields, positions, noColumn, limit, startTime,
-                endTime, batch, policy);
+                endTime, batch, policy, mode);
         this.tag = tag;
         this.idIndex = idIndex;
     }
@@ -70,6 +72,7 @@ public class VertexExecutionOptions extends ExecutionOptions {
         private long endTime = Long.MAX_VALUE;
         private int batch = DEFAULT_WRITE_BATCH;
         private PolicyEnum policy = null;
+        private WriteModeEnum mode = WriteModeEnum.INSERT;
         private int idIndex = DEFAULT_ROW_INFO_INDEX;
 
         public ExecutionOptionBuilder setGraphSpace(String graphSpace) {
@@ -138,6 +141,11 @@ public class VertexExecutionOptions extends ExecutionOptions {
             return this;
         }
 
+        public ExecutionOptionBuilder setWriteMode(WriteModeEnum mode) {
+            this.mode = mode;
+            return this;
+        }
+
         public ExecutionOptions builder() {
             if (graphSpace == null || graphSpace.trim().isEmpty()) {
                 throw new IllegalArgumentException("graph space can not be empty.");
@@ -146,7 +154,8 @@ public class VertexExecutionOptions extends ExecutionOptions {
                 throw new IllegalArgumentException("tag can not be empty.");
             }
             return new VertexExecutionOptions(graphSpace, executeStatement, fields,
-                    positions, noColumn, limit, startTime, endTime, batch, policy, tag, idIndex);
+                    positions, noColumn, limit, startTime, endTime, batch, policy, mode, tag,
+                    idIndex);
         }
     }
 }

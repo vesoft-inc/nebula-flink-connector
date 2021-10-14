@@ -8,12 +8,22 @@ package org.apache.flink.connector.nebula.utils;
 
 public class NebulaConstant {
     // template for insert statement
-    public static String BATCH_INSERT_TEMPLATE = "INSERT %s %s(%s) VALUES %s";
+    public static String BATCH_INSERT_TEMPLATE = "INSERT %s `%s`(%s) VALUES %s";
     public static String VERTEX_VALUE_TEMPLATE = "%s: (%s)";
     public static String VERTEX_VALUE_TEMPLATE_WITH_POLICY = "%s(\"%s\"): (%s)";
     public static String ENDPOINT_TEMPLATE = "%s(\"%s\")";
     public static String EDGE_VALUE_WITHOUT_RANKING_TEMPLATE = "%s->%s: (%s)";
     public static String EDGE_VALUE_TEMPLATE = "%s->%s@%d: (%s)";
+
+    // template for update statement
+    public static String UPDATE_VERTEX_TEMPLATE = "UPDATE %s ON `%s` %s SET %s";
+    public static String UPDATE_EDGE_TEMPLATE = "UPDATE %s ON `%s` %s->%s@%d SET %s";
+    public static String UPDATE_VALUE_TEMPLATE = "`%s`=%s";
+
+    // template for delete statement
+    public static String DELETE_VERTEX_TEMPLATE = "DELETE VERTEX %s";
+    public static String DELETE_EDGE_TEMPLATE = "DELETE EDGE `%s` %s";
+    public static String EDGE_ENDPOINT_TEMPLATE = "%s->%s@%d";
 
     // Delimiter
     public static String COMMA = ",";

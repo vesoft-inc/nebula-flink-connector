@@ -62,6 +62,18 @@ public class NebulaBatchOutputFormat<T> extends RichOutputFormat<T> implements F
             LOG.error("failed to get graph session, ", e);
             throw new IOException("get graph session error, ", e);
         }
+        ResultSet resultSet;
+        try {
+            resultSet = session.execute("USE " + executionOptions.getGraphSpace());
+        } catch (IOErrorException e) {
+            LOG.error("switch space error, ", e);
+            throw new IOException("switch space error,", e);
+        }
+        if (!resultSet.isSucceeded()) {
+            LOG.error("switch space failed, {}", resultSet.getErrorMessage());
+            throw new RuntimeException("switch space failed, " + resultSet.getErrorMessage());
+        }
+
         try {
             metaClient = metaProvider.getMetaClient();
         } catch (TException e) {
@@ -77,11 +89,12 @@ public class NebulaBatchOutputFormat<T> extends RichOutputFormat<T> implements F
         if (isVertex) {
             schema = metaProvider.getTagSchema(metaClient, executionOptions.getGraphSpace(),
                     executionOptions.getLabel());
+            nebulaBatchExecutor = new NebulaVertexBatchExecutor(executionOptions, vidType, schema);
         } else {
             schema = metaProvider.getEdgeSchema(metaClient, executionOptions.getGraphSpace(),
                     executionOptions.getLabel());
+            nebulaBatchExecutor = new NebulaEdgeBatchExecutor(executionOptions, vidType, schema);
         }
-        nebulaBatchExecutor = new NebulaBatchExecutor(executionOptions, isVertex, vidType, schema);
     }
 
     /**
@@ -100,24 +113,12 @@ public class NebulaBatchOutputFormat<T> extends RichOutputFormat<T> implements F
      * commit batch insert statements
      */
     private synchronized void commit() throws IOException {
-        ResultSet resultSet;
-        try {
-            resultSet = session.execute("USE " + executionOptions.getGraphSpace());
-        } catch (IOErrorException e) {
-            LOG.error("switch space error, ", e);
-            throw new IOException("switch space error,", e);
+        String errorExec = nebulaBatchExecutor.executeBatch(session);
+        if (errorExec != null) {
+            errorBuffer.add(errorExec);
         }
-
-        if (resultSet.isSucceeded()) {
-            String errorExec = nebulaBatchExecutor.executeBatch(session);
-            if (errorExec != null) {
-                errorBuffer.add(errorExec);
-            }
-            long pendingRow = numPendingRow.get();
-            numPendingRow.compareAndSet(pendingRow, 0);
-        } else {
-            LOG.error("switch space failed, ", resultSet.getErrorMessage());
-        }
+        long pendingRow = numPendingRow.get();
+        numPendingRow.compareAndSet(pendingRow, 0);
     }
 
     /**

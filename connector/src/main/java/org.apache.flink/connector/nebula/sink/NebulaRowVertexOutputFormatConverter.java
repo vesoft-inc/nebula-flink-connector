@@ -7,6 +7,7 @@
 package org.apache.flink.connector.nebula.sink;
 
 import com.esotericsoftware.minlog.Log;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -14,11 +15,12 @@ import java.util.Map;
 import org.apache.flink.connector.nebula.statement.VertexExecutionOptions;
 import org.apache.flink.connector.nebula.utils.NebulaConstant;
 import org.apache.flink.connector.nebula.utils.NebulaUtils;
+import org.apache.flink.connector.nebula.utils.NebulaVertex;
 import org.apache.flink.connector.nebula.utils.PolicyEnum;
 import org.apache.flink.connector.nebula.utils.VidTypeEnum;
 import org.apache.flink.types.Row;
 
-public class NebulaRowVertexOutputFormatConverter implements NebulaOutputFormatConverter<Row> {
+public class NebulaRowVertexOutputFormatConverter implements Serializable {
 
     private static final long serialVersionUID = -7728344698410737677L;
 
@@ -44,8 +46,8 @@ public class NebulaRowVertexOutputFormatConverter implements NebulaOutputFormatC
     }
 
 
-    @Override
-    public String createValue(Row row, PolicyEnum policy) {
+    public NebulaVertex createVertex(Row row, PolicyEnum policy) {
+        // check row data
         if (row == null || row.getArity() == 0) {
             Log.error("empty row");
             return null;
@@ -55,6 +57,7 @@ public class NebulaRowVertexOutputFormatConverter implements NebulaOutputFormatC
             Log.error("wrong id, your id is null ");
             return null;
         }
+        // extract vertex properties
         List<String> vertexProps = new ArrayList<>();
         for (int i : positions) {
             String propName = pos2Field.get(i);
@@ -66,8 +69,8 @@ public class NebulaRowVertexOutputFormatConverter implements NebulaOutputFormatC
             vertexProps.add(NebulaUtils.extraValue(row.getField(i), type));
         }
 
+        // format vertex id
         String formatId = String.valueOf(id);
-
         if (policy == null) {
             if (vidType == VidTypeEnum.STRING) {
                 formatId = NebulaUtils.mkString(NebulaUtils.escapeUtil(String.valueOf(formatId)),
@@ -75,12 +78,10 @@ public class NebulaRowVertexOutputFormatConverter implements NebulaOutputFormatC
             } else {
                 assert (NebulaUtils.isNumeric(formatId));
             }
-            return String.format(NebulaConstant.VERTEX_VALUE_TEMPLATE, formatId,
-                    String.join(",", vertexProps));
         } else {
             assert (vidType == VidTypeEnum.INT);
-            return String.format(NebulaConstant.VERTEX_VALUE_TEMPLATE_WITH_POLICY,
-                    policy.policy(), formatId, String.join(",", vertexProps));
         }
+        NebulaVertex vertex = new NebulaVertex(formatId, vertexProps);
+        return vertex;
     }
 }

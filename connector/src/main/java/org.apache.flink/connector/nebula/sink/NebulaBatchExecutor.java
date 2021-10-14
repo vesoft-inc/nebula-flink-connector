@@ -17,20 +17,15 @@ import org.apache.flink.connector.nebula.utils.VidTypeEnum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class NebulaBatchExecutor<T> {
-    private static final Logger LOG = LoggerFactory.getLogger(NebulaBatchExecutor.class);
+public abstract class NebulaBatchExecutor<T> {
 
-    private final ExecutionOptions executionOptions;
-    private final NebulaBufferedRow nebulaBufferedRow;
-    private final boolean isVertex;
-    private final Map<String, Integer> schema;
-    private final VidTypeEnum vidType;
+    protected final ExecutionOptions executionOptions;
+    protected final Map<String, Integer> schema;
+    protected final VidTypeEnum vidType;
 
-    public NebulaBatchExecutor(ExecutionOptions executionOptions, boolean isVertex,
+    public NebulaBatchExecutor(ExecutionOptions executionOptions,
                                VidTypeEnum vidType, Map<String, Integer> schema) {
         this.executionOptions = executionOptions;
-        this.nebulaBufferedRow = new NebulaBufferedRow();
-        this.isVertex = isVertex;
         this.vidType = vidType;
         this.schema = schema;
     }
@@ -40,50 +35,12 @@ public class NebulaBatchExecutor<T> {
      *
      * @param record represent vertex or edge
      */
-    void addToBatch(T record) {
-        NebulaOutputFormatConverter converter;
-        if (isVertex) {
-            converter = new NebulaRowVertexOutputFormatConverter(
-                    (VertexExecutionOptions) executionOptions, vidType, schema);
-        } else {
-            converter = new NebulaRowEdgeOutputFormatConverter(
-                    (EdgeExecutionOptions) executionOptions, vidType, schema);
-        }
-        String value = converter.createValue(record, executionOptions.getPolicy());
-        if (value == null) {
-            return;
-        }
-        nebulaBufferedRow.putRow(value);
-    }
+    abstract void addToBatch(T record);
 
     /**
      * execute the insert statement
      *
      * @param session graph session
      */
-    String executeBatch(Session session) {
-        String propNames = String.join(NebulaConstant.COMMA, executionOptions.getFields());
-        String values = String.join(NebulaConstant.COMMA, nebulaBufferedRow.getRows());
-        String exec = String.format(NebulaConstant.BATCH_INSERT_TEMPLATE,
-                executionOptions.getDataType(), executionOptions.getLabel(), propNames, values);
-        LOG.info("insert statement={}", exec);
-        ResultSet execResult = null;
-        try {
-            execResult = session.execute(exec);
-        } catch (Exception e) {
-            LOG.error("insert error:", e);
-            nebulaBufferedRow.clean();
-            return exec;
-        }
-
-        if (execResult.isSucceeded()) {
-            LOG.debug("insert success");
-        } else {
-            LOG.error("insert failed: {}", execResult.getErrorMessage());
-            nebulaBufferedRow.clean();
-            return exec;
-        }
-        nebulaBufferedRow.clean();
-        return null;
-    }
+    abstract String executeBatch(Session session);
 }

@@ -9,6 +9,7 @@ package org.apache.flink.connector.nebula.sink;
 import com.facebook.thrift.TException;
 import com.vesoft.nebula.client.graph.data.ResultSet;
 import com.vesoft.nebula.client.graph.exception.AuthFailedException;
+import com.vesoft.nebula.client.graph.exception.ClientServerIncompatibleException;
 import com.vesoft.nebula.client.graph.exception.IOErrorException;
 import com.vesoft.nebula.client.graph.exception.NotValidConnectionException;
 import com.vesoft.nebula.client.graph.net.Session;
@@ -58,7 +59,8 @@ public class NebulaBatchOutputFormat<T> extends RichOutputFormat<T> implements F
     public void open(int i, int i1) throws IOException {
         try {
             session = graphProvider.getSession();
-        } catch (NotValidConnectionException | IOErrorException | AuthFailedException e) {
+        } catch (NotValidConnectionException | IOErrorException
+                | AuthFailedException | ClientServerIncompatibleException e) {
             LOG.error("failed to get graph session, ", e);
             throw new IOException("get graph session error, ", e);
         }
@@ -76,7 +78,7 @@ public class NebulaBatchOutputFormat<T> extends RichOutputFormat<T> implements F
 
         try {
             metaClient = metaProvider.getMetaClient();
-        } catch (TException e) {
+        } catch (TException | ClientServerIncompatibleException e) {
             LOG.error("failed to get meta client, ", e);
             throw new IOException("get metaClient error, ", e);
         }

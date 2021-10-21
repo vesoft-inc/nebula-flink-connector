@@ -8,6 +8,7 @@ package org.apache.flink.connector.nebula.catalog;
 
 import com.facebook.thrift.TException;
 import com.vesoft.nebula.client.graph.data.HostAddress;
+import com.vesoft.nebula.client.graph.exception.ClientServerIncompatibleException;
 import com.vesoft.nebula.client.meta.MetaClient;
 import java.util.Collections;
 import java.util.List;
@@ -61,7 +62,7 @@ public abstract class AbstractNebulaCatalog extends AbstractCatalog {
         try {
             metaClient.connect();
             metaClient.close();
-        } catch (TException e) {
+        } catch (TException | ClientServerIncompatibleException e) {
             throw new ValidationException(String.format("Failed connecting to meta service via "
                     + "%s, ", address), e);
         }

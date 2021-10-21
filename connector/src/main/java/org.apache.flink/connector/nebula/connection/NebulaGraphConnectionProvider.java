@@ -10,6 +10,7 @@ package org.apache.flink.connector.nebula.connection;
 import com.vesoft.nebula.client.graph.NebulaPoolConfig;
 import com.vesoft.nebula.client.graph.data.HostAddress;
 import com.vesoft.nebula.client.graph.exception.AuthFailedException;
+import com.vesoft.nebula.client.graph.exception.ClientServerIncompatibleException;
 import com.vesoft.nebula.client.graph.exception.IOErrorException;
 import com.vesoft.nebula.client.graph.exception.NotValidConnectionException;
 import com.vesoft.nebula.client.graph.net.NebulaPool;
@@ -37,7 +38,7 @@ public class NebulaGraphConnectionProvider implements Serializable {
      * get Session to execute query statement
      */
     public Session getSession() throws NotValidConnectionException, IOErrorException,
-            AuthFailedException {
+            AuthFailedException, ClientServerIncompatibleException {
         NebulaPool nebulaPool = new NebulaPool();
         List<HostAddress> addresses = new ArrayList<>();
         for (String address : nebulaClientOptions.getGraphAddress().split(NebulaConstant.COMMA)) {

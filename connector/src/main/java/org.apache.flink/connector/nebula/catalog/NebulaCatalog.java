@@ -16,6 +16,7 @@ import static org.apache.flink.table.factories.FactoryUtil.CONNECTOR;
 
 import com.facebook.thrift.TException;
 import com.vesoft.nebula.client.graph.data.HostAddress;
+import com.vesoft.nebula.client.graph.exception.ClientServerIncompatibleException;
 import com.vesoft.nebula.client.meta.MetaClient;
 import com.vesoft.nebula.client.meta.exception.ExecuteFailedException;
 import com.vesoft.nebula.meta.ColumnDef;
@@ -68,7 +69,7 @@ public class NebulaCatalog extends AbstractNebulaCatalog {
             for (IdName space : spaces) {
                 spaceNames.add(new String(space.getName()));
             }
-        } catch (TException | ExecuteFailedException e) {
+        } catch (TException | ExecuteFailedException | ClientServerIncompatibleException e) {
             LOG.error("failed to connect meta service vis {} ", address, e);
             throw new CatalogException("nebula meta service connect failed.", e);
         }
@@ -125,7 +126,7 @@ public class NebulaCatalog extends AbstractNebulaCatalog {
 
         try {
             metaClient.connect();
-        } catch (TException e) {
+        } catch (TException | ClientServerIncompatibleException e) {
             LOG.error("failed to connect meta service vis {} ", address, e);
             throw new CatalogException("nebula meta service connect failed.", e);
         }
@@ -161,7 +162,7 @@ public class NebulaCatalog extends AbstractNebulaCatalog {
 
         try {
             metaClient.connect();
-        } catch (TException e) {
+        } catch (TException | ClientServerIncompatibleException e) {
             LOG.error("failed to connect meta service vis {} ", address, e);
             throw new CatalogException("nebula meta service connect failed.", e);
         }

@@ -8,6 +8,7 @@ package org.apache.flink.connector.nebula.connection;
 
 import com.facebook.thrift.TException;
 import com.vesoft.nebula.client.graph.data.HostAddress;
+import com.vesoft.nebula.client.graph.exception.ClientServerIncompatibleException;
 import com.vesoft.nebula.client.meta.MetaClient;
 import com.vesoft.nebula.client.meta.exception.ExecuteFailedException;
 import com.vesoft.nebula.meta.ColumnDef;
@@ -34,7 +35,7 @@ public class NebulaMetaConnectionProvider implements Serializable {
         this.nebulaClientOptions = nebulaClientOptions;
     }
 
-    public MetaClient getMetaClient() throws TException {
+    public MetaClient getMetaClient() throws TException, ClientServerIncompatibleException {
         List<HostAddress> addresses = nebulaClientOptions.getMetaAddress();
         MetaClient metaClient = new MetaClient(addresses);
         metaClient.connect();

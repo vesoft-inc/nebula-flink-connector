@@ -54,6 +54,11 @@ public class NebulaRowConverter implements NebulaConverter<Row> {
             }
             if (valueWrapper.isDateTime()) {
                 record.setField(pos, valueWrapper.asDateTime());
+                continue;
+            }
+            if(valueWrapper.isGeography()){
+                record.setField(pos, valueWrapper.asGeography());
+                continue;
             }
         }
         return record;

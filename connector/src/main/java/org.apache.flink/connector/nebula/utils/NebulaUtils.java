@@ -65,9 +65,10 @@ public class NebulaUtils {
                     return "timestamp(\"" + value + "\")";
                 }
             }
+            case GEOGRAPHY:
+                return "ST_GeogFromText(\"" + value + "\")";
             default: {
                 return String.valueOf(value);
-
             }
 
         }

@@ -48,6 +48,14 @@ public class NebulaUtilsTest extends TestCase {
                 PropertyType.DATE.getValue())));
         assert ("time(\"12:12:12\")".equals(NebulaUtils.extraValue("12:12:12",
                 PropertyType.TIME.getValue())));
+        assert ("ST_GeogFromText(\"POINT(1 3)\")".equals(NebulaUtils.extraValue("POINT(1 3)",
+                PropertyType.GEOGRAPHY.getValue())));
+        assert ("ST_GeogFromText(\"LINESTRING(1 2, 3 4)\")".equals(NebulaUtils.extraValue(
+                "LINESTRING(1 2, 3 4)",
+                PropertyType.GEOGRAPHY.getValue())));
+        assert ("ST_GeogFromText(\"POLYGON((0 1, 1 2, 2 3, 0 1))\")"
+                .equals(NebulaUtils.extraValue("POLYGON((0 1, 1 2, 2 3, 0 1))",
+                        PropertyType.GEOGRAPHY.getValue())));
     }
 
     public void testMkString() {

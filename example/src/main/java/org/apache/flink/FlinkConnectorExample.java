@@ -82,9 +82,9 @@ public class FlinkConnectorExample {
                         .setMetaAddress("127.0.0.1:9559")
                         .setEnableMetaSsl(true)
                         .setSslSignType(SslSighType.CA)
-                        .setCaSignParam("src/main/resources/ssl/casigned.pem",
-                                "src/main/resources/ssl/casigned.crt",
-                                "src/main/resources/ssl/casigned.key")
+                        .setCaSignParam("example/src/main/resources/ssl/casigned.pem",
+                                "example/src/main/resources/ssl/casigned.crt",
+                                "example/src/main/resources/ssl/casigned.key")
                         .build();
 
         // enable ssl for graph with Self ssl sign
@@ -94,8 +94,8 @@ public class FlinkConnectorExample {
                         .setMetaAddress("127.0.0.1:9559")
                         .setEnableMetaSsl(true)
                         .setSslSignType(SslSighType.SELF)
-                        .setSelfSignParam("src/main/resources/ssl/selfsigned.pem",
-                                "src/main/resources/ssl/selfsigned.key",
+                        .setSelfSignParam("example/src/main/resources/ssl/selfsigned.pem",
+                                "example/src/main/resources/ssl/selfsigned.key",
                                 "vesoft")
                         .build();
         return nebulaClientOptions;

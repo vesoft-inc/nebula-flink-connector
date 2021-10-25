@@ -17,6 +17,7 @@ import org.apache.flink.connector.nebula.sink.NebulaSinkFunction;
 import org.apache.flink.connector.nebula.statement.EdgeExecutionOptions;
 import org.apache.flink.connector.nebula.statement.ExecutionOptions;
 import org.apache.flink.connector.nebula.statement.VertexExecutionOptions;
+import org.apache.flink.connector.nebula.utils.SslSighType;
 import org.apache.flink.connector.nebula.utils.WriteModeEnum;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -66,16 +67,46 @@ public class FlinkConnectorExample {
         return playerSource;
     }
 
-    /**
-     * sink Nebula Graph with default INSERT mode
-     */
-    public static void sinkVertexData(StreamExecutionEnvironment env,
-                                      DataStream<List<String>> playerSource) {
+    private static NebulaClientOptions getClientOptions() {
+        // not enable ssl for graph
         NebulaClientOptions nebulaClientOptions =
                 new NebulaClientOptions.NebulaClientOptionsBuilder()
                         .setGraphAddress("127.0.0.1:9669")
                         .setMetaAddress("127.0.0.1:9559")
                         .build();
+
+        // enable ssl for graph with CA ssl sign
+        NebulaClientOptions nebulaClientOptionsWithCaSsl =
+                new NebulaClientOptions.NebulaClientOptionsBuilder()
+                        .setGraphAddress("127.0.0.1:9669")
+                        .setMetaAddress("127.0.0.1:9559")
+                        .setEnableMetaSsl(true)
+                        .setSslSignType(SslSighType.CA)
+                        .setCaSignParam("src/main/resources/ssl/casigned.pem",
+                                "src/main/resources/ssl/casigned.crt",
+                                "src/main/resources/ssl/casigned.key")
+                        .build();
+
+        // enable ssl for graph with Self ssl sign
+        NebulaClientOptions nebulaClientOptionsWithSelfSsl =
+                new NebulaClientOptions.NebulaClientOptionsBuilder()
+                        .setGraphAddress("127.0.0.1:9669")
+                        .setMetaAddress("127.0.0.1:9559")
+                        .setEnableMetaSsl(true)
+                        .setSslSignType(SslSighType.SELF)
+                        .setSelfSignParam("src/main/resources/ssl/selfsigned.pem",
+                                "src/main/resources/ssl/selfsigned.key",
+                                "vesoft")
+                        .build();
+        return nebulaClientOptions;
+    }
+
+    /**
+     * sink Nebula Graph with default INSERT mode
+     */
+    public static void sinkVertexData(StreamExecutionEnvironment env,
+                                      DataStream<List<String>> playerSource) {
+        NebulaClientOptions nebulaClientOptions = getClientOptions();
         NebulaGraphConnectionProvider graphConnectionProvider =
                 new NebulaGraphConnectionProvider(nebulaClientOptions);
         NebulaMetaConnectionProvider metaConnectionProvider =
@@ -115,11 +146,7 @@ public class FlinkConnectorExample {
      */
     public static void updateVertexData(StreamExecutionEnvironment env,
                                         DataStream<List<String>> playerSource) {
-        NebulaClientOptions nebulaClientOptions =
-                new NebulaClientOptions.NebulaClientOptionsBuilder()
-                        .setGraphAddress("127.0.0.1:9669")
-                        .setMetaAddress("127.0.0.1:9559")
-                        .build();
+        NebulaClientOptions nebulaClientOptions = getClientOptions();
         NebulaGraphConnectionProvider graphConnectionProvider =
                 new NebulaGraphConnectionProvider(nebulaClientOptions);
         NebulaMetaConnectionProvider metaConnectionProvider =
@@ -160,11 +187,7 @@ public class FlinkConnectorExample {
      */
     public static void deleteVertexData(StreamExecutionEnvironment env,
                                         DataStream<List<String>> playerSource) {
-        NebulaClientOptions nebulaClientOptions =
-                new NebulaClientOptions.NebulaClientOptionsBuilder()
-                        .setGraphAddress("127.0.0.1:9669")
-                        .setMetaAddress("127.0.0.1:9559")
-                        .build();
+        NebulaClientOptions nebulaClientOptions = getClientOptions();
         NebulaGraphConnectionProvider graphConnectionProvider =
                 new NebulaGraphConnectionProvider(nebulaClientOptions);
         NebulaMetaConnectionProvider metaConnectionProvider =
@@ -227,11 +250,7 @@ public class FlinkConnectorExample {
      */
     public static void sinkEdgeData(StreamExecutionEnvironment env,
                                     DataStream<List<String>> playerSource) {
-        NebulaClientOptions nebulaClientOptions =
-                new NebulaClientOptions.NebulaClientOptionsBuilder()
-                        .setGraphAddress("127.0.0.1:9669")
-                        .setMetaAddress("127.0.0.1:9559")
-                        .build();
+        NebulaClientOptions nebulaClientOptions = getClientOptions();
         NebulaGraphConnectionProvider graphConnectionProvider =
                 new NebulaGraphConnectionProvider(nebulaClientOptions);
         NebulaMetaConnectionProvider metaConnectionProvider =

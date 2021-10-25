@@ -20,6 +20,7 @@ import org.apache.flink.connector.nebula.source.NebulaSourceFunction;
 import org.apache.flink.connector.nebula.statement.EdgeExecutionOptions;
 import org.apache.flink.connector.nebula.statement.ExecutionOptions;
 import org.apache.flink.connector.nebula.statement.VertexExecutionOptions;
+import org.apache.flink.connector.nebula.utils.SslSighType;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.types.Row;
@@ -53,7 +54,7 @@ public class FlinkConnectorSourceExample {
     public static void initConfig() {
         NebulaClientOptions nebulaClientOptions =
                 new NebulaClientOptions.NebulaClientOptionsBuilder()
-                        .setMetaAddress("127.0.0.1:45500")
+                        .setMetaAddress("127.0.0.1:9559")
                         .build();
         storageConnectionProvider =
                 new NebulaStorageConnectionProvider(nebulaClientOptions);
@@ -145,7 +146,7 @@ public class FlinkConnectorSourceExample {
         // get Nebula vertex data in nebula TableRow format
         NebulaInputTableRowFormat inputFormat =
                 new NebulaInputTableRowFormat(storageConnectionProvider,
-                vertexExecutionOptions);
+                        vertexExecutionOptions);
         DataSource<BaseTableRow> dataSource = env.createInput(inputFormat);
         dataSource.print();
         System.out.println("datasource count: " + dataSource.count());
@@ -168,7 +169,7 @@ public class FlinkConnectorSourceExample {
         // get Nebula edge data in Nebula TableRow format
         NebulaInputTableRowFormat inputTableFormat =
                 new NebulaInputTableRowFormat(storageConnectionProvider,
-                edgeExecutionOptions);
+                        edgeExecutionOptions);
         DataSource<BaseTableRow> dataSourceTableRow = env.createInput(inputTableFormat);
         dataSourceTableRow.print();
         System.out.println("datasource count: " + dataSourceTableRow.count());

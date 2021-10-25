@@ -47,7 +47,22 @@ public class NebulaGraphConnectionProvider implements Serializable {
         }
 
         try {
-            nebulaPool.init(addresses, new NebulaPoolConfig());
+            NebulaPoolConfig poolConfig = new NebulaPoolConfig();
+            poolConfig.setTimeout(nebulaClientOptions.getTimeout());
+            if (nebulaClientOptions.isEnableGraphSsl()) {
+                poolConfig.setEnableSsl(true);
+                switch (nebulaClientOptions.getSslSighType()) {
+                    case CA:
+                        poolConfig.setSslParam(nebulaClientOptions.getCaSignParam());
+                        break;
+                    case SELF:
+                        poolConfig.setSslParam(nebulaClientOptions.getSelfSignParam());
+                        break;
+                    default:
+                        throw new IllegalArgumentException("ssl sign type is not supported.");
+                }
+            }
+            nebulaPool.init(addresses, poolConfig);
         } catch (UnknownHostException e) {
             LOG.error("NebulaPool init error, ", e);
         }

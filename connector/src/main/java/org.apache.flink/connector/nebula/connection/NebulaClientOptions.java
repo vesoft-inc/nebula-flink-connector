@@ -6,11 +6,14 @@
 
 package org.apache.flink.connector.nebula.connection;
 
+import com.vesoft.nebula.client.graph.data.CASignedSSLParam;
 import com.vesoft.nebula.client.graph.data.HostAddress;
+import com.vesoft.nebula.client.graph.data.SelfSignedSSLParam;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.flink.connector.nebula.utils.NebulaConstant;
+import org.apache.flink.connector.nebula.utils.SslSighType;
 
 public class NebulaClientOptions implements Serializable {
 
@@ -28,14 +31,33 @@ public class NebulaClientOptions implements Serializable {
 
     private final int connectRetry;
 
+    private final boolean enableGraphSsl;
+
+    private final boolean enableMetaSsl;
+
+    private final SslSighType sslSighType;
+
+    private final CASignedSSLParam caSignParam;
+
+    private final SelfSignedSSLParam selfSignParam;
+
+
     private NebulaClientOptions(String metaAddress, String graphAddress, String username,
-                                String password, int timeout, int connectRetry) {
+                                String password, int timeout, int connectRetry,
+                                boolean enableGraphSsl, boolean enableMetaSsl,
+                                SslSighType sslSighType, CASignedSSLParam caSignParam,
+                                SelfSignedSSLParam selfSignParam) {
         this.metaAddress = metaAddress;
         this.graphAddress = graphAddress;
         this.username = username;
         this.password = password;
         this.timeout = timeout;
         this.connectRetry = connectRetry;
+        this.enableGraphSsl = enableGraphSsl;
+        this.enableMetaSsl = enableMetaSsl;
+        this.sslSighType = sslSighType;
+        this.caSignParam = caSignParam;
+        this.selfSignParam = selfSignParam;
     }
 
     public List<HostAddress> getMetaAddress() {
@@ -67,6 +89,26 @@ public class NebulaClientOptions implements Serializable {
         return connectRetry;
     }
 
+    public boolean isEnableGraphSsl() {
+        return enableGraphSsl;
+    }
+
+    public boolean isEnableMetaSsl() {
+        return enableMetaSsl;
+    }
+
+    public SslSighType getSslSighType() {
+        return sslSighType;
+    }
+
+    public CASignedSSLParam getCaSignParam() {
+        return caSignParam;
+    }
+
+    public SelfSignedSSLParam getSelfSignParam() {
+        return selfSignParam;
+    }
+
     /**
      * Builder for {@link NebulaClientOptions}
      */
@@ -77,6 +119,13 @@ public class NebulaClientOptions implements Serializable {
         private String password = "nebula";
         private int timeout = 6000;
         private int connectRetry = 1;
+
+        // ssl options
+        private boolean enableGraphSsl = false;
+        private boolean enableMetaSsl = false;
+        private SslSighType sslSighType = null;
+        private CASignedSSLParam caSignParam = null;
+        private SelfSignedSSLParam selfSignParam = null;
 
         public NebulaClientOptionsBuilder setMetaAddress(String metaAddress) {
             this.metaAddress = metaAddress;
@@ -108,9 +157,62 @@ public class NebulaClientOptions implements Serializable {
             return this;
         }
 
+        public NebulaClientOptionsBuilder setEnableGraphSsl(boolean enableGraphSsl) {
+            this.enableGraphSsl = enableGraphSsl;
+            return this;
+        }
+
+        public NebulaClientOptionsBuilder setEnableMetaSsl(boolean enableMetaSsl) {
+            this.enableMetaSsl = enableMetaSsl;
+            return this;
+        }
+
+        public NebulaClientOptionsBuilder setSslSignType(SslSighType sslSighType) {
+            this.sslSighType = sslSighType;
+            return this;
+        }
+
+        public NebulaClientOptionsBuilder setCaSignParam(String caCrtFilePath, String crtFilePath,
+                                                         String keyFilePath) {
+            this.caSignParam = new CASignedSSLParam(caCrtFilePath, crtFilePath,
+                    keyFilePath);
+            return this;
+        }
+
+        public NebulaClientOptionsBuilder setSelfSignParam(String crtFilePath, String keyFilePath,
+                                                           String password) {
+            this.selfSignParam = new SelfSignedSSLParam(crtFilePath, keyFilePath, password);
+            return this;
+        }
+
         public NebulaClientOptions build() {
             if (metaAddress == null || metaAddress.trim().isEmpty()) {
                 throw new IllegalArgumentException("meta address can not be empty.");
+            }
+            if (enableMetaSsl || enableGraphSsl) {
+                // if meta is set to open ssl, then graph must be set to open ssl
+                enableGraphSsl = true;
+                if (sslSighType == null) {
+                    throw new IllegalArgumentException("ssl is enable, ssl sign type must not be "
+                            + "null");
+                }
+                switch (sslSighType) {
+                    case CA:
+                        if (caSignParam == null) {
+                            throw new IllegalArgumentException("ssl is enable and sign type is "
+                                    + "CA, caSignParam must not be null");
+                        }
+                        break;
+                    case SELF:
+                        if (selfSignParam == null) {
+                            throw new IllegalArgumentException("ssl is enable and sign type is "
+                                    + "CA, selfSignParam must not be null");
+                        }
+                        break;
+                    default:
+                        throw new IllegalArgumentException("ssl sign type is not supported.");
+                }
+
             }
 
             return new NebulaClientOptions(
@@ -119,7 +221,12 @@ public class NebulaClientOptions implements Serializable {
                     username,
                     password,
                     timeout,
-                    connectRetry);
+                    connectRetry,
+                    enableGraphSsl,
+                    enableMetaSsl,
+                    sslSighType,
+                    caSignParam,
+                    selfSignParam);
         }
     }
 }

@@ -6,7 +6,7 @@
 
 package org.apache.flink.connector.nebula.utils;
 
-public enum SslSighType {
+public enum SSLSighType {
     /**
      * CA sign
      */
@@ -19,7 +19,7 @@ public enum SslSighType {
 
     private String type;
 
-    SslSighType(String type) {
+    SSLSighType(String type) {
         this.type = type;
     }
 }

@@ -13,7 +13,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.flink.connector.nebula.utils.NebulaConstant;
-import org.apache.flink.connector.nebula.utils.SslSighType;
+import org.apache.flink.connector.nebula.utils.SSLSighType;
 
 public class NebulaClientOptions implements Serializable {
 
@@ -31,11 +31,11 @@ public class NebulaClientOptions implements Serializable {
 
     private final int connectRetry;
 
-    private final boolean enableGraphSsl;
+    private final boolean enableGraphSSL;
 
-    private final boolean enableMetaSsl;
+    private final boolean enableMetaSSL;
 
-    private final SslSighType sslSighType;
+    private final SSLSighType sslSighType;
 
     private final CASignedSSLParam caSignParam;
 
@@ -44,8 +44,8 @@ public class NebulaClientOptions implements Serializable {
 
     private NebulaClientOptions(String metaAddress, String graphAddress, String username,
                                 String password, int timeout, int connectRetry,
-                                boolean enableGraphSsl, boolean enableMetaSsl,
-                                SslSighType sslSighType, CASignedSSLParam caSignParam,
+                                boolean enableGraphSSL, boolean enableMetaSSL,
+                                SSLSighType sslSighType, CASignedSSLParam caSignParam,
                                 SelfSignedSSLParam selfSignParam) {
         this.metaAddress = metaAddress;
         this.graphAddress = graphAddress;
@@ -53,8 +53,8 @@ public class NebulaClientOptions implements Serializable {
         this.password = password;
         this.timeout = timeout;
         this.connectRetry = connectRetry;
-        this.enableGraphSsl = enableGraphSsl;
-        this.enableMetaSsl = enableMetaSsl;
+        this.enableGraphSSL = enableGraphSSL;
+        this.enableMetaSSL = enableMetaSSL;
         this.sslSighType = sslSighType;
         this.caSignParam = caSignParam;
         this.selfSignParam = selfSignParam;
@@ -89,15 +89,15 @@ public class NebulaClientOptions implements Serializable {
         return connectRetry;
     }
 
-    public boolean isEnableGraphSsl() {
-        return enableGraphSsl;
+    public boolean isEnableGraphSSL() {
+        return enableGraphSSL;
     }
 
-    public boolean isEnableMetaSsl() {
-        return enableMetaSsl;
+    public boolean isEnableMetaSSL() {
+        return enableMetaSSL;
     }
 
-    public SslSighType getSslSighType() {
+    public SSLSighType getSSLSighType() {
         return sslSighType;
     }
 
@@ -121,9 +121,9 @@ public class NebulaClientOptions implements Serializable {
         private int connectRetry = 1;
 
         // ssl options
-        private boolean enableGraphSsl = false;
-        private boolean enableMetaSsl = false;
-        private SslSighType sslSighType = null;
+        private boolean enableGraphSSL = false;
+        private boolean enableMetaSSL = false;
+        private SSLSighType sslSighType = null;
         private CASignedSSLParam caSignParam = null;
         private SelfSignedSSLParam selfSignParam = null;
 
@@ -157,17 +157,17 @@ public class NebulaClientOptions implements Serializable {
             return this;
         }
 
-        public NebulaClientOptionsBuilder setEnableGraphSsl(boolean enableGraphSsl) {
-            this.enableGraphSsl = enableGraphSsl;
+        public NebulaClientOptionsBuilder setEnableGraphSSL(boolean enableGraphSSL) {
+            this.enableGraphSSL = enableGraphSSL;
             return this;
         }
 
-        public NebulaClientOptionsBuilder setEnableMetaSsl(boolean enableMetaSsl) {
-            this.enableMetaSsl = enableMetaSsl;
+        public NebulaClientOptionsBuilder setEnableMetaSSL(boolean enableMetaSSL) {
+            this.enableMetaSSL = enableMetaSSL;
             return this;
         }
 
-        public NebulaClientOptionsBuilder setSslSignType(SslSighType sslSighType) {
+        public NebulaClientOptionsBuilder setSSLSignType(SSLSighType sslSighType) {
             this.sslSighType = sslSighType;
             return this;
         }
@@ -189,9 +189,12 @@ public class NebulaClientOptions implements Serializable {
             if (metaAddress == null || metaAddress.trim().isEmpty()) {
                 throw new IllegalArgumentException("meta address can not be empty.");
             }
-            if (enableMetaSsl || enableGraphSsl) {
+            if (enableMetaSSL || enableGraphSSL) {
                 // if meta is set to open ssl, then graph must be set to open ssl
-                enableGraphSsl = true;
+                if (enableMetaSSL && !enableGraphSSL) {
+                    throw new IllegalArgumentException(
+                            "meta ssl is enable, graph ssl must be enable");
+                }
                 if (sslSighType == null) {
                     throw new IllegalArgumentException("ssl is enable, ssl sign type must not be "
                             + "null");
@@ -222,8 +225,8 @@ public class NebulaClientOptions implements Serializable {
                     password,
                     timeout,
                     connectRetry,
-                    enableGraphSsl,
-                    enableMetaSsl,
+                    enableGraphSSL,
+                    enableMetaSSL,
                     sslSighType,
                     caSignParam,
                     selfSignParam);

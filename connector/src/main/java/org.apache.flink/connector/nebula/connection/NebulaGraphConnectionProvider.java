@@ -29,17 +29,10 @@ public class NebulaGraphConnectionProvider implements Serializable {
     private static final long serialVersionUID = 8392002706492085208L;
 
     private final NebulaClientOptions nebulaClientOptions;
+    private final NebulaPool nebulaPool = new NebulaPool();
 
     public NebulaGraphConnectionProvider(NebulaClientOptions nebulaClientOptions) {
         this.nebulaClientOptions = nebulaClientOptions;
-    }
-
-    /**
-     * get Session to execute query statement
-     */
-    public Session getSession() throws NotValidConnectionException, IOErrorException,
-            AuthFailedException, ClientServerIncompatibleException {
-        NebulaPool nebulaPool = new NebulaPool();
         List<HostAddress> addresses = new ArrayList<>();
         for (String address : nebulaClientOptions.getGraphAddress().split(NebulaConstant.COMMA)) {
             String[] hostAndPort = address.split(NebulaConstant.COLON);
@@ -49,9 +42,9 @@ public class NebulaGraphConnectionProvider implements Serializable {
         try {
             NebulaPoolConfig poolConfig = new NebulaPoolConfig();
             poolConfig.setTimeout(nebulaClientOptions.getTimeout());
-            if (nebulaClientOptions.isEnableGraphSsl()) {
+            if (nebulaClientOptions.isEnableGraphSSL()) {
                 poolConfig.setEnableSsl(true);
-                switch (nebulaClientOptions.getSslSighType()) {
+                switch (nebulaClientOptions.getSSLSighType()) {
                     case CA:
                         poolConfig.setSslParam(nebulaClientOptions.getCaSignParam());
                         break;
@@ -66,9 +59,23 @@ public class NebulaGraphConnectionProvider implements Serializable {
         } catch (UnknownHostException e) {
             LOG.error("NebulaPool init error, ", e);
         }
+    }
+
+    /**
+     * get Session to execute query statement
+     */
+    public Session getSession() throws NotValidConnectionException, IOErrorException,
+            AuthFailedException, ClientServerIncompatibleException {
         return nebulaPool.getSession(
                 nebulaClientOptions.getUsername(),
                 nebulaClientOptions.getPassword(),
                 true);
+    }
+
+    /**
+     * close nebula pool
+     */
+    public void close() {
+        nebulaPool.close();
     }
 }

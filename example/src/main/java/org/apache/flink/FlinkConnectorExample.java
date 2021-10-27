@@ -17,7 +17,7 @@ import org.apache.flink.connector.nebula.sink.NebulaSinkFunction;
 import org.apache.flink.connector.nebula.statement.EdgeExecutionOptions;
 import org.apache.flink.connector.nebula.statement.ExecutionOptions;
 import org.apache.flink.connector.nebula.statement.VertexExecutionOptions;
-import org.apache.flink.connector.nebula.utils.SslSighType;
+import org.apache.flink.connector.nebula.utils.SSLSighType;
 import org.apache.flink.connector.nebula.utils.WriteModeEnum;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -80,8 +80,8 @@ public class FlinkConnectorExample {
                 new NebulaClientOptions.NebulaClientOptionsBuilder()
                         .setGraphAddress("127.0.0.1:9669")
                         .setMetaAddress("127.0.0.1:9559")
-                        .setEnableMetaSsl(true)
-                        .setSslSignType(SslSighType.CA)
+                        .setEnableGraphSSL(true)
+                        .setSSLSignType(SSLSighType.CA)
                         .setCaSignParam("example/src/main/resources/ssl/casigned.pem",
                                 "example/src/main/resources/ssl/casigned.crt",
                                 "example/src/main/resources/ssl/casigned.key")
@@ -92,8 +92,8 @@ public class FlinkConnectorExample {
                 new NebulaClientOptions.NebulaClientOptionsBuilder()
                         .setGraphAddress("127.0.0.1:9669")
                         .setMetaAddress("127.0.0.1:9559")
-                        .setEnableMetaSsl(true)
-                        .setSslSignType(SslSighType.SELF)
+                        .setEnableGraphSSL(true)
+                        .setSSLSignType(SSLSighType.SELF)
                         .setSelfSignParam("example/src/main/resources/ssl/selfsigned.pem",
                                 "example/src/main/resources/ssl/selfsigned.key",
                                 "vesoft")

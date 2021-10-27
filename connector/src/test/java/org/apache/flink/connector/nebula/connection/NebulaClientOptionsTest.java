@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 /* Copyright (c) 2021 vesoft inc. All rights reserved.
  *
  * This source code is licensed under Apache 2.0 License,
@@ -7,12 +7,7 @@
 
 package org.apache.flink.connector.nebula.connection;
 
-=======
-package org.apache.flink.connector.nebula.connection;
-
-
->>>>>>> add test
-import org.apache.flink.connector.nebula.utils.SslSighType;
+import org.apache.flink.connector.nebula.utils.SSLSighType;
 import org.junit.Test;
 
 public class NebulaClientOptionsTest {
@@ -26,9 +21,9 @@ public class NebulaClientOptionsTest {
                         .setPassword("nebula")
                         .setConnectRetry(1)
                         .setTimeout(1000)
-                        .setEnableGraphSsl(true)
-                        .setEnableMetaSsl(true)
-                        .setSslSignType(SslSighType.CA)
+                        .setEnableGraphSSL(true)
+                        .setEnableMetaSSL(true)
+                        .setSSLSignType(SSLSighType.CA)
                         .setCaSignParam("caCrtFile", "crtFile", "keyFile")
                         .setSelfSignParam("crtFile", "keyFile", "password")
                         .build();
@@ -57,12 +52,12 @@ public class NebulaClientOptionsTest {
                 .NebulaClientOptionsBuilder()
                 .setGraphAddress(null)
                 .setMetaAddress("127.0.0.1:9559")
-                .setEnableGraphSsl(false)
-                .setEnableMetaSsl(true)
-                .setSslSignType(SslSighType.CA)
+                .setEnableGraphSSL(false)
+                .setEnableMetaSSL(true)
+                .setSSLSignType(SSLSighType.CA)
                 .setCaSignParam("caCrtFile", "crtFile", "keyFile")
                 .build();
-        assert (nebulaClientOptions.isEnableGraphSsl());
+        assert (!nebulaClientOptions.isEnableGraphSSL());
     }
 
 
@@ -72,9 +67,9 @@ public class NebulaClientOptionsTest {
                 .NebulaClientOptionsBuilder()
                 .setGraphAddress(null)
                 .setMetaAddress("127.0.0.1:9559")
-                .setEnableGraphSsl(false)
-                .setEnableMetaSsl(true)
-                .setSslSignType(null)
+                .setEnableGraphSSL(false)
+                .setEnableMetaSSL(true)
+                .setSSLSignType(null)
                 .setCaSignParam("caCrtFile", "crtFile", "keyFile")
                 .build();
     }
@@ -85,8 +80,8 @@ public class NebulaClientOptionsTest {
                 .NebulaClientOptionsBuilder()
                 .setGraphAddress(null)
                 .setMetaAddress("127.0.0.1:9559")
-                .setEnableGraphSsl(false)
-                .setEnableMetaSsl(true)
+                .setEnableGraphSSL(false)
+                .setEnableMetaSSL(true)
                 .setCaSignParam("caCrtFile", "crtFile", "keyFile")
                 .build();
     }
@@ -97,9 +92,9 @@ public class NebulaClientOptionsTest {
                 .NebulaClientOptionsBuilder()
                 .setGraphAddress(null)
                 .setMetaAddress("127.0.0.1:9559")
-                .setEnableGraphSsl(false)
-                .setEnableMetaSsl(true)
-                .setSslSignType(SslSighType.CA)
+                .setEnableGraphSSL(false)
+                .setEnableMetaSSL(true)
+                .setSSLSignType(SSLSighType.CA)
                 .setSelfSignParam("crtFile", "keyFile", "password")
                 .build();
 
@@ -111,9 +106,9 @@ public class NebulaClientOptionsTest {
                 .NebulaClientOptionsBuilder()
                 .setGraphAddress(null)
                 .setMetaAddress("127.0.0.1:9559")
-                .setEnableGraphSsl(false)
-                .setEnableMetaSsl(true)
-                .setSslSignType(SslSighType.SELF)
+                .setEnableGraphSSL(false)
+                .setEnableMetaSSL(true)
+                .setSSLSignType(SSLSighType.SELF)
                 .setCaSignParam("caCrtFile", "crtFile", "keyFile")
                 .build();
     }

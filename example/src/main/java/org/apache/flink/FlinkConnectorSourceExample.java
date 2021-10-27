@@ -20,7 +20,6 @@ import org.apache.flink.connector.nebula.source.NebulaSourceFunction;
 import org.apache.flink.connector.nebula.statement.EdgeExecutionOptions;
 import org.apache.flink.connector.nebula.statement.ExecutionOptions;
 import org.apache.flink.connector.nebula.statement.VertexExecutionOptions;
-import org.apache.flink.connector.nebula.utils.SslSighType;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.types.Row;

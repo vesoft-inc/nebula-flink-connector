@@ -132,9 +132,17 @@ public class NebulaBatchOutputFormat<T> extends RichOutputFormat<T> implements F
             commit();
         }
         if (!errorBuffer.isEmpty()) {
-            LOG.error("insert error statements: ", errorBuffer);
+            LOG.error("insert error statements: {}", errorBuffer);
         }
-        session.release();
+        if (session != null) {
+            session.release();
+        }
+        if (graphProvider != null) {
+            graphProvider.close();
+        }
+        if (metaClient != null) {
+            metaClient.close();
+        }
     }
 
     /**

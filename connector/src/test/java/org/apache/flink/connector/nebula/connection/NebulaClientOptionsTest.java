@@ -46,7 +46,7 @@ public class NebulaClientOptionsTest {
     }
 
 
-    @Test
+    @Test(expected = IllegalArgumentException.class)
     public void testIsEnableGraphSsl() {
         NebulaClientOptions nebulaClientOptions = new NebulaClientOptions
                 .NebulaClientOptionsBuilder()
@@ -57,7 +57,6 @@ public class NebulaClientOptionsTest {
                 .setSSLSignType(SSLSighType.CA)
                 .setCaSignParam("caCrtFile", "crtFile", "keyFile")
                 .build();
-        assert (!nebulaClientOptions.isEnableGraphSSL());
     }
 
 

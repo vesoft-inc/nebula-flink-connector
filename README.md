@@ -17,23 +17,6 @@ To use Nebula Flink Connector, do a check of these:
 - Java 8 or a higher version is installed.
 - Nebula Graph v2.0 is deployed. For more information, see [Deployment and installation of Nebula Graph](https://docs.nebula-graph.io/2.0/4.deployment-and-installation/1.resource-preparations/ "Click to go to Nebula Graph website").
 
-### Build Nebula Flink Connector
-
-1. Install the lastest java client 2.0.
-    ```
-    $ git clone https://github.com/vesoft-inc/nebula-java.git
-    $ cd nebula-java
-    $ mvn clean install -Dmaven.test.skip=true -Dgpg.skip -Dmaven.javadoc.skip=true  
-    ```
-
-2. Package Nebula Flink Connector.
-
-    ```
-    $ git clone https://github.com/vesoft-inc/nebula-flink-connector.git
-    $ cd nebula-flink-connector/connector
-    $ mvn clean package -Dmaven.test.skip=true -Dgpg.skip -Dmaven.javadoc.skip=true
-    ```
-
 ### Use in Maven
 Add the dependency to your pom.xml.
 
@@ -41,7 +24,7 @@ Add the dependency to your pom.xml.
 <dependency>
     <groupId>com.vesoft</groupId>
     <artifactId>nebula-flink-connector</artifactId>
-    <version>2.0.0</version>
+    <version>2.6.0</version>
 </dependency>
 ```
 
@@ -81,3 +64,13 @@ DataStream<Row> dataStream = playerSource.map(row -> {
 dataStream.addSink(nebulaSinkFunction);
 env.execute("write nebula")
 ```
+## Version match
+
+There are the version correspondence between Nebula Flink Connector and Nebula:
+
+| Nebula Flink Connector Version | Nebula Version |
+|:-----------------------:|:--------------:|
+|       2.0.0             |  2.0.0, 2.0.1  |
+|       2.5.0             |  2.5.0, 2.5.1  |
+|       2.6.0             |     2.6.0      |
+|     2.0-SNAPSHOT        |     nightly    |

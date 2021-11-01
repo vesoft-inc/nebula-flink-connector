@@ -12,10 +12,12 @@ import com.vesoft.nebula.client.graph.exception.AuthFailedException;
 import com.vesoft.nebula.client.graph.exception.ClientServerIncompatibleException;
 import com.vesoft.nebula.client.graph.exception.IOErrorException;
 import com.vesoft.nebula.client.graph.exception.NotValidConnectionException;
+import com.vesoft.nebula.client.graph.net.NebulaPool;
 import com.vesoft.nebula.client.graph.net.Session;
 import com.vesoft.nebula.client.meta.MetaClient;
 import java.io.Flushable;
 import java.io.IOException;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +36,7 @@ public class NebulaBatchOutputFormat<T> extends RichOutputFormat<T> implements F
     private static final long serialVersionUID = 8846672119763512586L;
 
     private volatile AtomicLong numPendingRow;
+    private NebulaPool nebulaPool;
     private Session session;
     private MetaClient metaClient;
     private NebulaBatchExecutor nebulaBatchExecutor;
@@ -58,9 +61,11 @@ public class NebulaBatchOutputFormat<T> extends RichOutputFormat<T> implements F
     @Override
     public void open(int i, int i1) throws IOException {
         try {
-            session = graphProvider.getSession();
-        } catch (NotValidConnectionException | IOErrorException
-                | AuthFailedException | ClientServerIncompatibleException e) {
+            nebulaPool = graphProvider.getNebulaPool();
+            session = nebulaPool.getSession(graphProvider.getUserName(),
+                    graphProvider.getPassword(), true);
+        } catch (UnknownHostException | NotValidConnectionException | AuthFailedException
+                | ClientServerIncompatibleException | IOErrorException e) {
             LOG.error("failed to get graph session, ", e);
             throw new IOException("get graph session error, ", e);
         }
@@ -137,8 +142,8 @@ public class NebulaBatchOutputFormat<T> extends RichOutputFormat<T> implements F
         if (session != null) {
             session.release();
         }
-        if (graphProvider != null) {
-            graphProvider.close();
+        if (nebulaPool != null) {
+            nebulaPool.close();
         }
         if (metaClient != null) {
             metaClient.close();

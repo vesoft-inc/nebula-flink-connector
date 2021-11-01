@@ -75,7 +75,7 @@ public class NebulaBatchOutputFormat<T> extends RichOutputFormat<T> implements F
         } catch (UnknownHostException | NotValidConnectionException | AuthFailedException
                 | ClientServerIncompatibleException | IOErrorException e) {
             LOG.error("failed to get graph session, ", e);
-            throw new IOException("get graph pool session, ", e);
+            throw new IOException("get graph session error, ", e);
         }
         ResultSet resultSet;
         try {

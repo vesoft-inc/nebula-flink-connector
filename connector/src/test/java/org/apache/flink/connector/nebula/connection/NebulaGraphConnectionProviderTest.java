@@ -10,6 +10,8 @@ import com.vesoft.nebula.client.graph.exception.AuthFailedException;
 import com.vesoft.nebula.client.graph.exception.ClientServerIncompatibleException;
 import com.vesoft.nebula.client.graph.exception.IOErrorException;
 import com.vesoft.nebula.client.graph.exception.NotValidConnectionException;
+import com.vesoft.nebula.client.graph.net.NebulaPool;
+import java.net.UnknownHostException;
 import org.apache.flink.connector.nebula.utils.SSLSighType;
 import org.junit.After;
 import org.junit.Before;
@@ -30,7 +32,7 @@ public class NebulaGraphConnectionProviderTest {
     }
 
     @Test
-    public void getSession() {
+    public void getNebulaPool() {
         NebulaClientOptions nebulaClientOptions =
                 new NebulaClientOptions.NebulaClientOptionsBuilder()
                         .setGraphAddress("127.0.0.1:9669")
@@ -43,7 +45,8 @@ public class NebulaGraphConnectionProviderTest {
         NebulaGraphConnectionProvider graphConnectionProvider =
                 new NebulaGraphConnectionProvider(nebulaClientOptions);
         try {
-            graphConnectionProvider.getSession();
+            NebulaPool nebulaPool = graphConnectionProvider.getNebulaPool();
+            nebulaPool.getSession("root", "nebula", true);
         } catch (Exception e) {
             LOG.info("get session failed, ", e);
             assert (false);
@@ -76,8 +79,10 @@ public class NebulaGraphConnectionProviderTest {
                 new NebulaGraphConnectionProvider(nebulaClientOptions);
 
         try {
-            graphConnectionProvider.getSession();
-        } catch (IOErrorException | AuthFailedException | ClientServerIncompatibleException e) {
+            NebulaPool pool = graphConnectionProvider.getNebulaPool();
+            pool.getSession("root", "nebula", true);
+        } catch (UnknownHostException | IOErrorException | AuthFailedException
+                | ClientServerIncompatibleException e) {
             LOG.error("get session faied, ", e);
             assert (false);
         }

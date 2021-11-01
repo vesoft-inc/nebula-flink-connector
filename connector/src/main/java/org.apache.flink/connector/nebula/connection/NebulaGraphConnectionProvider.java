@@ -29,53 +29,52 @@ public class NebulaGraphConnectionProvider implements Serializable {
     private static final long serialVersionUID = 8392002706492085208L;
 
     private final NebulaClientOptions nebulaClientOptions;
-    private final NebulaPool nebulaPool = new NebulaPool();
 
     public NebulaGraphConnectionProvider(NebulaClientOptions nebulaClientOptions) {
         this.nebulaClientOptions = nebulaClientOptions;
+    }
+
+    /**
+     * get Session to execute query statement
+     */
+    public NebulaPool getNebulaPool() throws UnknownHostException {
         List<HostAddress> addresses = new ArrayList<>();
         for (String address : nebulaClientOptions.getGraphAddress().split(NebulaConstant.COMMA)) {
             String[] hostAndPort = address.split(NebulaConstant.COLON);
             addresses.add(new HostAddress(hostAndPort[0], Integer.parseInt(hostAndPort[1])));
         }
 
-        try {
-            NebulaPoolConfig poolConfig = new NebulaPoolConfig();
-            poolConfig.setTimeout(nebulaClientOptions.getTimeout());
-            if (nebulaClientOptions.isEnableGraphSSL()) {
-                poolConfig.setEnableSsl(true);
-                switch (nebulaClientOptions.getSSLSighType()) {
-                    case CA:
-                        poolConfig.setSslParam(nebulaClientOptions.getCaSignParam());
-                        break;
-                    case SELF:
-                        poolConfig.setSslParam(nebulaClientOptions.getSelfSignParam());
-                        break;
-                    default:
-                        throw new IllegalArgumentException("ssl sign type is not supported.");
-                }
+        NebulaPool nebulaPool = new NebulaPool();
+        NebulaPoolConfig poolConfig = new NebulaPoolConfig();
+        poolConfig.setTimeout(nebulaClientOptions.getTimeout());
+        if (nebulaClientOptions.isEnableGraphSSL()) {
+            poolConfig.setEnableSsl(true);
+            switch (nebulaClientOptions.getSSLSighType()) {
+                case CA:
+                    poolConfig.setSslParam(nebulaClientOptions.getCaSignParam());
+                    break;
+                case SELF:
+                    poolConfig.setSslParam(nebulaClientOptions.getSelfSignParam());
+                    break;
+                default:
+                    throw new IllegalArgumentException("ssl sign type is not supported.");
             }
-            nebulaPool.init(addresses, poolConfig);
-        } catch (UnknownHostException e) {
-            LOG.error("NebulaPool init error, ", e);
         }
+        nebulaPool.init(addresses, poolConfig);
+        return nebulaPool;
     }
 
     /**
-     * get Session to execute query statement
+     * get username
      */
-    public Session getSession() throws NotValidConnectionException, IOErrorException,
-            AuthFailedException, ClientServerIncompatibleException {
-        return nebulaPool.getSession(
-                nebulaClientOptions.getUsername(),
-                nebulaClientOptions.getPassword(),
-                true);
+    public String getUserName() {
+        return nebulaClientOptions.getUsername();
     }
 
     /**
-     * close nebula pool
+     * get password
      */
-    public void close() {
-        nebulaPool.close();
+    public String getPassword() {
+        return nebulaClientOptions.getPassword();
     }
 }

@@ -145,7 +145,7 @@ public class FlinkConnectorExample {
                 new NebulaMetaConnectionProvider(nebulaClientOptions);
 
         ExecutionOptions executionOptions = new VertexExecutionOptions.ExecutionOptionBuilder()
-                .setGraphSpace("test2_6")
+                .setGraphSpace("flinkSink")
                 .setTag("person")
                 .setIdIndex(0)
                 .setFields(Arrays.asList("col1", "col2", "col3", "col4", "col5", "col6", "col7",
@@ -187,7 +187,7 @@ public class FlinkConnectorExample {
                 new NebulaMetaConnectionProvider(nebulaClientOptions);
 
         ExecutionOptions executionOptions = new VertexExecutionOptions.ExecutionOptionBuilder()
-                .setGraphSpace("test2_6")
+                .setGraphSpace("flinkSink")
                 .setTag("person")
                 .setIdIndex(0)
                 .setFields(Arrays.asList("col1", "col2"))
@@ -228,7 +228,7 @@ public class FlinkConnectorExample {
                 new NebulaMetaConnectionProvider(nebulaClientOptions);
 
         ExecutionOptions executionOptions = new VertexExecutionOptions.ExecutionOptionBuilder()
-                .setGraphSpace("test2_6")
+                .setGraphSpace("flinkSink")
                 .setTag("person")
                 .setIdIndex(0)
                 .setFields(Arrays.asList("col1", "col2"))
@@ -312,7 +312,7 @@ public class FlinkConnectorExample {
                 new NebulaMetaConnectionProvider(nebulaClientOptions);
 
         ExecutionOptions executionOptions = new EdgeExecutionOptions.ExecutionOptionBuilder()
-                .setGraphSpace("test2_6")
+                .setGraphSpace("flinkSink")
                 .setEdge("friend")
                 .setSrcIndex(0)
                 .setDstIndex(1)
@@ -355,7 +355,7 @@ public class FlinkConnectorExample {
                 new NebulaMetaConnectionProvider(nebulaClientOptions);
 
         ExecutionOptions executionOptions = new EdgeExecutionOptions.ExecutionOptionBuilder()
-                .setGraphSpace("test2_6")
+                .setGraphSpace("flinkSink")
                 .setEdge("friend")
                 .setSrcIndex(0)
                 .setDstIndex(1)
@@ -399,7 +399,7 @@ public class FlinkConnectorExample {
                 new NebulaMetaConnectionProvider(nebulaClientOptions);
 
         ExecutionOptions executionOptions = new EdgeExecutionOptions.ExecutionOptionBuilder()
-                .setGraphSpace("test2_6")
+                .setGraphSpace("flinkSink")
                 .setEdge("friend")
                 .setSrcIndex(0)
                 .setDstIndex(1)

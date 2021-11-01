@@ -26,7 +26,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * make sure your nebula graph has create Space
+ * make sure your nebula graph has create Space, space schema:
+ *
+ * <p>"CREATE SPACE `flinkSink` (partition_num = 100, replica_factor = 3, charset = utf8,
+ * collate = utf8_bin, vid_type = INT64, atomic_edge = false) ON default"
+ *
+ * <p>"USE `flinkSink`"
+ *
+ * <p>"CREATE TAG IF NOT EXISTS person(col1 string, col2 fixed_string(8), col3 int8, col4 int16,
+ * col5 int32, col6 int64, col7 date, col8 datetime, col9 timestamp, col10 bool, col11 double,
+ * col12 float, col13 time, col14 geography);"
+ *
+ * <p>"CREATE EDGE IF NOT EXISTS friend(col1 string, col2 fixed_string(8), col3 int8, col4 int16,
+ * col5 int32, col6 int64, col7 date, col8 datetime, col9 timestamp, col10 bool, col11 double,
+ * col12 float, col13 time, col14 geography);"
  */
 public class FlinkConnectorExample {
     private static final Logger LOG = LoggerFactory.getLogger(FlinkConnectorExample.class);
@@ -37,8 +50,11 @@ public class FlinkConnectorExample {
         sinkVertexData(env, playerSource);
         updateVertexData(env, playerSource);
         deleteVertexData(env, playerSource);
+
         DataStream<List<String>> friendSource = constructEdgeSourceData(env);
         sinkEdgeData(env, friendSource);
+        updateEdgeData(env, friendSource);
+        deleteEdgeData(env, friendSource);
     }
 
     /**
@@ -48,33 +64,26 @@ public class FlinkConnectorExample {
             StreamExecutionEnvironment env) {
         List<List<String>> player = new ArrayList<>();
         List<String> fields1 = Arrays.asList("61", "aba", "abcdefgh", "1", "1111", "22222",
-                "6412233",
-                "2019-01-01", "2019-01-01T12:12:12", "435463424", "false", "1.2", "1.0", "11:12:12",
-                "POINT(1 3)");
+                "6412233", "2019-01-01", "2019-01-01T12:12:12", "435463424", "false", "1.2", "1.0",
+                "11:12:12", "POINT(1 3)");
         List<String> fields2 = Arrays.asList("62", "aba", "abcdefgh", "1", "1111", "22222",
-                "6412233",
-                "2019-01-01", "2019-01-01T12:12:12", "435463424", "false", "1.2", "1.0", "11:12:12",
-                "POINT(1 3)");
+                "6412233", "2019-01-01", "2019-01-01T12:12:12", "435463424", "false", "1.2", "1.0",
+                "11:12:12", "POINT(1 3)");
         List<String> fields3 = Arrays.asList("63", "aba", "abcdefgh", "1", "1111", "22222",
-                "6412233",
-                "2019-01-01", "2019-01-01T12:12:12", "435463424", "false", "1.2", "1.0", "11:12:12",
-                "POINT(1 3)");
+                "6412233", "2019-01-01", "2019-01-01T12:12:12", "435463424", "false", "1.2", "1.0",
+                "11:12:12", "POINT(1 3)");
         List<String> fields4 = Arrays.asList("64", "aba", "abcdefgh", "1", "1111", "22222",
-                "6412233",
-                "2019-01-01", "2019-01-01T12:12:12", "435463424", "false", "1.2", "1.0", "11:12:12",
-                "LINESTRING(1 3,2 4)");
+                "6412233", "2019-01-01", "2019-01-01T12:12:12", "435463424", "false", "1.2", "1.0",
+                "11:12:12", "LINESTRING(1 3,2 4)");
         List<String> fields5 = Arrays.asList("65", "aba", "abcdefgh", "1", "1111", "22222",
-                "6412233",
-                "2019-01-01", "2019-01-01T12:12:12", "435463424", "false", "1.2", "1.0", "11:12:12",
-                "LINESTRING(1 3,2 4)");
+                "6412233", "2019-01-01", "2019-01-01T12:12:12", "435463424", "false", "1.2", "1.0",
+                "11:12:12", "LINESTRING(1 3,2 4)");
         List<String> fields6 = Arrays.asList("66", "aba", "abcdefgh", "1", "1111", "22222",
-                "6412233",
-                "2019-01-01", "2019-01-01T12:12:12", "435463424", "false", "1.2", "1.0", "11:12:12",
-                "LINESTRING(1 3,2 4)");
+                "6412233", "2019-01-01", "2019-01-01T12:12:12", "435463424", "false", "1.2", "1.0",
+                "11:12:12", "LINESTRING(1 3,2 4)");
         List<String> fields7 = Arrays.asList("67", "李四", "abcdefgh", "1", "1111", "22222",
-                "6412233",
-                "2019-01-01", "2019-01-01T12:12:12", "435463424", "true", "1.2", "1.0", "11:12:12",
-                "polygon((0 1,1 2,2 3,0 1))");
+                "6412233", "2019-01-01", "2019-01-01T12:12:12", "435463424", "true", "1.2", "1.0",
+                "11:12:12", "polygon((0 1,1 2,2 3,0 1))");
         List<String> fields8 = Arrays.asList("68", "aba", "张三", "1", "1111", "22222", "6412233",
                 "2019-01-01", "2019-01-01T12:12:12", "435463424", "true", "1.2", "1.0", "11:12:12",
                 "POLYGON((0 1,1 2,2 3,0 1))");
@@ -136,7 +145,7 @@ public class FlinkConnectorExample {
                 new NebulaMetaConnectionProvider(nebulaClientOptions);
 
         ExecutionOptions executionOptions = new VertexExecutionOptions.ExecutionOptionBuilder()
-                .setGraphSpace("flinkSink")
+                .setGraphSpace("test2_6")
                 .setTag("person")
                 .setIdIndex(0)
                 .setFields(Arrays.asList("col1", "col2", "col3", "col4", "col5", "col6", "col7",
@@ -178,10 +187,10 @@ public class FlinkConnectorExample {
                 new NebulaMetaConnectionProvider(nebulaClientOptions);
 
         ExecutionOptions executionOptions = new VertexExecutionOptions.ExecutionOptionBuilder()
-                .setGraphSpace("flinkSink")
-                .setTag("player")
+                .setGraphSpace("test2_6")
+                .setTag("person")
                 .setIdIndex(0)
-                .setFields(Arrays.asList("name", "age"))
+                .setFields(Arrays.asList("col1", "col2"))
                 .setPositions(Arrays.asList(1, 2))
                 .setWriteMode(WriteModeEnum.UPDATE)
                 .setBatch(2)
@@ -219,10 +228,10 @@ public class FlinkConnectorExample {
                 new NebulaMetaConnectionProvider(nebulaClientOptions);
 
         ExecutionOptions executionOptions = new VertexExecutionOptions.ExecutionOptionBuilder()
-                .setGraphSpace("flinkSink")
-                .setTag("player")
+                .setGraphSpace("test2_6")
+                .setTag("person")
                 .setIdIndex(0)
-                .setFields(Arrays.asList("name", "age"))
+                .setFields(Arrays.asList("col1", "col2"))
                 .setPositions(Arrays.asList(1, 2))
                 .setWriteMode(WriteModeEnum.DELETE)
                 .setBatch(2)
@@ -303,7 +312,7 @@ public class FlinkConnectorExample {
                 new NebulaMetaConnectionProvider(nebulaClientOptions);
 
         ExecutionOptions executionOptions = new EdgeExecutionOptions.ExecutionOptionBuilder()
-                .setGraphSpace("flinkSink")
+                .setGraphSpace("test2_6")
                 .setEdge("friend")
                 .setSrcIndex(0)
                 .setDstIndex(1)
@@ -330,6 +339,93 @@ public class FlinkConnectorExample {
             env.execute("Write Nebula");
         } catch (Exception e) {
             LOG.error("error when write Nebula Graph, ", e);
+            System.exit(-1);
+        }
+    }
+
+    /**
+     * sink Nebula Graph with UPDATE mode
+     */
+    public static void updateEdgeData(StreamExecutionEnvironment env,
+                                      DataStream<List<String>> playerSource) {
+        NebulaClientOptions nebulaClientOptions = getClientOptions();
+        NebulaGraphConnectionProvider graphConnectionProvider =
+                new NebulaGraphConnectionProvider(nebulaClientOptions);
+        NebulaMetaConnectionProvider metaConnectionProvider =
+                new NebulaMetaConnectionProvider(nebulaClientOptions);
+
+        ExecutionOptions executionOptions = new EdgeExecutionOptions.ExecutionOptionBuilder()
+                .setGraphSpace("test2_6")
+                .setEdge("friend")
+                .setSrcIndex(0)
+                .setDstIndex(1)
+                .setRankIndex(4)
+                .setFields(Arrays.asList("col1", "col2"))
+                .setPositions(Arrays.asList(2, 3))
+                .setWriteMode(WriteModeEnum.UPDATE)
+                .setBatch(2)
+                .builder();
+
+        NebulaBatchOutputFormat outPutFormat =
+                new NebulaBatchOutputFormat(graphConnectionProvider, metaConnectionProvider)
+                        .setExecutionOptions(executionOptions);
+        NebulaSinkFunction nebulaSinkFunction = new NebulaSinkFunction(outPutFormat);
+        DataStream<Row> dataStream = playerSource.map(row -> {
+            org.apache.flink.types.Row record = new org.apache.flink.types.Row(row.size());
+            for (int i = 0; i < row.size(); i++) {
+                record.setField(i, row.get(i));
+            }
+            return record;
+        });
+        dataStream.addSink(nebulaSinkFunction);
+        try {
+            env.execute("Update Nebula Vertex");
+        } catch (Exception e) {
+            LOG.error("error when update Nebula Graph Vertex, ", e);
+            System.exit(-1);
+        }
+    }
+
+
+    /**
+     * sink Nebula Graph with DELETE mode
+     */
+    public static void deleteEdgeData(StreamExecutionEnvironment env,
+                                      DataStream<List<String>> playerSource) {
+        NebulaClientOptions nebulaClientOptions = getClientOptions();
+        NebulaGraphConnectionProvider graphConnectionProvider =
+                new NebulaGraphConnectionProvider(nebulaClientOptions);
+        NebulaMetaConnectionProvider metaConnectionProvider =
+                new NebulaMetaConnectionProvider(nebulaClientOptions);
+
+        ExecutionOptions executionOptions = new EdgeExecutionOptions.ExecutionOptionBuilder()
+                .setGraphSpace("test2_6")
+                .setEdge("friend")
+                .setSrcIndex(0)
+                .setDstIndex(1)
+                .setRankIndex(4)
+                .setFields(Arrays.asList("col1", "col2"))
+                .setPositions(Arrays.asList(2, 3))
+                .setWriteMode(WriteModeEnum.DELETE)
+                .setBatch(2)
+                .builder();
+
+        NebulaBatchOutputFormat outPutFormat =
+                new NebulaBatchOutputFormat(graphConnectionProvider, metaConnectionProvider)
+                        .setExecutionOptions(executionOptions);
+        NebulaSinkFunction nebulaSinkFunction = new NebulaSinkFunction(outPutFormat);
+        DataStream<Row> dataStream = playerSource.map(row -> {
+            org.apache.flink.types.Row record = new org.apache.flink.types.Row(row.size());
+            for (int i = 0; i < row.size(); i++) {
+                record.setField(i, row.get(i));
+            }
+            return record;
+        });
+        dataStream.addSink(nebulaSinkFunction);
+        try {
+            env.execute("Update Nebula Vertex");
+        } catch (Exception e) {
+            LOG.error("error when update Nebula Graph Vertex, ", e);
             System.exit(-1);
         }
     }

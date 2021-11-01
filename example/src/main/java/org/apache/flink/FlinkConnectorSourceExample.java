@@ -26,6 +26,23 @@ import org.apache.flink.types.Row;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * make sure your environment has creates space, and data has been insert into this space.
+ * Space schema:
+ *
+ * <p>"CREATE SPACE `flinkSource` (partition_num = 100, replica_factor = 3, charset = utf8,
+ * collate = utf8_bin, vid_type = INT64, atomic_edge = false) ON default"
+ *
+ * <p>"USE `flinkSource`"
+ *
+ * <p>"CREATE TAG IF NOT EXISTS person(col1 string, col2 fixed_string(8), col3 int8, col4 int16,
+ * col5 int32, col6 int64, col7 date, col8 datetime, col9 timestamp, col10 bool, col11 double,
+ * col12 float, col13 time, col14 geography);"
+ *
+ * <p>"CREATE EDGE IF NOT EXISTS friend(col1 string, col2 fixed_string(8), col3 int8, col4 int16,
+ * col5 int32, col6 int64, col7 date, col8 datetime, col9 timestamp, col10 bool, col11 double,
+ * col12 float, col13 time, col14 geography);"
+ */
 public class FlinkConnectorSourceExample {
 
     private static final Logger LOG = LoggerFactory.getLogger(FlinkConnectorSourceExample.class);
@@ -61,7 +78,7 @@ public class FlinkConnectorSourceExample {
         // read no property
         vertexExecutionOptions = new VertexExecutionOptions.ExecutionOptionBuilder()
                 .setGraphSpace("flinkSource")
-                .setTag("player")
+                .setTag("person")
                 .setNoColumn(false)
                 .setFields(Arrays.asList())
                 .setLimit(100)
@@ -72,7 +89,7 @@ public class FlinkConnectorSourceExample {
         edgeExecutionOptions = new EdgeExecutionOptions.ExecutionOptionBuilder()
                 .setGraphSpace("flinkSource")
                 .setEdge("friend")
-                //.setFields(Arrays.asList("src", "dst","degree", "start"))
+                //.setFields(Arrays.asList("col1", "col2","col3"))
                 .setFields(Arrays.asList())
                 .setLimit(100)
                 .builder();
@@ -92,11 +109,24 @@ public class FlinkConnectorSourceExample {
 
         dataStreamSource.map(row -> {
             List<ValueWrapper> values = row.getValues();
-            Row record = new Row(1);
-            record.setField(0, values.get(0).getValue().getFieldValue());
+            Row record = new Row(15);
+            record.setField(0, values.get(0).asLong());
+            record.setField(1, values.get(1).asString());
+            record.setField(2, values.get(2).asString());
+            record.setField(3, values.get(3).asLong());
+            record.setField(4, values.get(4).asLong());
+            record.setField(5, values.get(5).asLong());
+            record.setField(6, values.get(6).asLong());
+            record.setField(7, values.get(7).asDate());
+            record.setField(8, values.get(8).asDateTime().getUTCDateTimeStr());
+            record.setField(9, values.get(9).asLong());
+            record.setField(10, values.get(10).asBoolean());
+            record.setField(11, values.get(11).asDouble());
+            record.setField(12, values.get(12).asDouble());
+            record.setField(13, values.get(13).asTime().getUTCTimeStr());
+            record.setField(14, values.get(14).asGeography());
             return record;
-        });
-        dataStreamSource.print();
+        }).print();
         env.execute("NebulaStreamSource");
     }
 
@@ -115,16 +145,26 @@ public class FlinkConnectorSourceExample {
 
         dataStreamSource.map(row -> {
             List<ValueWrapper> values = row.getValues();
-            Row record = new Row(6);
-            record.setField(0, values.get(0).getValue().getFieldValue());
-            record.setField(1, values.get(1).getValue().getFieldValue());
-            record.setField(2, values.get(2).getValue().getFieldValue());
-            record.setField(3, values.get(3).getValue().getFieldValue());
-            record.setField(4, values.get(4).getValue().getFieldValue());
-            record.setField(5, values.get(5).getValue().getFieldValue());
+            Row record = new Row(17);
+            record.setField(0, values.get(0).asLong());
+            record.setField(1, values.get(1).asLong());
+            record.setField(2, values.get(2).asLong());
+            record.setField(3, values.get(3).asString());
+            record.setField(4, values.get(4).asString());
+            record.setField(5, values.get(5).asLong());
+            record.setField(6, values.get(6).asLong());
+            record.setField(7, values.get(7).asLong());
+            record.setField(8, values.get(8).asLong());
+            record.setField(9, values.get(9).asDate());
+            record.setField(10, values.get(10).asDateTime().getUTCDateTimeStr());
+            record.setField(11, values.get(11).asLong());
+            record.setField(12, values.get(12).asBoolean());
+            record.setField(13, values.get(13).asDouble());
+            record.setField(14, values.get(14).asDouble());
+            record.setField(15, values.get(15).asTime().getUTCTimeStr());
+            record.setField(16, values.get(16).asGeography());
             return record;
-        });
-        dataStreamSource.print();
+        }).print();
         env.execute("NebulaStreamSource");
     }
 

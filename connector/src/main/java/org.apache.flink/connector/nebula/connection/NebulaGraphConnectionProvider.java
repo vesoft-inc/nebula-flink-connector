@@ -18,6 +18,7 @@ import com.vesoft.nebula.client.graph.net.Session;
 import java.io.Serializable;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import org.apache.flink.connector.nebula.utils.NebulaConstant;
 import org.slf4j.Logger;
@@ -44,6 +45,7 @@ public class NebulaGraphConnectionProvider implements Serializable {
             addresses.add(new HostAddress(hostAndPort[0], Integer.parseInt(hostAndPort[1])));
         }
 
+        Collections.shuffle(addresses);
         NebulaPool nebulaPool = new NebulaPool();
         NebulaPoolConfig poolConfig = new NebulaPoolConfig();
         poolConfig.setTimeout(nebulaClientOptions.getTimeout());

@@ -132,6 +132,11 @@ public abstract class ExecutionOptions implements Serializable {
      */
     private WriteModeEnum writeMode;
 
+    /**
+     * interval between write submit
+     */
+    private long batchIntervalMs;
+
 
     protected ExecutionOptions(String graphSpace,
                                String executeStatement,
@@ -143,7 +148,8 @@ public abstract class ExecutionOptions implements Serializable {
                                long endTime,
                                long batch,
                                PolicyEnum policy,
-                               WriteModeEnum writeMode) {
+                               WriteModeEnum writeMode,
+                               long batchIntervalMs) {
         this.graphSpace = graphSpace;
 
         this.executeStatement = executeStatement;
@@ -156,6 +162,7 @@ public abstract class ExecutionOptions implements Serializable {
         this.batch = batch;
         this.policy = policy;
         this.writeMode = writeMode;
+        this.batchIntervalMs = batchIntervalMs;
     }
 
     public String getGraphSpace() {
@@ -206,6 +213,10 @@ public abstract class ExecutionOptions implements Serializable {
         return writeMode;
     }
 
+    public long getBatchIntervalMs() {
+        return batchIntervalMs;
+    }
+
     @Override
     public String toString() {
         return "ExecutionOptions{"
@@ -220,6 +231,7 @@ public abstract class ExecutionOptions implements Serializable {
                 + ", batch=" + batch
                 + ", policy=" + policy
                 + ", mode=" + writeMode
+                + ", batchIntervalMs=" + batchIntervalMs
                 + '}';
     }
 }

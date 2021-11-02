@@ -21,6 +21,10 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import org.apache.flink.api.common.io.RichOutputFormat;
 import org.apache.flink.configuration.Configuration;
@@ -28,6 +32,7 @@ import org.apache.flink.connector.nebula.connection.NebulaGraphConnectionProvide
 import org.apache.flink.connector.nebula.connection.NebulaMetaConnectionProvider;
 import org.apache.flink.connector.nebula.statement.ExecutionOptions;
 import org.apache.flink.connector.nebula.utils.VidTypeEnum;
+import org.apache.flink.runtime.util.ExecutorThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,6 +49,10 @@ public class NebulaBatchOutputFormat<T> extends RichOutputFormat<T> implements F
     private NebulaMetaConnectionProvider metaProvider;
     private ExecutionOptions executionOptions;
     private List<String> errorBuffer = new ArrayList<>();
+
+    private transient ScheduledExecutorService scheduler;
+    private transient ScheduledFuture<?> scheduledFuture;
+    private transient volatile boolean closed = false;
 
     public NebulaBatchOutputFormat(NebulaGraphConnectionProvider graphProvider,
                                    NebulaMetaConnectionProvider metaProvider) {
@@ -102,13 +111,28 @@ public class NebulaBatchOutputFormat<T> extends RichOutputFormat<T> implements F
                     executionOptions.getLabel());
             nebulaBatchExecutor = new NebulaEdgeBatchExecutor(executionOptions, vidType, schema);
         }
+        // start the schedule task: submit the buffer records every batchInterval.
+        // If batchIntervalMs is 0, do not start the scheduler task.
+        if (executionOptions.getBatchIntervalMs() != 0 && executionOptions.getBatch() != 1) {
+            this.scheduler = Executors.newScheduledThreadPool(1, new ExecutorThreadFactory(
+                    "nebula-write-output-format"));
+            this.scheduledFuture = this.scheduler.scheduleWithFixedDelay(() -> {
+                synchronized (NebulaBatchOutputFormat.this) {
+                    if (!closed) {
+                        commit();
+                    }
+                } },
+                    executionOptions.getBatchIntervalMs(),
+                    executionOptions.getBatchIntervalMs(),
+                    TimeUnit.MILLISECONDS);
+        }
     }
 
     /**
      * write one record to buffer
      */
     @Override
-    public final synchronized void writeRecord(T row) throws IOException {
+    public final synchronized void writeRecord(T row) {
         nebulaBatchExecutor.addToBatch(row);
 
         if (numPendingRow.incrementAndGet() >= executionOptions.getBatch()) {
@@ -119,7 +143,7 @@ public class NebulaBatchOutputFormat<T> extends RichOutputFormat<T> implements F
     /**
      * commit batch insert statements
      */
-    private synchronized void commit() throws IOException {
+    private synchronized void commit() {
         String errorExec = nebulaBatchExecutor.executeBatch(session);
         if (errorExec != null) {
             errorBuffer.add(errorExec);
@@ -132,21 +156,28 @@ public class NebulaBatchOutputFormat<T> extends RichOutputFormat<T> implements F
      * commit the batch write operator before release connection
      */
     @Override
-    public final synchronized void close() throws IOException {
-        if (numPendingRow.get() > 0) {
-            commit();
-        }
-        if (!errorBuffer.isEmpty()) {
-            LOG.error("insert error statements: {}", errorBuffer);
-        }
-        if (session != null) {
-            session.release();
-        }
-        if (nebulaPool != null) {
-            nebulaPool.close();
-        }
-        if (metaClient != null) {
-            metaClient.close();
+    public final synchronized void close() {
+        if (!closed) {
+            closed = true;
+            if (scheduledFuture != null) {
+                scheduledFuture.cancel(false);
+                scheduler.shutdown();
+            }
+            if (numPendingRow != null && numPendingRow.get() > 0) {
+                commit();
+            }
+            if (!errorBuffer.isEmpty()) {
+                LOG.error("insert error statements: {}", errorBuffer);
+            }
+            if (session != null) {
+                session.release();
+            }
+            if (nebulaPool != null) {
+                nebulaPool.close();
+            }
+            if (metaClient != null) {
+                metaClient.close();
+            }
         }
     }
 

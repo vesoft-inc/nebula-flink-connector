@@ -47,6 +47,9 @@ public class NebulaEdgeBatchExecutor<T> extends NebulaBatchExecutor<T> {
 
     @Override
     String executeBatch(Session session) {
+        if (nebulaEdgeList.size() == 0) {
+            return null;
+        }
         NebulaEdges nebulaEdges = new NebulaEdges(executionOptions.getLabel(),
                 executionOptions.getFields(), nebulaEdgeList, executionOptions.getPolicy(),
                 executionOptions.getPolicy());

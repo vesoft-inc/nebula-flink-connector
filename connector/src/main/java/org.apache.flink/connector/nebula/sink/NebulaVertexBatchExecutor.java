@@ -49,6 +49,9 @@ public class NebulaVertexBatchExecutor<T> extends NebulaBatchExecutor<T> {
 
     @Override
     String executeBatch(Session session) {
+        if (nebulaVertexList.size() == 0) {
+            return null;
+        }
         NebulaVertices nebulaVertices = new NebulaVertices(executionOptions.getLabel(),
                 executionOptions.getFields(), nebulaVertexList, executionOptions.getPolicy());
         // generate the write ngql statement

@@ -19,6 +19,7 @@ import org.apache.flink.connector.nebula.source.NebulaSourceFunction;
 import org.apache.flink.connector.nebula.statement.EdgeExecutionOptions;
 import org.apache.flink.connector.nebula.statement.ExecutionOptions;
 import org.apache.flink.connector.nebula.statement.VertexExecutionOptions;
+import org.apache.flink.connector.nebula.utils.SSLSighType;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.types.Row;
@@ -47,6 +48,8 @@ public class FlinkConnectorSourceExample {
     private static final Logger LOG = LoggerFactory.getLogger(FlinkConnectorSourceExample.class);
 
     private static NebulaStorageConnectionProvider storageConnectionProvider;
+    private static NebulaStorageConnectionProvider storageConnectionProviderCaSSL;
+    private static NebulaStorageConnectionProvider storageConnectionProviderSelfSSL;
     private static ExecutionOptions vertexExecutionOptions;
     private static ExecutionOptions edgeExecutionOptions;
 
@@ -73,6 +76,30 @@ public class FlinkConnectorSourceExample {
                         .build();
         storageConnectionProvider =
                 new NebulaStorageConnectionProvider(nebulaClientOptions);
+
+        NebulaClientOptions nebulaClientOptionsWithCaSSL =
+                new NebulaClientOptions.NebulaClientOptionsBuilder()
+                        .setEnableMetaSSL(true)
+                        .setEnableStorageSSL(true)
+                        .setSSLSignType(SSLSighType.CA)
+                        .setCaSignParam("example/src/main/resources/ssl/casigned.pem",
+                                "example/src/main/resources/ssl/casigned.crt",
+                                "example/src/main/resources/ssl/casigned.key")
+                        .build();
+        storageConnectionProviderCaSSL =
+                new NebulaStorageConnectionProvider(nebulaClientOptionsWithCaSSL);
+
+        NebulaClientOptions nebulaClientOptionsWithSelfSSL =
+                new NebulaClientOptions.NebulaClientOptionsBuilder()
+                        .setEnableMetaSSL(true)
+                        .setEnableStorageSSL(true)
+                        .setSSLSignType(SSLSighType.SELF)
+                        .setCaSignParam("example/src/main/resources/ssl/selfsigned.pem",
+                                "example/src/main/resources/ssl/selfsigned.key",
+                                "vesoft")
+                        .build();
+        storageConnectionProviderSelfSSL =
+                new NebulaStorageConnectionProvider(nebulaClientOptionsWithSelfSSL);
 
         // read no property
         vertexExecutionOptions = new VertexExecutionOptions.ExecutionOptionBuilder()

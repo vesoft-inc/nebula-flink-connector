@@ -45,6 +45,7 @@ public class FlinkConnectorExample {
 
     public static void main(String[] args) {
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+        env.setParallelism(5);
         DataStream<List<String>> playerSource = constructVertexSourceData(env);
         sinkVertexData(env, playerSource);
         updateVertexData(env, playerSource);

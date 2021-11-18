@@ -7,13 +7,11 @@ package org.apache.flink.connector.nebula.connection;
 
 
 import com.vesoft.nebula.client.graph.NebulaPoolConfig;
+import com.vesoft.nebula.client.graph.data.CASignedSSLParam;
 import com.vesoft.nebula.client.graph.data.HostAddress;
-import com.vesoft.nebula.client.graph.exception.AuthFailedException;
-import com.vesoft.nebula.client.graph.exception.ClientServerIncompatibleException;
-import com.vesoft.nebula.client.graph.exception.IOErrorException;
-import com.vesoft.nebula.client.graph.exception.NotValidConnectionException;
+import com.vesoft.nebula.client.graph.data.SSLParam;
+import com.vesoft.nebula.client.graph.data.SelfSignedSSLParam;
 import com.vesoft.nebula.client.graph.net.NebulaPool;
-import com.vesoft.nebula.client.graph.net.Session;
 import java.io.Serializable;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -51,12 +49,20 @@ public class NebulaGraphConnectionProvider implements Serializable {
         if (nebulaClientOptions.isEnableGraphSSL()) {
             poolConfig.setEnableSsl(true);
             switch (nebulaClientOptions.getSSLSighType()) {
-                case CA:
-                    poolConfig.setSslParam(nebulaClientOptions.getCaSignParam());
+                case CA: {
+                    CASignParams caSignParams = nebulaClientOptions.getCaSignParam();
+                    SSLParam sslParam = new CASignedSSLParam(caSignParams.getCaCrtFilePath(),
+                            caSignParams.getCrtFilePath(), caSignParams.getKeyFilePath());
+                    poolConfig.setSslParam(sslParam);
                     break;
-                case SELF:
-                    poolConfig.setSslParam(nebulaClientOptions.getSelfSignParam());
+                }
+                case SELF: {
+                    SelfSignParams selfSignParams = nebulaClientOptions.getSelfSignParam();
+                    SSLParam sslParam = new SelfSignedSSLParam(selfSignParams.getCrtFilePath(),
+                            selfSignParams.getKeyFilePath(), selfSignParams.getPassword());
+                    poolConfig.setSslParam(sslParam);
                     break;
+                }
                 default:
                     throw new IllegalArgumentException("ssl sign type is not supported.");
             }

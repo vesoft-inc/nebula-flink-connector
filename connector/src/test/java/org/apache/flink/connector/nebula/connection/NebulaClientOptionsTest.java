@@ -51,8 +51,8 @@ public class NebulaClientOptionsTest {
                 .NebulaClientOptionsBuilder()
                 .setGraphAddress(null)
                 .setMetaAddress("127.0.0.1:9559")
-                .setEnableGraphSSL(false)
-                .setEnableMetaSSL(true)
+                .setEnableMetaSSL(false)
+                .setEnableStorageSSL(true)
                 .setSSLSignType(SSLSighType.CA)
                 .setCaSignParam("caCrtFile", "crtFile", "keyFile")
                 .build();

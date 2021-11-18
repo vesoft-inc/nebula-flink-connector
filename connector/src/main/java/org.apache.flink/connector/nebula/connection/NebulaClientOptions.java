@@ -5,9 +5,7 @@
 
 package org.apache.flink.connector.nebula.connection;
 
-import com.vesoft.nebula.client.graph.data.CASignedSSLParam;
 import com.vesoft.nebula.client.graph.data.HostAddress;
-import com.vesoft.nebula.client.graph.data.SelfSignedSSLParam;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,18 +32,21 @@ public class NebulaClientOptions implements Serializable {
 
     private final boolean enableMetaSSL;
 
+    private final boolean enableStorageSSL;
+
     private final SSLSighType sslSighType;
 
-    private final CASignedSSLParam caSignParam;
+    private final CASignParams caSSLSignParams;
 
-    private final SelfSignedSSLParam selfSignParam;
+    private final SelfSignParams selfSignParams;
 
 
     private NebulaClientOptions(String metaAddress, String graphAddress, String username,
                                 String password, int timeout, int connectRetry,
                                 boolean enableGraphSSL, boolean enableMetaSSL,
-                                SSLSighType sslSighType, CASignedSSLParam caSignParam,
-                                SelfSignedSSLParam selfSignParam) {
+                                boolean enableStorageSSL,
+                                SSLSighType sslSighType, CASignParams caSSLSignParams,
+                                SelfSignParams selfSignParams) {
         this.metaAddress = metaAddress;
         this.graphAddress = graphAddress;
         this.username = username;
@@ -54,9 +55,10 @@ public class NebulaClientOptions implements Serializable {
         this.connectRetry = connectRetry;
         this.enableGraphSSL = enableGraphSSL;
         this.enableMetaSSL = enableMetaSSL;
+        this.enableStorageSSL = enableStorageSSL;
         this.sslSighType = sslSighType;
-        this.caSignParam = caSignParam;
-        this.selfSignParam = selfSignParam;
+        this.caSSLSignParams = caSSLSignParams;
+        this.selfSignParams = selfSignParams;
     }
 
     public List<HostAddress> getMetaAddress() {
@@ -96,16 +98,20 @@ public class NebulaClientOptions implements Serializable {
         return enableMetaSSL;
     }
 
+    public boolean isEnableStorageSSL() {
+        return enableStorageSSL;
+    }
+
     public SSLSighType getSSLSighType() {
         return sslSighType;
     }
 
-    public CASignedSSLParam getCaSignParam() {
-        return caSignParam;
+    public CASignParams getCaSignParam() {
+        return caSSLSignParams;
     }
 
-    public SelfSignedSSLParam getSelfSignParam() {
-        return selfSignParam;
+    public SelfSignParams getSelfSignParam() {
+        return selfSignParams;
     }
 
     /**
@@ -122,9 +128,10 @@ public class NebulaClientOptions implements Serializable {
         // ssl options
         private boolean enableGraphSSL = false;
         private boolean enableMetaSSL = false;
+        private boolean enableStorageSSL = false;
         private SSLSighType sslSighType = null;
-        private CASignedSSLParam caSignParam = null;
-        private SelfSignedSSLParam selfSignParam = null;
+        private CASignParams caSSLSignParams = null;
+        private SelfSignParams selfSignParams = null;
 
         public NebulaClientOptionsBuilder setMetaAddress(String metaAddress) {
             this.metaAddress = metaAddress;
@@ -166,6 +173,12 @@ public class NebulaClientOptions implements Serializable {
             return this;
         }
 
+        public NebulaClientOptionsBuilder setEnableStorageSSL(boolean enableStorageSSL) {
+            this.enableStorageSSL = enableStorageSSL;
+            return this;
+        }
+
+
         public NebulaClientOptionsBuilder setSSLSignType(SSLSighType sslSighType) {
             this.sslSighType = sslSighType;
             return this;
@@ -173,14 +186,13 @@ public class NebulaClientOptions implements Serializable {
 
         public NebulaClientOptionsBuilder setCaSignParam(String caCrtFilePath, String crtFilePath,
                                                          String keyFilePath) {
-            this.caSignParam = new CASignedSSLParam(caCrtFilePath, crtFilePath,
-                    keyFilePath);
+            this.caSSLSignParams = new CASignParams(caCrtFilePath, crtFilePath, keyFilePath);
             return this;
         }
 
         public NebulaClientOptionsBuilder setSelfSignParam(String crtFilePath, String keyFilePath,
                                                            String password) {
-            this.selfSignParam = new SelfSignedSSLParam(crtFilePath, keyFilePath, password);
+            this.selfSignParams = new SelfSignParams(crtFilePath, keyFilePath, password);
             return this;
         }
 
@@ -188,26 +200,27 @@ public class NebulaClientOptions implements Serializable {
             if (metaAddress == null || metaAddress.trim().isEmpty()) {
                 throw new IllegalArgumentException("meta address can not be empty.");
             }
-            if (enableMetaSSL || enableGraphSSL) {
-                // if meta is set to open ssl, then graph must be set to open ssl
-                if (enableMetaSSL && !enableGraphSSL) {
+            if (enableMetaSSL || enableGraphSSL || enableStorageSSL) {
+                // if storage is set to open ssl, then meta must be set to open ssl
+                if (enableStorageSSL && !enableMetaSSL) {
                     throw new IllegalArgumentException(
-                            "meta ssl is enable, graph ssl must be enable");
+                            "storage ssl is enabled, meta ssl must be enabled.");
                 }
+
                 if (sslSighType == null) {
-                    throw new IllegalArgumentException("ssl is enable, ssl sign type must not be "
+                    throw new IllegalArgumentException("ssl is enabled, ssl sign type must not be "
                             + "null");
                 }
                 switch (sslSighType) {
                     case CA:
-                        if (caSignParam == null) {
-                            throw new IllegalArgumentException("ssl is enable and sign type is "
+                        if (caSSLSignParams == null) {
+                            throw new IllegalArgumentException("ssl is enabled and sign type is "
                                     + "CA, caSignParam must not be null");
                         }
                         break;
                     case SELF:
-                        if (selfSignParam == null) {
-                            throw new IllegalArgumentException("ssl is enable and sign type is "
+                        if (selfSignParams == null) {
+                            throw new IllegalArgumentException("ssl is enabled and sign type is "
                                     + "CA, selfSignParam must not be null");
                         }
                         break;
@@ -226,9 +239,10 @@ public class NebulaClientOptions implements Serializable {
                     connectRetry,
                     enableGraphSSL,
                     enableMetaSSL,
+                    enableStorageSSL,
                     sslSighType,
-                    caSignParam,
-                    selfSignParam);
+                    caSSLSignParams,
+                    selfSignParams);
         }
     }
 }

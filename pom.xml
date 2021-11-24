@@ -7,7 +7,7 @@
     <groupId>com.vesoft</groupId>
     <artifactId>nebula-flink</artifactId>
     <packaging>pom</packaging>
-    <version>2.6.0</version>
+    <version>2.6.1</version>
 
     <modules>
         <module>connector</module>

@@ -1,7 +1,6 @@
 /* Copyright (c) 2020 vesoft inc. All rights reserved.
  *
- * This source code is licensed under Apache 2.0 License,
- * attached with Common Clause Condition 1.0, found in the LICENSES directory.
+ * This source code is licensed under Apache 2.0 License.
  */
 
 package org.apache.flink.connector.nebula.utils;
@@ -36,6 +35,7 @@ public class NebulaConstant {
     // default value for read & write
     public static final int DEFAULT_SCAN_LIMIT = 2000;
     public static final int DEFAULT_WRITE_BATCH = 2000;
+    public static final long DEFAULT_BATCH_INTERVAL_MS = 0;
     public static final int DEFAULT_ROW_INFO_INDEX = -1;
 
     // default value for connection

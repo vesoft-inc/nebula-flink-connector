@@ -1,7 +1,6 @@
 /* Copyright (c) 2021 vesoft inc. All rights reserved.
  *
- * This source code is licensed under Apache 2.0 License,
- * attached with Common Clause Condition 1.0, found in the LICENSES directory.
+ * This source code is licensed under Apache 2.0 License.
  */
 
 package org.apache.flink.connector.nebula.sink;
@@ -47,6 +46,9 @@ public class NebulaEdgeBatchExecutor<T> extends NebulaBatchExecutor<T> {
 
     @Override
     String executeBatch(Session session) {
+        if (nebulaEdgeList.size() == 0) {
+            return null;
+        }
         NebulaEdges nebulaEdges = new NebulaEdges(executionOptions.getLabel(),
                 executionOptions.getFields(), nebulaEdgeList, executionOptions.getPolicy(),
                 executionOptions.getPolicy());

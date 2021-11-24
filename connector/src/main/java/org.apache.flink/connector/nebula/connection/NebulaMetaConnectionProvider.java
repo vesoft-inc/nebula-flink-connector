@@ -1,13 +1,15 @@
 /* Copyright (c) 2020 vesoft inc. All rights reserved.
  *
- * This source code is licensed under Apache 2.0 License,
- * attached with Common Clause Condition 1.0, found in the LICENSES directory.
+ * This source code is licensed under Apache 2.0 License.
  */
 
 package org.apache.flink.connector.nebula.connection;
 
 import com.facebook.thrift.TException;
+import com.vesoft.nebula.client.graph.data.CASignedSSLParam;
 import com.vesoft.nebula.client.graph.data.HostAddress;
+import com.vesoft.nebula.client.graph.data.SSLParam;
+import com.vesoft.nebula.client.graph.data.SelfSignedSSLParam;
 import com.vesoft.nebula.client.graph.exception.ClientServerIncompatibleException;
 import com.vesoft.nebula.client.meta.MetaClient;
 import com.vesoft.nebula.client.meta.exception.ExecuteFailedException;
@@ -16,11 +18,9 @@ import com.vesoft.nebula.meta.PropertyType;
 import com.vesoft.nebula.meta.Schema;
 import com.vesoft.nebula.meta.SpaceItem;
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.apache.flink.connector.nebula.utils.NebulaConstant;
 import org.apache.flink.connector.nebula.utils.VidTypeEnum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,7 +37,32 @@ public class NebulaMetaConnectionProvider implements Serializable {
 
     public MetaClient getMetaClient() throws TException, ClientServerIncompatibleException {
         List<HostAddress> addresses = nebulaClientOptions.getMetaAddress();
-        MetaClient metaClient = new MetaClient(addresses);
+        int timeout = nebulaClientOptions.getTimeout();
+        int retry = nebulaClientOptions.getConnectRetry();
+        MetaClient metaClient;
+        if (nebulaClientOptions.isEnableMetaSSL()) {
+            switch (nebulaClientOptions.getSSLSighType()) {
+                case CA: {
+                    CASignParams caSignParams = nebulaClientOptions.getCaSignParam();
+                    SSLParam sslParam = new CASignedSSLParam(caSignParams.getCaCrtFilePath(),
+                            caSignParams.getCrtFilePath(), caSignParams.getKeyFilePath());
+                    metaClient = new MetaClient(addresses, timeout, retry, retry, true, sslParam);
+                    break;
+                }
+                case SELF: {
+                    SelfSignParams selfSignParams = nebulaClientOptions.getSelfSignParam();
+                    SSLParam sslParam = new SelfSignedSSLParam(selfSignParams.getCrtFilePath(),
+                            selfSignParams.getKeyFilePath(), selfSignParams.getPassword());
+                    metaClient = new MetaClient(addresses, timeout, retry, retry, true, sslParam);
+                    break;
+                }
+                default:
+                    throw new IllegalArgumentException("ssl sign type is not supported.");
+            }
+        } else {
+            metaClient = new MetaClient(addresses, timeout, retry, retry);
+        }
+
         metaClient.connect();
         return metaClient;
     }

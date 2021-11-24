@@ -1,11 +1,11 @@
 /* Copyright (c) 2020 vesoft inc. All rights reserved.
  *
- * This source code is licensed under Apache 2.0 License,
- * attached with Common Clause Condition 1.0, found in the LICENSES directory.
+ * This source code is licensed under Apache 2.0 License.
  */
 
 package org.apache.flink.connector.nebula.statement;
 
+import static org.apache.flink.connector.nebula.utils.NebulaConstant.DEFAULT_BATCH_INTERVAL_MS;
 import static org.apache.flink.connector.nebula.utils.NebulaConstant.DEFAULT_ROW_INFO_INDEX;
 import static org.apache.flink.connector.nebula.utils.NebulaConstant.DEFAULT_SCAN_LIMIT;
 import static org.apache.flink.connector.nebula.utils.NebulaConstant.DEFAULT_WRITE_BATCH;
@@ -39,9 +39,10 @@ public class VertexExecutionOptions extends ExecutionOptions {
                                   PolicyEnum policy,
                                   WriteModeEnum mode,
                                   String tag,
-                                  int idIndex) {
+                                  int idIndex,
+                                  long batchIntervalMs) {
         super(graphSpace, executeStatement, fields, positions, noColumn, limit, startTime,
-                endTime, batch, policy, mode);
+                endTime, batch, policy, mode, batchIntervalMs);
         this.tag = tag;
         this.idIndex = idIndex;
     }
@@ -71,6 +72,7 @@ public class VertexExecutionOptions extends ExecutionOptions {
         private long startTime = 0;
         private long endTime = Long.MAX_VALUE;
         private int batch = DEFAULT_WRITE_BATCH;
+        private long batchIntervalMs = DEFAULT_BATCH_INTERVAL_MS;
         private PolicyEnum policy = null;
         private WriteModeEnum mode = WriteModeEnum.INSERT;
         private int idIndex = DEFAULT_ROW_INFO_INDEX;
@@ -146,6 +148,11 @@ public class VertexExecutionOptions extends ExecutionOptions {
             return this;
         }
 
+        public ExecutionOptionBuilder setBathIntervalMs(long batchIntervalMs) {
+            this.batchIntervalMs = batchIntervalMs;
+            return this;
+        }
+
         public ExecutionOptions builder() {
             if (graphSpace == null || graphSpace.trim().isEmpty()) {
                 throw new IllegalArgumentException("graph space can not be empty.");
@@ -155,7 +162,7 @@ public class VertexExecutionOptions extends ExecutionOptions {
             }
             return new VertexExecutionOptions(graphSpace, executeStatement, fields,
                     positions, noColumn, limit, startTime, endTime, batch, policy, mode, tag,
-                    idIndex);
+                    idIndex, batchIntervalMs);
         }
     }
 }

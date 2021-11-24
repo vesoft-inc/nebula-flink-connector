@@ -1,7 +1,6 @@
 /* Copyright (c) 2020 vesoft inc. All rights reserved.
  *
- * This source code is licensed under Apache 2.0 License,
- * attached with Common Clause Condition 1.0, found in the LICENSES directory.
+ * This source code is licensed under Apache 2.0 License.
  */
 
 package org.apache.flink;
@@ -46,6 +45,7 @@ public class FlinkConnectorExample {
 
     public static void main(String[] args) {
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+        env.setParallelism(5);
         DataStream<List<String>> playerSource = constructVertexSourceData(env);
         sinkVertexData(env, playerSource);
         updateVertexData(env, playerSource);

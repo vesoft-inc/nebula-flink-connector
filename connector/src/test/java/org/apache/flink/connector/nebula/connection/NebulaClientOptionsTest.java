@@ -1,8 +1,7 @@
 
 /* Copyright (c) 2021 vesoft inc. All rights reserved.
  *
- * This source code is licensed under Apache 2.0 License,
- * attached with Common Clause Condition 1.0, found in the LICENSES directory.
+ * This source code is licensed under Apache 2.0 License.
  */
 
 package org.apache.flink.connector.nebula.connection;
@@ -52,8 +51,8 @@ public class NebulaClientOptionsTest {
                 .NebulaClientOptionsBuilder()
                 .setGraphAddress(null)
                 .setMetaAddress("127.0.0.1:9559")
-                .setEnableGraphSSL(false)
-                .setEnableMetaSSL(true)
+                .setEnableMetaSSL(false)
+                .setEnableStorageSSL(true)
                 .setSSLSignType(SSLSighType.CA)
                 .setCaSignParam("caCrtFile", "crtFile", "keyFile")
                 .build();

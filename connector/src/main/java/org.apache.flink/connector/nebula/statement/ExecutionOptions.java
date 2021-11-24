@@ -1,7 +1,6 @@
 /* Copyright (c) 2020 vesoft inc. All rights reserved.
  *
- * This source code is licensed under Apache 2.0 License,
- * attached with Common Clause Condition 1.0, found in the LICENSES directory.
+ * This source code is licensed under Apache 2.0 License.
  */
 
 package org.apache.flink.connector.nebula.statement;
@@ -132,6 +131,11 @@ public abstract class ExecutionOptions implements Serializable {
      */
     private WriteModeEnum writeMode;
 
+    /**
+     * interval between write submit
+     */
+    private long batchIntervalMs;
+
 
     protected ExecutionOptions(String graphSpace,
                                String executeStatement,
@@ -143,7 +147,8 @@ public abstract class ExecutionOptions implements Serializable {
                                long endTime,
                                long batch,
                                PolicyEnum policy,
-                               WriteModeEnum writeMode) {
+                               WriteModeEnum writeMode,
+                               long batchIntervalMs) {
         this.graphSpace = graphSpace;
 
         this.executeStatement = executeStatement;
@@ -156,6 +161,7 @@ public abstract class ExecutionOptions implements Serializable {
         this.batch = batch;
         this.policy = policy;
         this.writeMode = writeMode;
+        this.batchIntervalMs = batchIntervalMs;
     }
 
     public String getGraphSpace() {
@@ -206,6 +212,10 @@ public abstract class ExecutionOptions implements Serializable {
         return writeMode;
     }
 
+    public long getBatchIntervalMs() {
+        return batchIntervalMs;
+    }
+
     @Override
     public String toString() {
         return "ExecutionOptions{"
@@ -220,6 +230,7 @@ public abstract class ExecutionOptions implements Serializable {
                 + ", batch=" + batch
                 + ", policy=" + policy
                 + ", mode=" + writeMode
+                + ", batchIntervalMs=" + batchIntervalMs
                 + '}';
     }
 }

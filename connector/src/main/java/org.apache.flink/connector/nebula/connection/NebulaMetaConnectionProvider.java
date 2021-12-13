@@ -6,6 +6,7 @@
 package org.apache.flink.connector.nebula.connection;
 
 import com.facebook.thrift.TException;
+import com.vesoft.nebula.PropertyType;
 import com.vesoft.nebula.client.graph.data.CASignedSSLParam;
 import com.vesoft.nebula.client.graph.data.HostAddress;
 import com.vesoft.nebula.client.graph.data.SSLParam;
@@ -14,7 +15,6 @@ import com.vesoft.nebula.client.graph.exception.ClientServerIncompatibleExceptio
 import com.vesoft.nebula.client.meta.MetaClient;
 import com.vesoft.nebula.client.meta.exception.ExecuteFailedException;
 import com.vesoft.nebula.meta.ColumnDef;
-import com.vesoft.nebula.meta.PropertyType;
 import com.vesoft.nebula.meta.Schema;
 import com.vesoft.nebula.meta.SpaceItem;
 import java.io.Serializable;

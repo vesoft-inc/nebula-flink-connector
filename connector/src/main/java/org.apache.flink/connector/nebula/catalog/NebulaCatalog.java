@@ -14,6 +14,7 @@ import static org.apache.flink.connector.nebula.table.NebulaDynamicTableFactory.
 import static org.apache.flink.table.factories.FactoryUtil.CONNECTOR;
 
 import com.facebook.thrift.TException;
+import com.vesoft.nebula.PropertyType;
 import com.vesoft.nebula.client.graph.data.HostAddress;
 import com.vesoft.nebula.client.graph.exception.ClientServerIncompatibleException;
 import com.vesoft.nebula.client.meta.MetaClient;
@@ -21,7 +22,6 @@ import com.vesoft.nebula.client.meta.exception.ExecuteFailedException;
 import com.vesoft.nebula.meta.ColumnDef;
 import com.vesoft.nebula.meta.EdgeItem;
 import com.vesoft.nebula.meta.IdName;
-import com.vesoft.nebula.meta.PropertyType;
 import com.vesoft.nebula.meta.Schema;
 import com.vesoft.nebula.meta.TagItem;
 import java.util.ArrayList;

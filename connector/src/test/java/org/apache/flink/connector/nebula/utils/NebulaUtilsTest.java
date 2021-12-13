@@ -1,6 +1,6 @@
 package org.apache.flink.connector.nebula.utils;
 
-import com.vesoft.nebula.meta.PropertyType;
+import com.vesoft.nebula.PropertyType;
 import junit.framework.TestCase;
 
 public class NebulaUtilsTest extends TestCase {

@@ -5,13 +5,13 @@
 
 package org.apache.flink.connector.nebula.sink;
 
+import com.vesoft.nebula.PropertyType;
 import com.vesoft.nebula.client.graph.NebulaPoolConfig;
 import com.vesoft.nebula.client.graph.data.HostAddress;
 import com.vesoft.nebula.client.graph.data.ResultSet;
 import com.vesoft.nebula.client.graph.exception.IOErrorException;
 import com.vesoft.nebula.client.graph.net.NebulaPool;
 import com.vesoft.nebula.client.graph.net.Session;
-import com.vesoft.nebula.meta.PropertyType;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;

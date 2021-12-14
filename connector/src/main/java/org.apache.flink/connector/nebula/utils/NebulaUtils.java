@@ -5,8 +5,8 @@
 
 package org.apache.flink.connector.nebula.utils;
 
+import com.vesoft.nebula.PropertyType;
 import com.vesoft.nebula.client.graph.data.HostAddress;
-import com.vesoft.nebula.meta.PropertyType;
 import java.util.ArrayList;
 import java.util.List;
 

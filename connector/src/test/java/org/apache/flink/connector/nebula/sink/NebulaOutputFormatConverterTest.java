@@ -5,12 +5,10 @@
 
 package org.apache.flink.connector.nebula.sink;
 
-import com.vesoft.nebula.meta.PropertyType;
+import com.vesoft.nebula.PropertyType;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import org.apache.flink.connector.nebula.sink.NebulaRowEdgeOutputFormatConverter;
-import org.apache.flink.connector.nebula.sink.NebulaRowVertexOutputFormatConverter;
 import org.apache.flink.connector.nebula.statement.EdgeExecutionOptions;
 import org.apache.flink.connector.nebula.statement.ExecutionOptions;
 import org.apache.flink.connector.nebula.statement.VertexExecutionOptions;

@@ -1,6 +1,6 @@
 package org.apache.flink.connector.nebula.sink;
 
-import com.vesoft.nebula.meta.PropertyType;
+import com.vesoft.nebula.PropertyType;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;

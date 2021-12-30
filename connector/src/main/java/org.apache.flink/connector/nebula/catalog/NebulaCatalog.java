@@ -24,6 +24,7 @@ import com.vesoft.nebula.meta.EdgeItem;
 import com.vesoft.nebula.meta.IdName;
 import com.vesoft.nebula.meta.Schema;
 import com.vesoft.nebula.meta.TagItem;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -53,7 +54,7 @@ public class NebulaCatalog extends AbstractNebulaCatalog {
     private final MetaClient metaClient;
 
     public NebulaCatalog(String catalogName, String defaultDatabase, String username, String pwd,
-                         String address) {
+                         String address) throws UnknownHostException {
         super(catalogName, defaultDatabase, username, pwd, address);
         this.hostAndPorts = NebulaUtils.getHostAndPorts(address);
         this.metaClient = new MetaClient(hostAndPorts);

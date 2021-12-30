@@ -13,6 +13,7 @@ import static org.apache.flink.table.descriptors.CatalogDescriptorValidator.CATA
 import static org.apache.flink.table.descriptors.CatalogDescriptorValidator.CATALOG_PROPERTY_VERSION;
 import static org.apache.flink.table.descriptors.CatalogDescriptorValidator.CATALOG_TYPE;
 
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -31,12 +32,16 @@ public class NebulaCatalogFactory implements CatalogFactory {
     @Override
     public Catalog createCatalog(String name, Map<String, String> properties) {
         final DescriptorProperties prop = getValidatedProperties(properties);
-        return new NebulaCatalog(
-                name,
-                prop.getString(CATALOG_DEFAULT_DATABASE),
-                prop.getString(CATALOG_NEBULA_USERNAME),
-                prop.getString(CATALOG_NEBULA_PASSWORD),
-                prop.getString(CATALOG_NEBULA_ADDRESS));
+        try {
+            return new NebulaCatalog(
+                    name,
+                    prop.getString(CATALOG_DEFAULT_DATABASE),
+                    prop.getString(CATALOG_NEBULA_USERNAME),
+                    prop.getString(CATALOG_NEBULA_PASSWORD),
+                    prop.getString(CATALOG_NEBULA_ADDRESS));
+        } catch (UnknownHostException e) {
+            throw new IllegalArgumentException("address is illegal,", e);
+        }
     }
 
     @Override

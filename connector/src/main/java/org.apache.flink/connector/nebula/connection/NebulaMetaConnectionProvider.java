@@ -18,6 +18,7 @@ import com.vesoft.nebula.meta.ColumnDef;
 import com.vesoft.nebula.meta.Schema;
 import com.vesoft.nebula.meta.SpaceItem;
 import java.io.Serializable;
+import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,7 +36,8 @@ public class NebulaMetaConnectionProvider implements Serializable {
         this.nebulaClientOptions = nebulaClientOptions;
     }
 
-    public MetaClient getMetaClient() throws TException, ClientServerIncompatibleException {
+    public MetaClient getMetaClient() throws TException, ClientServerIncompatibleException,
+            UnknownHostException {
         List<HostAddress> addresses = nebulaClientOptions.getMetaAddress();
         int timeout = nebulaClientOptions.getTimeout();
         int retry = nebulaClientOptions.getConnectRetry();

@@ -9,6 +9,7 @@ import com.facebook.thrift.TException;
 import com.vesoft.nebula.client.graph.data.HostAddress;
 import com.vesoft.nebula.client.graph.exception.ClientServerIncompatibleException;
 import com.vesoft.nebula.client.meta.MetaClient;
+import java.net.UnknownHostException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -57,7 +58,12 @@ public abstract class AbstractNebulaCatalog extends AbstractCatalog {
     public void open() throws CatalogException {
         // test metaClient connection
         List<HostAddress> hostAndPorts = NebulaUtils.getHostAndPorts(address);
-        MetaClient metaClient = new MetaClient(hostAndPorts);
+        MetaClient metaClient = null;
+        try {
+            metaClient = new MetaClient(hostAndPorts);
+        } catch (UnknownHostException e) {
+            throw new IllegalArgumentException("address is illegal, ", e);
+        }
         try {
             metaClient.connect();
             metaClient.close();

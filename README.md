@@ -6,7 +6,7 @@ Flink Connector for Nebula Graph
 [![GitHub stars](https://img.shields.io/github/stars/vesoft-inc/nebula-flink-connector.svg?color=brightgreen)](https://GitHub.com/vesoft-inc/nebula-flink-connector/stargazers/)
 [![GitHub fork](https://img.shields.io/github/forks/vesoft-inc/nebula-flink-connector.svg?color=brightgreen)](https://GitHub.com/vesoft-inc/nebula-flink-connector/forks/)
 
-Nebula-Flink-Connector 2.0 is a connector that helps Flink users to easily access Nebula Graph 2.0. If you want to access Nebula Graph 1.x with Flink, please refer to [Nebula-Flink-Connector 1.0](https://github.com/vesoft-inc/nebula-java/tree/v1.0/tools/nebula-flink).
+Nebula-Flink-Connector 2.0/3.0 is a connector that helps Flink users to easily access Nebula Graph 2.0/3.0. If you want to access Nebula Graph 1.x with Flink, please refer to [Nebula-Flink-Connector 1.0](https://github.com/vesoft-inc/nebula-java/tree/v1.0/tools/nebula-flink).
 
 ## Quick start
 
@@ -15,7 +15,7 @@ Nebula-Flink-Connector 2.0 is a connector that helps Flink users to easily acces
 To use Nebula Flink Connector, do a check of these:
 
 - Java 8 or a higher version is installed.
-- Nebula Graph v2.0 is deployed. For more information, see [Deployment and installation of Nebula Graph](https://docs.nebula-graph.io/2.0/4.deployment-and-installation/1.resource-preparations/ "Click to go to Nebula Graph website").
+- Nebula Graph is deployed. For more information, see [Deployment and installation of Nebula Graph](https://docs.nebula-graph.io/2.0/4.deployment-and-installation/1.resource-preparations/ "Click to go to Nebula Graph website").
 
 ### Use in Maven
 Add the dependency to your pom.xml.
@@ -24,7 +24,7 @@ Add the dependency to your pom.xml.
 <dependency>
     <groupId>com.vesoft</groupId>
     <artifactId>nebula-flink-connector</artifactId>
-    <version>2.6.0</version>
+    <version>3.0-SNAPSHOT</version>
 </dependency>
 ```
 
@@ -73,4 +73,4 @@ There are the version correspondence between Nebula Flink Connector and Nebula:
 |       2.0.0             |  2.0.0, 2.0.1  |
 |       2.5.0             |  2.5.0, 2.5.1  |
 |       2.6.0             |     2.6.0      |
-|     2.0-SNAPSHOT        |     nightly    |
+|     3.0-SNAPSHOT        |     nightly    |

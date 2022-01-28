@@ -24,7 +24,7 @@ Add the dependency to your pom.xml.
 <dependency>
     <groupId>com.vesoft</groupId>
     <artifactId>nebula-flink-connector</artifactId>
-    <version>3.0-SNAPSHOT</version>
+    <version>3.0.0</version>
 </dependency>
 ```
 
@@ -73,4 +73,5 @@ There are the version correspondence between Nebula Flink Connector and Nebula:
 |       2.0.0             |  2.0.0, 2.0.1  |
 |       2.5.0             |  2.5.0, 2.5.1  |
 |       2.6.0             |     2.6.0      |
+|       3.0.0             |     3.0.0      |
 |     3.0-SNAPSHOT        |     nightly    |

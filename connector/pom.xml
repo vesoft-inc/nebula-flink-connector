@@ -19,6 +19,7 @@
         <compiler.source.version>1.8</compiler.source.version>
         <compiler.target.version>1.8</compiler.target.version>
         <junit.version>4.13.1</junit.version>
+        <slf4j-log4j12.version>1.7.25</slf4j-log4j12.version>
     </properties>
 
     <dependencies>
@@ -66,6 +67,16 @@
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- slf4j-log4j -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <version>${slf4j-log4j12.version}</version>
+            <optional>true</optional>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 

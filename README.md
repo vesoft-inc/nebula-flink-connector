@@ -76,3 +76,6 @@ There are the version correspondence between Nebula Flink Connector and Nebula:
 |       2.6.1             |  2.6.0, 2.6.1  |
 |       3.0.0             |     3.0.0      | 
 |     3.0-SNAPSHOT        |     nightly    |
+
+## Note
+Flink version requirements: 1.11.x

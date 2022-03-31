@@ -5,6 +5,7 @@
 
 package org.apache.flink.connector.nebula.source;
 
+import com.vesoft.nebula.client.meta.MetaClient;
 import com.vesoft.nebula.client.storage.StorageClient;
 import com.vesoft.nebula.client.storage.data.BaseTableRow;
 import java.io.IOException;
@@ -16,6 +17,7 @@ import org.apache.flink.api.common.io.statistics.BaseStatistics;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.connector.nebula.connection.NebulaStorageConnectionProvider;
 import org.apache.flink.connector.nebula.statement.ExecutionOptions;
+import org.apache.flink.connector.nebula.utils.PartitionUtils;
 import org.apache.flink.core.io.GenericInputSplit;
 import org.apache.flink.core.io.InputSplit;
 import org.apache.flink.core.io.InputSplitAssigner;
@@ -39,6 +41,7 @@ abstract class NebulaInputFormat<T> extends RichInputFormat<T, InputSplit> {
     protected ExecutionOptions executionOptions;
     protected NebulaStorageConnectionProvider storageConnectionProvider;
     private transient StorageClient storageClient;
+    private transient MetaClient metaClient;
 
     protected Boolean hasNext = false;
     protected List<BaseTableRow> rows;
@@ -47,6 +50,10 @@ abstract class NebulaInputFormat<T> extends RichInputFormat<T, InputSplit> {
     protected NebulaConverter<T> nebulaConverter;
 
     private long scannedRows;
+    /**
+     * the number of graph partitions
+     */
+    private Integer numPart;
     private int times = 0; // todo rm
 
     public NebulaInputFormat(NebulaStorageConnectionProvider storageConnectionProvider,
@@ -64,6 +71,8 @@ abstract class NebulaInputFormat<T> extends RichInputFormat<T, InputSplit> {
     public void openInputFormat() throws IOException {
         try {
             storageClient = storageConnectionProvider.getStorageClient();
+            metaClient = storageConnectionProvider.getMetaClient();
+            numPart = metaClient.getPartsAlloc(executionOptions.getGraphSpace()).size();
         } catch (Exception e) {
             LOG.error("connect storage client error, ", e);
             throw new IOException("connect storage client error, ", e);
@@ -76,6 +85,9 @@ abstract class NebulaInputFormat<T> extends RichInputFormat<T, InputSplit> {
         try {
             if (storageClient != null) {
                 storageClient.close();
+            }
+            if (metaClient != null) {
+                metaClient.close();
             }
         } catch (Exception e) {
             LOG.error("close client error,", e);
@@ -90,7 +102,11 @@ abstract class NebulaInputFormat<T> extends RichInputFormat<T, InputSplit> {
 
     @Override
     public InputSplit[] createInputSplits(int numSplit) throws IOException {
-        return new GenericInputSplit[]{new GenericInputSplit(0, 1)};
+        InputSplit[] inputSplits = new InputSplit[numSplit];
+        for (int i = 1; i <= numSplit; i++) {
+            inputSplits[i - 1] = new GenericInputSplit(i, numSplit);
+        }
+        return inputSplits;
     }
 
     @Override
@@ -101,11 +117,13 @@ abstract class NebulaInputFormat<T> extends RichInputFormat<T, InputSplit> {
     @Override
     public void open(InputSplit inputSplit) throws IOException {
         if (inputSplit != null) {
-
+            GenericInputSplit split = (GenericInputSplit) inputSplit;
+            List<Integer> scanParts = PartitionUtils.getScanParts(split.getSplitNumber(),
+                    numPart, split.getTotalNumberOfSplits());
             if (executionOptions.getDataType().isVertex()) {
-                nebulaSource = new NebulaVertexSource(storageClient, executionOptions);
+                nebulaSource = new NebulaVertexSource(storageClient, executionOptions, scanParts);
             } else {
-                nebulaSource = new NebulaEdgeSource(storageClient, executionOptions);
+                nebulaSource = new NebulaEdgeSource(storageClient, executionOptions, scanParts);
             }
             try {
                 hasNext = nebulaSource.hasNext();

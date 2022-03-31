@@ -5,11 +5,11 @@
 
 package org.apache.flink.connector.nebula.connection;
 
-
 import com.vesoft.nebula.client.graph.data.CASignedSSLParam;
 import com.vesoft.nebula.client.graph.data.HostAddress;
 import com.vesoft.nebula.client.graph.data.SSLParam;
 import com.vesoft.nebula.client.graph.data.SelfSignedSSLParam;
+import com.vesoft.nebula.client.meta.MetaClient;
 import com.vesoft.nebula.client.storage.StorageClient;
 import java.io.Serializable;
 import java.util.List;
@@ -61,6 +61,39 @@ public class NebulaStorageConnectionProvider implements Serializable {
             throw new Exception("failed to connect storaged.");
         }
         return storageClient;
+    }
+
+    public MetaClient getMetaClient() throws Exception {
+        List<HostAddress> addresses = nebulaClientOptions.getMetaAddress();
+        int timeout = nebulaClientOptions.getTimeout();
+        int retry = nebulaClientOptions.getConnectRetry();
+        MetaClient metaClient;
+        if (nebulaClientOptions.isEnableStorageSSL()) {
+            switch (nebulaClientOptions.getSSLSighType()) {
+                case CA: {
+                    CASignParams caSignParams = nebulaClientOptions.getCaSignParam();
+                    SSLParam sslParam = new CASignedSSLParam(caSignParams.getCaCrtFilePath(),
+                            caSignParams.getCrtFilePath(), caSignParams.getKeyFilePath());
+                    metaClient = new MetaClient(addresses, timeout, retry, retry, true,
+                            sslParam);
+                    break;
+                }
+                case SELF: {
+                    SelfSignParams selfSignParams = nebulaClientOptions.getSelfSignParam();
+                    SSLParam sslParam = new SelfSignedSSLParam(selfSignParams.getCrtFilePath(),
+                            selfSignParams.getKeyFilePath(), selfSignParams.getPassword());
+                    metaClient = new MetaClient(addresses, timeout, retry, retry, true,
+                            sslParam);
+                    break;
+                }
+                default:
+                    throw new IllegalArgumentException("ssl sign type is not supported.");
+            }
+        } else {
+            metaClient = new MetaClient(addresses, timeout, retry, retry);
+        }
+        metaClient.connect();
+        return metaClient;
     }
 
 }

@@ -28,7 +28,7 @@ public class NebulaVertexSource extends NebulaSource {
         this.scanPartIterator = scanParts.iterator();
     }
 
-    private void getVertexDataRow(Integer part) {
+    private void getVertexDataRow(int part) {
         if (executionOptions.isNoColumn()) {
             iterator = storageClient.scanVertex(
                     executionOptions.getGraphSpace(),
@@ -59,18 +59,13 @@ public class NebulaVertexSource extends NebulaSource {
             return false;
         }
 
-        boolean continueFlag;
-        boolean breakFlag = false;
-        while ((dataIterator == null || !dataIterator.hasNext()) && !breakFlag) {
-            continueFlag = false;
+        while ((dataIterator == null || !dataIterator.hasNext())) {
             if (iterator == null || !iterator.hasNext()) {
                 if (scanPartIterator.hasNext()) {
                     getVertexDataRow(scanPartIterator.next());
-                    // jump to the next loop
-                    continueFlag = true;
+                    continue;
                 }
-                // break while loop
-                breakFlag = !continueFlag;
+                break;
             } else {
                 ScanVertexResult next = iterator.next();
                 if (!next.isEmpty()) {

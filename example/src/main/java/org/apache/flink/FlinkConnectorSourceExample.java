@@ -12,6 +12,7 @@ import java.util.List;
 import org.apache.flink.api.java.ExecutionEnvironment;
 import org.apache.flink.api.java.operators.DataSource;
 import org.apache.flink.connector.nebula.connection.NebulaClientOptions;
+import org.apache.flink.connector.nebula.connection.NebulaMetaConnectionProvider;
 import org.apache.flink.connector.nebula.connection.NebulaStorageConnectionProvider;
 import org.apache.flink.connector.nebula.source.NebulaInputRowFormat;
 import org.apache.flink.connector.nebula.source.NebulaInputTableRowFormat;
@@ -48,6 +49,7 @@ public class FlinkConnectorSourceExample {
     private static final Logger LOG = LoggerFactory.getLogger(FlinkConnectorSourceExample.class);
 
     private static NebulaStorageConnectionProvider storageConnectionProvider;
+    private static NebulaMetaConnectionProvider metaConnectionProvider;
     private static NebulaStorageConnectionProvider storageConnectionProviderCaSSL;
     private static NebulaStorageConnectionProvider storageConnectionProviderSelfSSL;
     private static ExecutionOptions vertexExecutionOptions;
@@ -76,6 +78,8 @@ public class FlinkConnectorSourceExample {
                         .build();
         storageConnectionProvider =
                 new NebulaStorageConnectionProvider(nebulaClientOptions);
+        metaConnectionProvider =
+                new NebulaMetaConnectionProvider(nebulaClientOptions);
 
         NebulaClientOptions nebulaClientOptionsWithCaSSL =
                 new NebulaClientOptions.NebulaClientOptionsBuilder()
@@ -129,7 +133,8 @@ public class FlinkConnectorSourceExample {
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         env.setParallelism(1);
 
-        NebulaSourceFunction sourceFunction = new NebulaSourceFunction(storageConnectionProvider)
+        NebulaSourceFunction sourceFunction = new NebulaSourceFunction(storageConnectionProvider,
+                metaConnectionProvider)
                 .setExecutionOptions(vertexExecutionOptions);
         DataStreamSource<BaseTableRow> dataStreamSource = env.addSource(sourceFunction);
 
@@ -165,7 +170,8 @@ public class FlinkConnectorSourceExample {
         env.setParallelism(3);
 
         // get Nebula Graph data in BaseTableRow format
-        NebulaSourceFunction sourceFunction = new NebulaSourceFunction(storageConnectionProvider)
+        NebulaSourceFunction sourceFunction = new NebulaSourceFunction(storageConnectionProvider,
+                metaConnectionProvider)
                 .setExecutionOptions(edgeExecutionOptions);
         DataStreamSource<BaseTableRow> dataStreamSource = env.addSource(sourceFunction);
 
@@ -203,6 +209,7 @@ public class FlinkConnectorSourceExample {
 
         // get Nebula vertex data in flink Row format
         NebulaInputRowFormat inputRowFormat = new NebulaInputRowFormat(storageConnectionProvider,
+                metaConnectionProvider,
                 vertexExecutionOptions);
         DataSource<Row> rowDataSource = env.createInput(inputRowFormat);
         rowDataSource.print();
@@ -211,6 +218,7 @@ public class FlinkConnectorSourceExample {
         // get Nebula vertex data in nebula TableRow format
         NebulaInputTableRowFormat inputFormat =
                 new NebulaInputTableRowFormat(storageConnectionProvider,
+                        metaConnectionProvider,
                         vertexExecutionOptions);
         DataSource<BaseTableRow> dataSource = env.createInput(inputFormat);
         dataSource.print();
@@ -226,6 +234,7 @@ public class FlinkConnectorSourceExample {
 
         // get Nebula edge data in flink Row format
         NebulaInputRowFormat inputFormat = new NebulaInputRowFormat(storageConnectionProvider,
+                metaConnectionProvider,
                 edgeExecutionOptions);
         DataSource<Row> dataSourceRow = env.createInput(inputFormat);
         dataSourceRow.print();
@@ -234,6 +243,7 @@ public class FlinkConnectorSourceExample {
         // get Nebula edge data in Nebula TableRow format
         NebulaInputTableRowFormat inputTableFormat =
                 new NebulaInputTableRowFormat(storageConnectionProvider,
+                        metaConnectionProvider,
                         edgeExecutionOptions);
         DataSource<BaseTableRow> dataSourceTableRow = env.createInput(inputTableFormat);
         dataSourceTableRow.print();

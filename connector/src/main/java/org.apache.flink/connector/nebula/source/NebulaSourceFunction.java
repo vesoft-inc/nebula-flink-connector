@@ -11,6 +11,7 @@ import com.vesoft.nebula.client.storage.data.BaseTableRow;
 import java.util.List;
 import org.apache.flink.api.common.functions.RuntimeContext;
 import org.apache.flink.configuration.Configuration;
+import org.apache.flink.connector.nebula.connection.NebulaMetaConnectionProvider;
 import org.apache.flink.connector.nebula.connection.NebulaStorageConnectionProvider;
 import org.apache.flink.connector.nebula.statement.ExecutionOptions;
 import org.apache.flink.connector.nebula.utils.PartitionUtils;
@@ -29,16 +30,19 @@ public class NebulaSourceFunction extends RichParallelSourceFunction<BaseTableRo
 
     private StorageClient storageClient;
     private MetaClient metaClient;
-    private final NebulaStorageConnectionProvider connectionProvider;
+    private final NebulaStorageConnectionProvider storageConnectionProvider;
+    private final NebulaMetaConnectionProvider metaConnectionProvider;
     private ExecutionOptions executionOptions;
     /**
      * the number of graph partitions
      */
     private Integer numPart;
 
-    public NebulaSourceFunction(NebulaStorageConnectionProvider connectionProvider) {
+    public NebulaSourceFunction(NebulaStorageConnectionProvider storageConnectionProvider,
+                                NebulaMetaConnectionProvider metaConnectionProvider) {
         super();
-        this.connectionProvider = connectionProvider;
+        this.storageConnectionProvider = storageConnectionProvider;
+        this.metaConnectionProvider = metaConnectionProvider;
     }
 
     /**
@@ -47,8 +51,8 @@ public class NebulaSourceFunction extends RichParallelSourceFunction<BaseTableRo
     @Override
     public void open(Configuration parameters) throws Exception {
         super.open(parameters);
-        storageClient = connectionProvider.getStorageClient();
-        metaClient = connectionProvider.getMetaClient();
+        storageClient = storageConnectionProvider.getStorageClient();
+        metaClient = metaConnectionProvider.getMetaClient();
         numPart = metaClient.getPartsAlloc(executionOptions.getGraphSpace()).size();
     }
 
@@ -57,11 +61,15 @@ public class NebulaSourceFunction extends RichParallelSourceFunction<BaseTableRo
      */
     @Override
     public void close() throws Exception {
-        if (storageClient != null) {
-            storageClient.close();
-        }
-        if (metaClient != null) {
-            metaClient.close();
+        try {
+            if (storageClient != null) {
+                storageClient.close();
+            }
+            if (metaClient != null) {
+                metaClient.close();
+            }
+        } catch (Exception e) {
+            LOG.error("cancel exception:{}", e.getMessage(), e);
         }
     }
 

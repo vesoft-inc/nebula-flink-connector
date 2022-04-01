@@ -15,6 +15,7 @@ import org.apache.flink.api.common.io.DefaultInputSplitAssigner;
 import org.apache.flink.api.common.io.RichInputFormat;
 import org.apache.flink.api.common.io.statistics.BaseStatistics;
 import org.apache.flink.configuration.Configuration;
+import org.apache.flink.connector.nebula.connection.NebulaMetaConnectionProvider;
 import org.apache.flink.connector.nebula.connection.NebulaStorageConnectionProvider;
 import org.apache.flink.connector.nebula.statement.ExecutionOptions;
 import org.apache.flink.connector.nebula.utils.PartitionUtils;
@@ -40,6 +41,7 @@ abstract class NebulaInputFormat<T> extends RichInputFormat<T, InputSplit> {
 
     protected ExecutionOptions executionOptions;
     protected NebulaStorageConnectionProvider storageConnectionProvider;
+    protected NebulaMetaConnectionProvider metaConnectionProvider;
     private transient StorageClient storageClient;
     private transient MetaClient metaClient;
 
@@ -57,8 +59,10 @@ abstract class NebulaInputFormat<T> extends RichInputFormat<T, InputSplit> {
     private int times = 0; // todo rm
 
     public NebulaInputFormat(NebulaStorageConnectionProvider storageConnectionProvider,
+                             NebulaMetaConnectionProvider metaConnectionProvider,
                              ExecutionOptions executionOptions) {
         this.storageConnectionProvider = storageConnectionProvider;
+        this.metaConnectionProvider = metaConnectionProvider;
         this.executionOptions = executionOptions;
     }
 
@@ -71,7 +75,7 @@ abstract class NebulaInputFormat<T> extends RichInputFormat<T, InputSplit> {
     public void openInputFormat() throws IOException {
         try {
             storageClient = storageConnectionProvider.getStorageClient();
-            metaClient = storageConnectionProvider.getMetaClient();
+            metaClient = metaConnectionProvider.getMetaClient();
             numPart = metaClient.getPartsAlloc(executionOptions.getGraphSpace()).size();
         } catch (Exception e) {
             LOG.error("connect storage client error, ", e);
@@ -103,8 +107,8 @@ abstract class NebulaInputFormat<T> extends RichInputFormat<T, InputSplit> {
     @Override
     public InputSplit[] createInputSplits(int numSplit) throws IOException {
         InputSplit[] inputSplits = new InputSplit[numSplit];
-        for (int i = 1; i <= numSplit; i++) {
-            inputSplits[i - 1] = new GenericInputSplit(i, numSplit);
+        for (int i = 0; i < numSplit; i++) {
+            inputSplits[i] = new GenericInputSplit(i + 1, numSplit);
         }
         return inputSplits;
     }

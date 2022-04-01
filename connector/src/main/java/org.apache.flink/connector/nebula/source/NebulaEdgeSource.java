@@ -28,7 +28,7 @@ public class NebulaEdgeSource extends NebulaSource {
         this.scanPartIterator = scanParts.iterator();
     }
 
-    public void getEdgeDataRow(Integer part) {
+    public void getEdgeDataRow(int part) {
         if (executionOptions.isNoColumn()) {
             iterator = storageClient.scanEdge(
                     executionOptions.getGraphSpace(),
@@ -61,18 +61,13 @@ public class NebulaEdgeSource extends NebulaSource {
             return false;
         }
 
-        boolean continueFlag;
-        boolean breakFlag = false;
-        while ((dataIterator == null || !dataIterator.hasNext()) && !breakFlag) {
-            continueFlag = false;
+        while ((dataIterator == null || !dataIterator.hasNext())) {
             if (iterator == null || !iterator.hasNext()) {
                 if (scanPartIterator.hasNext()) {
                     getEdgeDataRow(scanPartIterator.next());
-                    // jump to the next loop
-                    continueFlag = true;
+                    continue;
                 }
-                // break while loop
-                breakFlag = !continueFlag;
+                break;
             } else {
                 ScanEdgeResult next = iterator.next();
                 if (!next.isEmpty()) {

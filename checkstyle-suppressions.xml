@@ -6,4 +6,5 @@
 <suppressions>
     <suppress files="[\\/]src[\\/]main[\\/]fbthrift" checks=".*" />
     <suppress files="[\\/]src[\\/]main[\\/]generated" checks=".*" />
+    <suppress files="FlinkExecutorThreadFactory\.java" checks=".*" />
 </suppressions>

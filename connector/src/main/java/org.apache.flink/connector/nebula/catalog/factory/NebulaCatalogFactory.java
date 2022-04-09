@@ -5,13 +5,13 @@
 
 package org.apache.flink.connector.nebula.catalog.factory;
 
+import static org.apache.flink.graph.descriptors.NebulaCatalogValidator.CATALOG_DEFAULT_DATABASE;
 import static org.apache.flink.graph.descriptors.NebulaCatalogValidator.CATALOG_NEBULA_ADDRESS;
 import static org.apache.flink.graph.descriptors.NebulaCatalogValidator.CATALOG_NEBULA_PASSWORD;
 import static org.apache.flink.graph.descriptors.NebulaCatalogValidator.CATALOG_NEBULA_USERNAME;
+import static org.apache.flink.graph.descriptors.NebulaCatalogValidator.CATALOG_PROPERTY_VERSION;
+import static org.apache.flink.graph.descriptors.NebulaCatalogValidator.CATALOG_TYPE;
 import static org.apache.flink.graph.descriptors.NebulaCatalogValidator.CATALOG_TYPE_VALUE_NEBULA;
-import static org.apache.flink.table.descriptors.CatalogDescriptorValidator.CATALOG_DEFAULT_DATABASE;
-import static org.apache.flink.table.descriptors.CatalogDescriptorValidator.CATALOG_PROPERTY_VERSION;
-import static org.apache.flink.table.descriptors.CatalogDescriptorValidator.CATALOG_TYPE;
 
 import java.net.UnknownHostException;
 import java.util.ArrayList;

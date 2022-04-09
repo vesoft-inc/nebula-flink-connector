@@ -30,8 +30,8 @@ import org.apache.flink.configuration.Configuration;
 import org.apache.flink.connector.nebula.connection.NebulaGraphConnectionProvider;
 import org.apache.flink.connector.nebula.connection.NebulaMetaConnectionProvider;
 import org.apache.flink.connector.nebula.statement.ExecutionOptions;
+import org.apache.flink.connector.nebula.utils.FlinkExecutorThreadFactory;
 import org.apache.flink.connector.nebula.utils.VidTypeEnum;
-import org.apache.flink.runtime.util.ExecutorThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -113,7 +113,7 @@ public class NebulaBatchOutputFormat<T> extends RichOutputFormat<T> implements F
         // start the schedule task: submit the buffer records every batchInterval.
         // If batchIntervalMs is 0, do not start the scheduler task.
         if (executionOptions.getBatchIntervalMs() != 0 && executionOptions.getBatch() != 1) {
-            this.scheduler = Executors.newScheduledThreadPool(1, new ExecutorThreadFactory(
+            this.scheduler = Executors.newScheduledThreadPool(1, new FlinkExecutorThreadFactory(
                     "nebula-write-output-format"));
             this.scheduledFuture = this.scheduler.scheduleWithFixedDelay(() -> {
                 synchronized (NebulaBatchOutputFormat.this) {

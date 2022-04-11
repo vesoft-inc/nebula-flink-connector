@@ -1,4 +1,4 @@
-package org.apache.flink.connector.nebula.utils;
+package org.apache.flink.flink.util;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -17,8 +17,6 @@ package org.apache.flink.connector.nebula.utils;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-import org.apache.flink.util.FatalExitExceptionHandler;
 
 import javax.annotation.Nullable;
 
@@ -43,7 +41,7 @@ import static org.apache.flink.util.Preconditions.checkNotNull;
  *
  * <p>All threads created by this factory are daemon threads and have the default (normal) priority.
  */
-public class FlinkExecutorThreadFactory implements ThreadFactory {
+public class ExecutorThreadFactory implements ThreadFactory {
 
     /** The thread pool name used when no explicit pool name has been specified. */
     private static final String DEFAULT_POOL_NAME = "flink-executor-pool";
@@ -64,7 +62,7 @@ public class FlinkExecutorThreadFactory implements ThreadFactory {
      * Creates a new thread factory using the default thread pool name ('flink-executor-pool') and
      * the default uncaught exception handler (log exception and kill process).
      */
-    public FlinkExecutorThreadFactory() {
+    public ExecutorThreadFactory() {
         this(DEFAULT_POOL_NAME);
     }
 
@@ -74,7 +72,7 @@ public class FlinkExecutorThreadFactory implements ThreadFactory {
      *
      * @param poolName The pool name, used as the threads' name prefix
      */
-    public FlinkExecutorThreadFactory(String poolName) {
+    public ExecutorThreadFactory(String poolName) {
         this(poolName, FatalExitExceptionHandler.INSTANCE);
     }
 
@@ -85,11 +83,11 @@ public class FlinkExecutorThreadFactory implements ThreadFactory {
      * @param poolName The pool name, used as the threads' name prefix
      * @param exceptionHandler The uncaught exception handler for the threads
      */
-    public FlinkExecutorThreadFactory(String poolName, UncaughtExceptionHandler exceptionHandler) {
+    public ExecutorThreadFactory(String poolName, UncaughtExceptionHandler exceptionHandler) {
         this(poolName, Thread.NORM_PRIORITY, exceptionHandler);
     }
 
-    FlinkExecutorThreadFactory(
+    ExecutorThreadFactory(
             final String poolName,
             final int threadPriority,
             @Nullable final UncaughtExceptionHandler exceptionHandler) {
@@ -123,7 +121,7 @@ public class FlinkExecutorThreadFactory implements ThreadFactory {
 
     // --------------------------------------------------------------------------------------------
 
-    /** Builder for {@link FlinkExecutorThreadFactory}. */
+    /** Builder for {@link ExecutorThreadFactory}. */
     public static final class Builder {
         private String poolName;
         private int priority = Thread.NORM_PRIORITY;
@@ -144,8 +142,8 @@ public class FlinkExecutorThreadFactory implements ThreadFactory {
             return this;
         }
 
-        public FlinkExecutorThreadFactory build() {
-            return new FlinkExecutorThreadFactory(poolName, priority, exceptionHandler);
+        public ExecutorThreadFactory build() {
+            return new ExecutorThreadFactory(poolName, priority, exceptionHandler);
         }
     }
 }

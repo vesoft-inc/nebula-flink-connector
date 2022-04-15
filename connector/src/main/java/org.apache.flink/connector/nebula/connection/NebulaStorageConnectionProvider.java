@@ -61,4 +61,12 @@ public class NebulaStorageConnectionProvider implements Serializable {
         }
         return storageClient;
     }
+
+    public NebulaClientOptions getNebulaClientOptions() {
+        return nebulaClientOptions;
+    }
+
+    public void setNebulaClientOptions(NebulaClientOptions nebulaClientOptions) {
+        this.nebulaClientOptions = nebulaClientOptions;
+    }
 }

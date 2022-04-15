@@ -6,7 +6,6 @@
 package org.apache.flink.connector.nebula.source;
 
 import java.io.IOException;
-import org.apache.flink.connector.nebula.connection.NebulaMetaConnectionProvider;
 import org.apache.flink.connector.nebula.connection.NebulaStorageConnectionProvider;
 import org.apache.flink.connector.nebula.statement.ExecutionOptions;
 import org.apache.flink.core.io.InputSplit;
@@ -17,17 +16,15 @@ import org.apache.flink.types.Row;
  * Read NebulaGraph data in flink's {@link Row} format.
  * <p>how to use:
  *     NebulaInputRowFormat inputFormat = new NebulaInputRowFormat
- *                                        (storageConnectionProvider,
- *                                        metaConnectionProvider, vertexExecutionOptions);
+ *                                        (storageConnectionProvider, vertexExecutionOptions);
  *     DataSource dataSource = env.createInput(inputFormat);
  * </p>
  */
 public class NebulaInputRowFormat extends NebulaInputFormat<Row> {
 
     public NebulaInputRowFormat(NebulaStorageConnectionProvider storageConnectionProvider,
-                                NebulaMetaConnectionProvider metaConnectionProvider,
                                 ExecutionOptions executionOptions) {
-        super(storageConnectionProvider, metaConnectionProvider, executionOptions);
+        super(storageConnectionProvider, executionOptions);
     }
 
     @Override

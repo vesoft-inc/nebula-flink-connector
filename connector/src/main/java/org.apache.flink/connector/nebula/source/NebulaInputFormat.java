@@ -15,6 +15,7 @@ import org.apache.flink.api.common.io.DefaultInputSplitAssigner;
 import org.apache.flink.api.common.io.RichInputFormat;
 import org.apache.flink.api.common.io.statistics.BaseStatistics;
 import org.apache.flink.configuration.Configuration;
+import org.apache.flink.connector.nebula.connection.NebulaClientOptions;
 import org.apache.flink.connector.nebula.connection.NebulaMetaConnectionProvider;
 import org.apache.flink.connector.nebula.connection.NebulaStorageConnectionProvider;
 import org.apache.flink.connector.nebula.statement.ExecutionOptions;
@@ -59,10 +60,12 @@ abstract class NebulaInputFormat<T> extends RichInputFormat<T, InputSplit> {
     private int times = 0; // todo rm
 
     public NebulaInputFormat(NebulaStorageConnectionProvider storageConnectionProvider,
-                             NebulaMetaConnectionProvider metaConnectionProvider,
                              ExecutionOptions executionOptions) {
         this.storageConnectionProvider = storageConnectionProvider;
-        this.metaConnectionProvider = metaConnectionProvider;
+        NebulaClientOptions nebulaClientOptions =
+                storageConnectionProvider.getNebulaClientOptions();
+        this.metaConnectionProvider =
+                new NebulaMetaConnectionProvider(nebulaClientOptions);
         this.executionOptions = executionOptions;
     }
 

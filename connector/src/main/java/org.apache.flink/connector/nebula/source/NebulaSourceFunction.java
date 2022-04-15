@@ -11,6 +11,7 @@ import com.vesoft.nebula.client.storage.data.BaseTableRow;
 import java.util.List;
 import org.apache.flink.api.common.functions.RuntimeContext;
 import org.apache.flink.configuration.Configuration;
+import org.apache.flink.connector.nebula.connection.NebulaClientOptions;
 import org.apache.flink.connector.nebula.connection.NebulaMetaConnectionProvider;
 import org.apache.flink.connector.nebula.connection.NebulaStorageConnectionProvider;
 import org.apache.flink.connector.nebula.statement.ExecutionOptions;
@@ -38,11 +39,13 @@ public class NebulaSourceFunction extends RichParallelSourceFunction<BaseTableRo
      */
     private Integer numPart;
 
-    public NebulaSourceFunction(NebulaStorageConnectionProvider storageConnectionProvider,
-                                NebulaMetaConnectionProvider metaConnectionProvider) {
+    public NebulaSourceFunction(NebulaStorageConnectionProvider storageConnectionProvider) {
         super();
         this.storageConnectionProvider = storageConnectionProvider;
-        this.metaConnectionProvider = metaConnectionProvider;
+        NebulaClientOptions nebulaClientOptions =
+                storageConnectionProvider.getNebulaClientOptions();
+        this.metaConnectionProvider =
+                new NebulaMetaConnectionProvider(nebulaClientOptions);
     }
 
     /**

@@ -59,7 +59,7 @@ public class NebulaVertexSource extends NebulaSource {
             return false;
         }
 
-        while ((dataIterator == null || !dataIterator.hasNext())) {
+        while (dataIterator == null || !dataIterator.hasNext()) {
             if (iterator == null || !iterator.hasNext()) {
                 if (scanPartIterator.hasNext()) {
                     getVertexDataRow(scanPartIterator.next());

@@ -37,7 +37,7 @@ public class NebulaSourceFunction extends RichParallelSourceFunction<BaseTableRo
     /**
      * the number of graph partitions
      */
-    private Integer numPart;
+    private int numPart;
 
     public NebulaSourceFunction(NebulaStorageConnectionProvider storageConnectionProvider) {
         super();

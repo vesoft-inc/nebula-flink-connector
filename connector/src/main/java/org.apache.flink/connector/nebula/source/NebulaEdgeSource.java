@@ -61,7 +61,7 @@ public class NebulaEdgeSource extends NebulaSource {
             return false;
         }
 
-        while ((dataIterator == null || !dataIterator.hasNext())) {
+        while (dataIterator == null || !dataIterator.hasNext()) {
             if (iterator == null || !iterator.hasNext()) {
                 if (scanPartIterator.hasNext()) {
                     getEdgeDataRow(scanPartIterator.next());

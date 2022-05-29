@@ -56,7 +56,7 @@ abstract class NebulaInputFormat<T> extends RichInputFormat<T, InputSplit> {
     /**
      * the number of graph partitions
      */
-    private Integer numPart;
+    private int numPart;
     private int times = 0; // todo rm
 
     public NebulaInputFormat(NebulaStorageConnectionProvider storageConnectionProvider,

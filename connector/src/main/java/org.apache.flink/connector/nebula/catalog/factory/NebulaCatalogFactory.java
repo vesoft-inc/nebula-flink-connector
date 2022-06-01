@@ -5,72 +5,82 @@
 
 package org.apache.flink.connector.nebula.catalog.factory;
 
-import static org.apache.flink.graph.descriptors.NebulaCatalogValidator.CATALOG_NEBULA_ADDRESS;
-import static org.apache.flink.graph.descriptors.NebulaCatalogValidator.CATALOG_NEBULA_PASSWORD;
-import static org.apache.flink.graph.descriptors.NebulaCatalogValidator.CATALOG_NEBULA_USERNAME;
-import static org.apache.flink.graph.descriptors.NebulaCatalogValidator.CATALOG_TYPE_VALUE_NEBULA;
-import static org.apache.flink.table.descriptors.CatalogDescriptorValidator.CATALOG_DEFAULT_DATABASE;
-import static org.apache.flink.table.descriptors.CatalogDescriptorValidator.CATALOG_PROPERTY_VERSION;
-import static org.apache.flink.table.descriptors.CatalogDescriptorValidator.CATALOG_TYPE;
-
 import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import org.apache.commons.collections.map.HashedMap;
+import java.util.HashSet;
+import java.util.Set;
+import org.apache.flink.configuration.ConfigOption;
+import org.apache.flink.configuration.ConfigOptions;
 import org.apache.flink.connector.nebula.catalog.NebulaCatalog;
-import org.apache.flink.graph.descriptors.NebulaCatalogValidator;
 import org.apache.flink.table.catalog.Catalog;
-import org.apache.flink.table.descriptors.DescriptorProperties;
 import org.apache.flink.table.factories.CatalogFactory;
+import org.apache.flink.table.factories.FactoryUtil;
+import org.apache.flink.table.factories.FactoryUtil.CatalogFactoryHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class NebulaCatalogFactory implements CatalogFactory {
     private static final Logger LOG = LoggerFactory.getLogger(NebulaCatalogFactory.class);
+    public static final String IDENTIFIER = "nebula";
+
+    public static final ConfigOption<String> DEFAULT_DATABASE = ConfigOptions
+            .key("default-database")
+            .stringType()
+            .defaultValue("default");
+
+    public static final ConfigOption<String> ADDRESS = ConfigOptions
+            .key("address")
+            .stringType()
+            .noDefaultValue()
+            .withDescription("the nebula meta server address.");
+
+    public static final ConfigOption<String> USERNAME = ConfigOptions
+            .key("username")
+            .stringType()
+            .noDefaultValue()
+            .withDescription("the nebula server name.");
+
+    public static final ConfigOption<String> PASSWORD = ConfigOptions
+            .key("password")
+            .stringType()
+            .noDefaultValue()
+            .withDescription("the nebula server password.");
 
     @Override
-    public Catalog createCatalog(String name, Map<String, String> properties) {
-        final DescriptorProperties prop = getValidatedProperties(properties);
+    public Catalog createCatalog(Context context) {
+        String catalogName = context.getName();
+        CatalogFactoryHelper helper = FactoryUtil.createCatalogFactoryHelper(this, context);
+        helper.validate();
+        String defaultDatabase = helper.getOptions().getOptional(DEFAULT_DATABASE).get();
+        String address = helper.getOptions().getOptional(ADDRESS).get();
+        String username = helper.getOptions().getOptional(USERNAME).get();
+        String password = helper.getOptions().getOptional(PASSWORD).get();
+
         try {
-            return new NebulaCatalog(
-                    name,
-                    prop.getString(CATALOG_DEFAULT_DATABASE),
-                    prop.getString(CATALOG_NEBULA_USERNAME),
-                    prop.getString(CATALOG_NEBULA_PASSWORD),
-                    prop.getString(CATALOG_NEBULA_ADDRESS));
+            return new NebulaCatalog(catalogName,defaultDatabase, username, password, address);
         } catch (UnknownHostException e) {
-            throw new IllegalArgumentException("address is illegal,", e);
+            throw new RuntimeException(e);
         }
     }
 
     @Override
-    public Map<String, String> requiredContext() {
-        Map<String, String> context = new HashedMap();
-        context.put(CATALOG_TYPE, CATALOG_TYPE_VALUE_NEBULA);
-        context.put(CATALOG_PROPERTY_VERSION, "1");
-        return context;
+    public String factoryIdentifier() {
+        return IDENTIFIER;
     }
 
     @Override
-    public List<String> supportedProperties() {
-        List<String> properties = new ArrayList<>();
-
-        // default database
-        properties.add(CATALOG_DEFAULT_DATABASE);
-
-        properties.add(CATALOG_NEBULA_ADDRESS);
-        properties.add(CATALOG_NEBULA_USERNAME);
-        properties.add(CATALOG_NEBULA_PASSWORD);
-        return properties;
+    public Set<ConfigOption<?>> requiredOptions() {
+        Set<ConfigOption<?>> set = new HashSet<>();
+        set.add(ADDRESS);
+        set.add(USERNAME);
+        set.add(PASSWORD);
+        return set;
     }
 
-    private static DescriptorProperties getValidatedProperties(Map<String, String> properties) {
-        final DescriptorProperties descriptorProperties = new DescriptorProperties(true);
-        descriptorProperties.putProperties(properties);
-
-        new NebulaCatalogValidator().validate(descriptorProperties);
-
-        return descriptorProperties;
+    @Override
+    public Set<ConfigOption<?>> optionalOptions() {
+        Set<ConfigOption<?>> set = new HashSet<>();
+        set.add(DEFAULT_DATABASE);
+        return set;
     }
+
 }

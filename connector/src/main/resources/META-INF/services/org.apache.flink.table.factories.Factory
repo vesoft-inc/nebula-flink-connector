@@ -1,0 +1,2 @@
+org.apache.flink.connector.nebula.table.NebulaDynamicTableFactory
+org.apache.flink.connector.nebula.catalog.factory.NebulaCatalogFactory

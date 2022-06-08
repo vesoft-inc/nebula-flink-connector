@@ -11,6 +11,7 @@ import com.vesoft.nebula.client.storage.data.VertexTableRow;
 import com.vesoft.nebula.client.storage.scan.ScanVertexResult;
 import com.vesoft.nebula.client.storage.scan.ScanVertexResultIterator;
 import java.util.Iterator;
+import java.util.List;
 import org.apache.flink.connector.nebula.statement.ExecutionOptions;
 
 /**
@@ -19,16 +20,19 @@ import org.apache.flink.connector.nebula.statement.ExecutionOptions;
 public class NebulaVertexSource extends NebulaSource {
     ScanVertexResultIterator iterator = null;
     Iterator<VertexTableRow> dataIterator = null;
+    Iterator<Integer> scanPartIterator;
 
-
-    public NebulaVertexSource(StorageClient storageClient, ExecutionOptions executionOptions) {
+    public NebulaVertexSource(StorageClient storageClient, ExecutionOptions executionOptions,
+                              List<Integer> scanParts) {
         super(storageClient, executionOptions);
+        this.scanPartIterator = scanParts.iterator();
     }
 
-    private void getVertexDataRow() {
+    private void getVertexDataRow(int part) {
         if (executionOptions.isNoColumn()) {
             iterator = storageClient.scanVertex(
                     executionOptions.getGraphSpace(),
+                    part,
                     executionOptions.getLabel(),
                     executionOptions.getLimit(),
                     executionOptions.getStartTime(),
@@ -38,6 +42,7 @@ public class NebulaVertexSource extends NebulaSource {
         } else {
             iterator = storageClient.scanVertex(
                     executionOptions.getGraphSpace(),
+                    part,
                     executionOptions.getLabel(),
                     executionOptions.getFields(),
                     executionOptions.getLimit(),
@@ -50,22 +55,25 @@ public class NebulaVertexSource extends NebulaSource {
 
     @Override
     public boolean hasNext() throws Exception {
-        if (iterator == null) {
-            getVertexDataRow();
+        if (dataIterator == null && iterator == null && !scanPartIterator.hasNext()) {
+            return false;
         }
 
-        if (dataIterator == null || !dataIterator.hasNext()) {
-            if (!iterator.hasNext()) {
-                return false;
-            }
-            while (iterator.hasNext()) {
-                ScanVertexResult result = iterator.next();
-                if (!result.isEmpty()) {
-                    dataIterator = result.getVertexTableRows().iterator();
-                    break;
+        while (dataIterator == null || !dataIterator.hasNext()) {
+            if (iterator == null || !iterator.hasNext()) {
+                if (scanPartIterator.hasNext()) {
+                    getVertexDataRow(scanPartIterator.next());
+                    continue;
+                }
+                break;
+            } else {
+                ScanVertexResult next = iterator.next();
+                if (!next.isEmpty()) {
+                    dataIterator = next.getVertexTableRows().iterator();
                 }
             }
         }
+
         if (dataIterator == null) {
             return false;
         }

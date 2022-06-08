@@ -5,7 +5,6 @@
 
 package org.apache.flink.connector.nebula.connection;
 
-
 import com.vesoft.nebula.client.graph.data.CASignedSSLParam;
 import com.vesoft.nebula.client.graph.data.HostAddress;
 import com.vesoft.nebula.client.graph.data.SSLParam;
@@ -63,4 +62,11 @@ public class NebulaStorageConnectionProvider implements Serializable {
         return storageClient;
     }
 
+    public NebulaClientOptions getNebulaClientOptions() {
+        return nebulaClientOptions;
+    }
+
+    public void setNebulaClientOptions(NebulaClientOptions nebulaClientOptions) {
+        this.nebulaClientOptions = nebulaClientOptions;
+    }
 }

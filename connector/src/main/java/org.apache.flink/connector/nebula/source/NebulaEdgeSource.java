@@ -10,8 +10,8 @@ import com.vesoft.nebula.client.storage.data.BaseTableRow;
 import com.vesoft.nebula.client.storage.data.EdgeTableRow;
 import com.vesoft.nebula.client.storage.scan.ScanEdgeResult;
 import com.vesoft.nebula.client.storage.scan.ScanEdgeResultIterator;
-import com.vesoft.nebula.client.storage.scan.ScanVertexResult;
 import java.util.Iterator;
+import java.util.List;
 import org.apache.flink.connector.nebula.statement.ExecutionOptions;
 
 /**
@@ -20,16 +20,19 @@ import org.apache.flink.connector.nebula.statement.ExecutionOptions;
 public class NebulaEdgeSource extends NebulaSource {
     ScanEdgeResultIterator iterator = null;
     Iterator<EdgeTableRow> dataIterator = null;
+    Iterator<Integer> scanPartIterator;
 
-
-    public NebulaEdgeSource(StorageClient storageClient, ExecutionOptions executionOptions) {
+    public NebulaEdgeSource(StorageClient storageClient,
+                            ExecutionOptions executionOptions, List<Integer> scanParts) {
         super(storageClient, executionOptions);
+        this.scanPartIterator = scanParts.iterator();
     }
 
-    public void getEdgeDataRow() {
+    public void getEdgeDataRow(int part) {
         if (executionOptions.isNoColumn()) {
             iterator = storageClient.scanEdge(
                     executionOptions.getGraphSpace(),
+                    part,
                     executionOptions.getLabel(),
                     executionOptions.getLimit(),
                     executionOptions.getStartTime(),
@@ -40,6 +43,7 @@ public class NebulaEdgeSource extends NebulaSource {
         } else {
             iterator = storageClient.scanEdge(
                     executionOptions.getGraphSpace(),
+                    part,
                     executionOptions.getLabel(),
                     executionOptions.getFields(),
                     executionOptions.getLimit(),
@@ -53,21 +57,25 @@ public class NebulaEdgeSource extends NebulaSource {
 
     @Override
     public boolean hasNext() throws Exception {
-        if (iterator == null) {
-            getEdgeDataRow();
+        if (dataIterator == null && iterator == null && !scanPartIterator.hasNext()) {
+            return false;
         }
-        if (dataIterator == null || !dataIterator.hasNext()) {
-            if (!iterator.hasNext()) {
-                return false;
-            }
-            while (iterator.hasNext()) {
-                ScanEdgeResult result = iterator.next();
-                if (!result.isEmpty()) {
-                    dataIterator = result.getEdgeTableRows().iterator();
-                    break;
+
+        while (dataIterator == null || !dataIterator.hasNext()) {
+            if (iterator == null || !iterator.hasNext()) {
+                if (scanPartIterator.hasNext()) {
+                    getEdgeDataRow(scanPartIterator.next());
+                    continue;
+                }
+                break;
+            } else {
+                ScanEdgeResult next = iterator.next();
+                if (!next.isEmpty()) {
+                    dataIterator = next.getEdgeTableRows().iterator();
                 }
             }
         }
+
         if (dataIterator == null) {
             return false;
         }

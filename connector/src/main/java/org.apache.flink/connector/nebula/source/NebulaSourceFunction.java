@@ -5,36 +5,48 @@
 
 package org.apache.flink.connector.nebula.source;
 
+import com.vesoft.nebula.client.meta.MetaClient;
 import com.vesoft.nebula.client.storage.StorageClient;
 import com.vesoft.nebula.client.storage.data.BaseTableRow;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import org.apache.flink.api.common.functions.RuntimeContext;
 import org.apache.flink.configuration.Configuration;
+import org.apache.flink.connector.nebula.connection.NebulaClientOptions;
+import org.apache.flink.connector.nebula.connection.NebulaMetaConnectionProvider;
 import org.apache.flink.connector.nebula.connection.NebulaStorageConnectionProvider;
 import org.apache.flink.connector.nebula.statement.ExecutionOptions;
-import org.apache.flink.streaming.api.functions.source.RichSourceFunction;
+import org.apache.flink.connector.nebula.utils.PartitionUtils;
+import org.apache.flink.streaming.api.functions.source.RichParallelSourceFunction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Implementation of {@link RichSourceFunction} to get NebulaGraph vertex and edge.
+ * Implementation of {@link RichParallelSourceFunction} to get NebulaGraph vertex and edge.
  */
-public class NebulaSourceFunction extends RichSourceFunction<BaseTableRow> {
+public class NebulaSourceFunction extends RichParallelSourceFunction<BaseTableRow> {
 
     private static final Logger LOG = LoggerFactory.getLogger(NebulaSourceFunction.class);
 
     private static final long serialVersionUID = -4864517634021753949L;
 
     private StorageClient storageClient;
-    private final NebulaStorageConnectionProvider connectionProvider;
+    private MetaClient metaClient;
+    private final NebulaStorageConnectionProvider storageConnectionProvider;
+    private final NebulaMetaConnectionProvider metaConnectionProvider;
     private ExecutionOptions executionOptions;
+    /**
+     * the number of graph partitions
+     */
+    private int numPart;
 
-    public NebulaSourceFunction(NebulaStorageConnectionProvider connectionProvider) {
+    public NebulaSourceFunction(NebulaStorageConnectionProvider storageConnectionProvider) {
         super();
-        this.connectionProvider = connectionProvider;
+        this.storageConnectionProvider = storageConnectionProvider;
+        NebulaClientOptions nebulaClientOptions =
+                storageConnectionProvider.getNebulaClientOptions();
+        this.metaConnectionProvider =
+                new NebulaMetaConnectionProvider(nebulaClientOptions);
     }
-
 
     /**
      * open nebula client
@@ -42,7 +54,9 @@ public class NebulaSourceFunction extends RichSourceFunction<BaseTableRow> {
     @Override
     public void open(Configuration parameters) throws Exception {
         super.open(parameters);
-        storageClient = connectionProvider.getStorageClient();
+        storageClient = storageConnectionProvider.getStorageClient();
+        metaClient = metaConnectionProvider.getMetaClient();
+        numPart = metaClient.getPartsAlloc(executionOptions.getGraphSpace()).size();
     }
 
     /**
@@ -50,8 +64,15 @@ public class NebulaSourceFunction extends RichSourceFunction<BaseTableRow> {
      */
     @Override
     public void close() throws Exception {
-        if (storageClient != null) {
-            storageClient.close();
+        try {
+            if (storageClient != null) {
+                storageClient.close();
+            }
+            if (metaClient != null) {
+                metaClient.close();
+            }
+        } catch (Exception e) {
+            LOG.error("cancel exception:{}", e.getMessage(), e);
         }
     }
 
@@ -60,15 +81,17 @@ public class NebulaSourceFunction extends RichSourceFunction<BaseTableRow> {
      */
     @Override
     public void run(SourceContext<BaseTableRow> sourceContext) throws Exception {
-
-        Map<String, List<String>> returnCols = new HashMap<>();
-        returnCols.put(executionOptions.getLabel(), executionOptions.getFields());
+        RuntimeContext runtimeContext = getRuntimeContext();
+        List<Integer> scanParts = PartitionUtils.getScanParts(
+                runtimeContext.getIndexOfThisSubtask() + 1,
+                numPart,
+                runtimeContext.getNumberOfParallelSubtasks());
 
         NebulaSource nebulaSource;
         if (executionOptions.getDataType().isVertex()) {
-            nebulaSource = new NebulaVertexSource(storageClient, executionOptions);
+            nebulaSource = new NebulaVertexSource(storageClient, executionOptions, scanParts);
         } else {
-            nebulaSource = new NebulaEdgeSource(storageClient, executionOptions);
+            nebulaSource = new NebulaEdgeSource(storageClient, executionOptions, scanParts);
         }
 
         while (nebulaSource.hasNext()) {
@@ -83,8 +106,11 @@ public class NebulaSourceFunction extends RichSourceFunction<BaseTableRow> {
             if (storageClient != null) {
                 storageClient.close();
             }
+            if (metaClient != null) {
+                metaClient.close();
+            }
         } catch (Exception e) {
-            LOG.error("cancel exception:{}", e);
+            LOG.error("cancel exception:{}", e.getMessage(), e);
         }
     }
 

@@ -38,23 +38,23 @@ import org.slf4j.LoggerFactory;
 public class NebulaBatchOutputFormat<T> extends RichOutputFormat<T> implements Flushable {
     private static final Logger LOG = LoggerFactory.getLogger(NebulaBatchOutputFormat.class);
     private static final long serialVersionUID = 8846672119763512586L;
-
+    protected MetaClient metaClient;
+    protected NebulaBatchExecutor nebulaBatchExecutor;
+    protected NebulaMetaConnectionProvider metaProvider;
+    protected ExecutionOptions executionOptions;
     private volatile AtomicLong numPendingRow;
     private NebulaPool nebulaPool;
     private Session session;
-    private MetaClient metaClient;
-    private NebulaBatchExecutor nebulaBatchExecutor;
     private NebulaGraphConnectionProvider graphProvider;
-    private NebulaMetaConnectionProvider metaProvider;
-    private ExecutionOptions executionOptions;
     private List<String> errorBuffer = new ArrayList<>();
 
     private transient ScheduledExecutorService scheduler;
     private transient ScheduledFuture<?> scheduledFuture;
     private transient volatile boolean closed = false;
 
-    public NebulaBatchOutputFormat(NebulaGraphConnectionProvider graphProvider,
-                                   NebulaMetaConnectionProvider metaProvider) {
+    public NebulaBatchOutputFormat(
+            NebulaGraphConnectionProvider graphProvider,
+            NebulaMetaConnectionProvider metaProvider) {
         this.graphProvider = graphProvider;
         this.metaProvider = metaProvider;
     }
@@ -97,19 +97,7 @@ public class NebulaBatchOutputFormat<T> extends RichOutputFormat<T> implements F
         }
 
         numPendingRow = new AtomicLong(0);
-
-        VidTypeEnum vidType = metaProvider.getVidType(metaClient, executionOptions.getGraphSpace());
-        boolean isVertex = executionOptions.getDataType().isVertex();
-        Map<String, Integer> schema;
-        if (isVertex) {
-            schema = metaProvider.getTagSchema(metaClient, executionOptions.getGraphSpace(),
-                    executionOptions.getLabel());
-            nebulaBatchExecutor = new NebulaVertexBatchExecutor(executionOptions, vidType, schema);
-        } else {
-            schema = metaProvider.getEdgeSchema(metaClient, executionOptions.getGraphSpace(),
-                    executionOptions.getLabel());
-            nebulaBatchExecutor = new NebulaEdgeBatchExecutor(executionOptions, vidType, schema);
-        }
+        setNebulaBatchExecutor();
         // start the schedule task: submit the buffer records every batchInterval.
         // If batchIntervalMs is 0, do not start the scheduler task.
         if (executionOptions.getBatchIntervalMs() != 0 && executionOptions.getBatch() != 1) {
@@ -124,6 +112,28 @@ public class NebulaBatchOutputFormat<T> extends RichOutputFormat<T> implements F
                     executionOptions.getBatchIntervalMs(),
                     executionOptions.getBatchIntervalMs(),
                     TimeUnit.MILLISECONDS);
+        }
+    }
+
+    protected void setNebulaBatchExecutor() {
+        VidTypeEnum vidType = metaProvider.getVidType(metaClient, executionOptions.getGraphSpace());
+        boolean isVertex = executionOptions.getDataType().isVertex();
+        Map<String, Integer> schema;
+        if (isVertex) {
+            schema =
+                    metaProvider.getTagSchema(
+                            metaClient,
+                            executionOptions.getGraphSpace(),
+                            executionOptions.getLabel());
+            nebulaBatchExecutor =
+                    new NebulaVertexBatchExecutor<T>(executionOptions, vidType, schema);
+        } else {
+            schema =
+                    metaProvider.getEdgeSchema(
+                            metaClient,
+                            executionOptions.getGraphSpace(),
+                            executionOptions.getLabel());
+            nebulaBatchExecutor = new NebulaEdgeBatchExecutor<T>(executionOptions, vidType, schema);
         }
     }
 

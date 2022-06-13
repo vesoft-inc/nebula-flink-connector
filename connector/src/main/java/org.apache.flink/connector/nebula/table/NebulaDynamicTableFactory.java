@@ -5,16 +5,26 @@
 
 package org.apache.flink.connector.nebula.table;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import org.apache.flink.configuration.ConfigOption;
 import org.apache.flink.configuration.ConfigOptions;
+import org.apache.flink.configuration.ReadableConfig;
+import org.apache.flink.connector.nebula.connection.NebulaClientOptions;
+import org.apache.flink.connector.nebula.statement.EdgeExecutionOptions;
+import org.apache.flink.connector.nebula.statement.ExecutionOptions;
+import org.apache.flink.connector.nebula.statement.VertexExecutionOptions;
+import org.apache.flink.connector.nebula.utils.DataTypeEnum;
 import org.apache.flink.connector.nebula.utils.NebulaConstant;
+import org.apache.flink.table.catalog.Column;
 import org.apache.flink.table.connector.sink.DynamicTableSink;
 import org.apache.flink.table.connector.source.DynamicTableSource;
 import org.apache.flink.table.factories.DynamicTableSinkFactory;
 import org.apache.flink.table.factories.DynamicTableSourceFactory;
-
+import org.apache.flink.table.factories.FactoryUtil;
+import org.apache.flink.table.types.DataType;
 
 public class NebulaDynamicTableFactory implements DynamicTableSourceFactory,
         DynamicTableSinkFactory {
@@ -56,6 +66,12 @@ public class NebulaDynamicTableFactory implements DynamicTableSourceFactory,
             .noDefaultValue()
             .withDescription("the nebula graph space label name.");
 
+    public static final ConfigOption<DataTypeEnum> DATA_TYPE = ConfigOptions
+            .key("data-type")
+            .enumType(DataTypeEnum.class)
+            .noDefaultValue()
+            .withDescription("the nebula graph data type.");
+
     public static final ConfigOption<Integer> CONNECT_TIMEOUT = ConfigOptions
             .key("connect-timeout")
             .intType()
@@ -80,11 +96,140 @@ public class NebulaDynamicTableFactory implements DynamicTableSourceFactory,
             .defaultValue(NebulaConstant.DEFAULT_EXECUTION_RETRY)
             .withDescription("the nebula execute retry times");
 
+    public static final ConfigOption<Integer> SRC_INDEX = ConfigOptions
+            .key("src-index")
+            .intType()
+            .defaultValue(NebulaConstant.DEFAULT_ROW_INFO_INDEX)
+            .withDescription("the nebula execute edge src index");
+
+    public static final ConfigOption<Integer> DST_INDEX = ConfigOptions
+            .key("dst-index")
+            .intType()
+            .defaultValue(NebulaConstant.DEFAULT_ROW_INFO_INDEX)
+            .withDescription("the nebula execute edge dst index");
+
+    public static final ConfigOption<Integer> RANK_INDEX = ConfigOptions
+            .key("rank-index")
+            .intType()
+            .defaultValue(NebulaConstant.DEFAULT_ROW_INFO_INDEX)
+            .withDescription("the nebula execute rank index");
 
     @Override
     public DynamicTableSink createDynamicTableSink(Context context) {
-        return new NebulaDynamicTableSink(METAADDRESS.key(), GRAPHADDRESS.key(), USERNAME.key(),
-                PASSWORD.key());
+        final FactoryUtil.TableFactoryHelper helper =
+                FactoryUtil.createTableFactoryHelper(this, context);
+        final ReadableConfig config = helper.getOptions();
+
+        final DataType producedDataType =
+                context.getCatalogTable().getResolvedSchema().toPhysicalRowDataType();
+
+        helper.validate();
+        validateConfigOptions(config);
+        return new NebulaDynamicTableSink(
+                getClientOptions(config), getExecutionOptions(context, config), producedDataType);
+    }
+
+    private void validateConfigOptions(ReadableConfig config) {
+        if (!config.getOptional(METAADDRESS).isPresent()) {
+            throw new IllegalArgumentException(
+                    String.format("The value of '%s' option should not be null",
+                            METAADDRESS.key()));
+        }
+
+        if (!config.getOptional(GRAPHADDRESS).isPresent()) {
+            throw new IllegalArgumentException(
+                    String.format("The value of '%s' option should not be null",
+                            GRAPHADDRESS.key()));
+        }
+
+        if (!config.getOptional(USERNAME).isPresent()) {
+            throw new IllegalArgumentException(
+                    String.format("The value of '%s' option should not be null",
+                            USERNAME.key()));
+        }
+
+        if (!config.getOptional(PASSWORD).isPresent()) {
+            throw new IllegalArgumentException(
+                    String.format("The value of '%s' option should not be null", PASSWORD.key()));
+        }
+
+        if (!config.getOptional(GRAPH_SPACE).isPresent()) {
+            throw new IllegalArgumentException(
+                    String.format("The value of '%s' option should not be null",
+                            GRAPH_SPACE.key()));
+        }
+
+        if (config.get(CONNECT_TIMEOUT) < 0) {
+            throw new IllegalArgumentException(
+                    String.format("The value of '%s' option should not be negative, but is %s.",
+                            CONNECT_TIMEOUT.key(), config.get(CONNECT_TIMEOUT)));
+        }
+
+        if (config.get(CONNECT_RETRY) < 0) {
+            throw new IllegalArgumentException(
+                    String.format("The value of '%s' option should not be negative, but is %s.",
+                            CONNECT_RETRY.key(), config.get(CONNECT_RETRY)));
+        }
+
+        if (config.get(TIMEOUT) < 0) {
+            throw new IllegalArgumentException(
+                    String.format("The value of '%s' option should not be negative, but is %s.",
+                            TIMEOUT.key(), config.get(TIMEOUT)));
+        }
+
+        if (config.get(EXECUTE_RETRY) < 0) {
+            throw new IllegalArgumentException(
+                    String.format("The value of '%s' option should not be negative, but is %s.",
+                            EXECUTE_RETRY.key(), config.get(EXECUTE_RETRY)));
+        }
+    }
+
+    private NebulaClientOptions getClientOptions(ReadableConfig config) {
+        return new NebulaClientOptions.NebulaClientOptionsBuilder()
+                .setMetaAddress(config.get(METAADDRESS))
+                .setGraphAddress(config.get(GRAPHADDRESS))
+                .setUsername(config.get(USERNAME))
+                .setPassword(config.get(PASSWORD))
+                .build();
+    }
+
+    private ExecutionOptions getExecutionOptions(Context context, ReadableConfig config) {
+        List<String> fields = new ArrayList<>();
+        List<Integer> positions = new ArrayList<>();
+        List<Column> columns = context.getCatalogTable().getResolvedSchema().getColumns();
+
+
+        if (config.get(DATA_TYPE).isVertex()) {
+            for (int i = 1; i < columns.size(); i++) {
+                positions.add(i);
+                fields.add(columns.get(i).getName());
+            }
+
+            return new VertexExecutionOptions.ExecutionOptionBuilder()
+                    .setFields(fields)
+                    .setIdIndex(0)
+                    .setPositions(positions)
+                    .setGraphSpace(config.get(GRAPH_SPACE))
+                    .setTag(context.getObjectIdentifier().getObjectName())
+                    .builder();
+        } else {
+            for (int i = 0; i < columns.size(); i++) {
+                if (config.get(RANK_INDEX) != i) {
+                    positions.add(i);
+                    fields.add(columns.get(i).getName());
+                }
+            }
+
+            return new EdgeExecutionOptions.ExecutionOptionBuilder()
+                    .setFields(fields)
+                    .setSrcIndex(config.get(SRC_INDEX))
+                    .setDstIndex(config.get(DST_INDEX))
+                    .setRankIndex(config.get(RANK_INDEX))
+                    .setPositions(positions)
+                    .setGraphSpace(config.get(GRAPH_SPACE))
+                    .setEdge(context.getObjectIdentifier().getObjectName())
+                    .builder();
+        }
     }
 
     @Override
@@ -114,10 +259,15 @@ public class NebulaDynamicTableFactory implements DynamicTableSourceFactory,
     @Override
     public Set<ConfigOption<?>> optionalOptions() {
         Set<ConfigOption<?>> set = new HashSet<>();
+        set.add(GRAPH_SPACE);
+        set.add(DATA_TYPE);
         set.add(CONNECT_TIMEOUT);
         set.add(CONNECT_RETRY);
         set.add(TIMEOUT);
         set.add(EXECUTE_RETRY);
+        set.add(SRC_INDEX);
+        set.add(DST_INDEX);
+        set.add(RANK_INDEX);
         return set;
     }
 }

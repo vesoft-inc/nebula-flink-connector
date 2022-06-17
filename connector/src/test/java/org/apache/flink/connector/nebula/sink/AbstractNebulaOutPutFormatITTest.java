@@ -1,10 +1,9 @@
 package org.apache.flink.connector.nebula.sink;
 
+import java.util.concurrent.ExecutionException;
 import org.apache.flink.table.api.EnvironmentSettings;
 import org.apache.flink.table.api.TableEnvironment;
 import org.junit.Test;
-
-import java.util.concurrent.ExecutionException;
 
 public class AbstractNebulaOutPutFormatITTest {
     static final String META_ADDRESS = "127.0.0.1:9559";
@@ -12,9 +11,7 @@ public class AbstractNebulaOutPutFormatITTest {
     static final String USER_NAME = "root";
     static final String PASSWORD = "nebula";
 
-    /**
-     * sink Nebula Graph Vertex Data with default INSERT mode
-     */
+    /** sink Nebula Graph Vertex Data with default INSERT mode */
     @Test
     public void sinkVertexData() throws ExecutionException, InterruptedException {
         TableEnvironment tableEnvironment =
@@ -57,12 +54,15 @@ public class AbstractNebulaOutPutFormatITTest {
                         + "'data-type'='vertex'"
                         + ")");
 
-        tableEnvironment.executeSql("insert into person values ('89', 'aba', 'abcdefgh', '1', '1111', '22222', '6412233', '2019-01-01', '2019-01-01T12:12:12', '435463424', 'false', '1.2', '1.0', '11:12:12', 'POINT(1 3)')").await();
+        tableEnvironment
+                .executeSql(
+                        "insert into person values ('89', 'aba', 'abcdefgh', '1', '1111',"
+                                + " '22222', '6412233', '2019-01-01', '2019-01-01T12:12:12',"
+                                + " '435463424', 'false', '1.2', '1.0', '11:12:12', 'POINT(1 3)')")
+                .await();
     }
 
-    /**
-     * sink Nebula Graph Edge Data with default INSERT mode
-     */
+    /** sink Nebula Graph Edge Data with default INSERT mode */
     @Test
     public void sinkEdgeData() throws ExecutionException, InterruptedException {
         TableEnvironment tableEnvironment =
@@ -110,13 +110,15 @@ public class AbstractNebulaOutPutFormatITTest {
                         + ")");
 
         tableEnvironment
-                .executeSql("insert into friend values ('61', '62', 'aba', 'abcdefgh', '1', '1111', '22222', '6412233', '2019-01-01', '2019-01-01T12:12:12', '435463424', 'false', '1.2', '1.0', '11:12:12', 'POINT(1 3)')")
+                .executeSql(
+                        "insert into friend values ('61', '62', 'aba', 'abcdefgh',"
+                                + " '1', '1111', '22222', '6412233', '2019-01-01',"
+                                + " '2019-01-01T12:12:12',"
+                                + " '435463424', 'false', '1.2', '1.0', '11:12:12', 'POINT(1 3)')")
                 .await();
     }
 
-    /**
-     * sink Nebula Graph Edge Data with default INSERT mode
-     */
+    /** sink Nebula Graph Edge Data with default INSERT mode */
     @Test
     public void sinkEdgeDataWithoutRank() throws ExecutionException, InterruptedException {
         TableEnvironment tableEnvironment =
@@ -163,7 +165,11 @@ public class AbstractNebulaOutPutFormatITTest {
                         + ")");
 
         tableEnvironment
-                .executeSql("insert into friend values ('61', '89', 'aba', 'abcdefgh', '1', '1111', '22222', '6412233', '2019-01-01', '2019-01-01T12:12:12', '435463424', 'false', '1.2', '1.0', '11:12:12', 'POINT(1 3)')")
+                .executeSql(
+                        "insert into friend values ('61', '89', 'aba', 'abcdefgh',"
+                                + " '1', '1111', '22222', '6412233', '2019-01-01',"
+                                + " '2019-01-01T12:12:12', '435463424', 'false', '1.2', '1.0',"
+                                + " '11:12:12', 'POINT(1 3)')")
                 .await();
     }
 }

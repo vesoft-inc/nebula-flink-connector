@@ -5,9 +5,6 @@
 
 package org.apache.flink.connector.nebula.catalog.factory;
 
-import static org.apache.flink.connector.nebula.table.NebulaDynamicTableFactory.CONNECT_RETRY;
-import static org.apache.flink.connector.nebula.table.NebulaDynamicTableFactory.CONNECT_TIMEOUT;
-import static org.apache.flink.connector.nebula.table.NebulaDynamicTableFactory.EXECUTE_RETRY;
 import static org.apache.flink.connector.nebula.table.NebulaDynamicTableFactory.GRAPHADDRESS;
 import static org.apache.flink.connector.nebula.table.NebulaDynamicTableFactory.GRAPH_SPACE;
 import static org.apache.flink.connector.nebula.table.NebulaDynamicTableFactory.LABEL_NAME;
@@ -47,10 +44,7 @@ public class NebulaCatalogFactory implements CatalogFactory {
     public Set<ConfigOption<?>> optionalOptions() {
         final Set<ConfigOption<?>> options = new HashSet<>();
         options.add(LABEL_NAME);
-        options.add(CONNECT_TIMEOUT);
-        options.add(CONNECT_RETRY);
         options.add(TIMEOUT);
-        options.add(EXECUTE_RETRY);
         return options;
     }
 }

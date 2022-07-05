@@ -72,29 +72,11 @@ public class NebulaDynamicTableFactory implements DynamicTableSourceFactory,
             .noDefaultValue()
             .withDescription("the nebula graph data type.");
 
-    public static final ConfigOption<Integer> CONNECT_TIMEOUT = ConfigOptions
-            .key("connect-timeout")
-            .intType()
-            .defaultValue(NebulaConstant.DEFAULT_CONNECT_TIMEOUT_MS)
-            .withDescription("the nebula connect timeout duration");
-
-    public static final ConfigOption<Integer> CONNECT_RETRY = ConfigOptions
-            .key("connect-retry")
-            .intType()
-            .defaultValue(NebulaConstant.DEFAULT_CONNECT_RETRY)
-            .withDescription("the nebula connect retry times");
-
     public static final ConfigOption<Integer> TIMEOUT = ConfigOptions
             .key("timeout")
             .intType()
             .defaultValue(NebulaConstant.DEFAULT_TIMEOUT_MS)
             .withDescription("the nebula execute timeout duration");
-
-    public static final ConfigOption<Integer> EXECUTE_RETRY = ConfigOptions
-            .key("execute-retry")
-            .intType()
-            .defaultValue(NebulaConstant.DEFAULT_EXECUTION_RETRY)
-            .withDescription("the nebula execute retry times");
 
     public static final ConfigOption<Integer> SRC_INDEX = ConfigOptions
             .key("src-index")
@@ -159,28 +141,10 @@ public class NebulaDynamicTableFactory implements DynamicTableSourceFactory,
                             GRAPH_SPACE.key()));
         }
 
-        if (config.get(CONNECT_TIMEOUT) < 0) {
-            throw new IllegalArgumentException(
-                    String.format("The value of '%s' option should not be negative, but is %s.",
-                            CONNECT_TIMEOUT.key(), config.get(CONNECT_TIMEOUT)));
-        }
-
-        if (config.get(CONNECT_RETRY) < 0) {
-            throw new IllegalArgumentException(
-                    String.format("The value of '%s' option should not be negative, but is %s.",
-                            CONNECT_RETRY.key(), config.get(CONNECT_RETRY)));
-        }
-
         if (config.get(TIMEOUT) < 0) {
             throw new IllegalArgumentException(
                     String.format("The value of '%s' option should not be negative, but is %s.",
                             TIMEOUT.key(), config.get(TIMEOUT)));
-        }
-
-        if (config.get(EXECUTE_RETRY) < 0) {
-            throw new IllegalArgumentException(
-                    String.format("The value of '%s' option should not be negative, but is %s.",
-                            EXECUTE_RETRY.key(), config.get(EXECUTE_RETRY)));
         }
     }
 
@@ -261,10 +225,7 @@ public class NebulaDynamicTableFactory implements DynamicTableSourceFactory,
         Set<ConfigOption<?>> set = new HashSet<>();
         set.add(GRAPH_SPACE);
         set.add(DATA_TYPE);
-        set.add(CONNECT_TIMEOUT);
-        set.add(CONNECT_RETRY);
         set.add(TIMEOUT);
-        set.add(EXECUTE_RETRY);
         set.add(SRC_INDEX);
         set.add(DST_INDEX);
         set.add(RANK_INDEX);

@@ -177,7 +177,7 @@ public class NebulaDynamicTableFactory implements DynamicTableSourceFactory,
                     .setTag(context.getObjectIdentifier().getObjectName())
                     .builder();
         } else {
-            for (int i = 0; i < columns.size(); i++) {
+            for (int i = 2; i < columns.size(); i++) {
                 if (config.get(RANK_ID_INDEX) != i) {
                     positions.add(i);
                     fields.add(columns.get(i).getName());

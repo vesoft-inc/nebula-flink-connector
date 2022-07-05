@@ -107,9 +107,9 @@ public class AbstractNebulaOutPutFormatITTest {
                         + PASSWORD
                         + "',"
                         + "'graph-space'='flinkSink',"
-                        + "'src-index'='0',"
-                        + "'dst-index'='1',"
-                        + "'rank-index'='4',"
+                        + "'src-id-index'='0',"
+                        + "'dst-id-index'='1',"
+                        + "'rank-id-index'='4',"
                         + "'write-mode'='insert',"
                         + "'data-type'='edge'"
                         + ")");
@@ -163,8 +163,8 @@ public class AbstractNebulaOutPutFormatITTest {
                         + PASSWORD
                         + "',"
                         + "'graph-space'='flinkSink',"
-                        + "'src-index'='0',"
-                        + "'dst-index'='1',"
+                        + "'src-id-index'='0',"
+                        + "'dst-id-index'='1',"
                         + "'write-mode'='insert',"
                         + "'data-type'='edge'"
                         + ")");

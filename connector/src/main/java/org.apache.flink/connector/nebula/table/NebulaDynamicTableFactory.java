@@ -78,20 +78,20 @@ public class NebulaDynamicTableFactory implements DynamicTableSourceFactory,
             .defaultValue(NebulaConstant.DEFAULT_TIMEOUT_MS)
             .withDescription("the nebula execute timeout duration");
 
-    public static final ConfigOption<Integer> SRC_INDEX = ConfigOptions
-            .key("src-index")
+    public static final ConfigOption<Integer> SRC_ID_INDEX = ConfigOptions
+            .key("src-id-index")
             .intType()
             .defaultValue(NebulaConstant.DEFAULT_ROW_INFO_INDEX)
             .withDescription("the nebula execute edge src index");
 
-    public static final ConfigOption<Integer> DST_INDEX = ConfigOptions
-            .key("dst-index")
+    public static final ConfigOption<Integer> DST_ID_INDEX = ConfigOptions
+            .key("dst-id-index")
             .intType()
             .defaultValue(NebulaConstant.DEFAULT_ROW_INFO_INDEX)
             .withDescription("the nebula execute edge dst index");
 
-    public static final ConfigOption<Integer> RANK_INDEX = ConfigOptions
-            .key("rank-index")
+    public static final ConfigOption<Integer> RANK_ID_INDEX = ConfigOptions
+            .key("rank-id-index")
             .intType()
             .defaultValue(NebulaConstant.DEFAULT_ROW_INFO_INDEX)
             .withDescription("the nebula execute rank index");
@@ -178,7 +178,7 @@ public class NebulaDynamicTableFactory implements DynamicTableSourceFactory,
                     .builder();
         } else {
             for (int i = 0; i < columns.size(); i++) {
-                if (config.get(RANK_INDEX) != i) {
+                if (config.get(RANK_ID_INDEX) != i) {
                     positions.add(i);
                     fields.add(columns.get(i).getName());
                 }
@@ -186,9 +186,9 @@ public class NebulaDynamicTableFactory implements DynamicTableSourceFactory,
 
             return new EdgeExecutionOptions.ExecutionOptionBuilder()
                     .setFields(fields)
-                    .setSrcIndex(config.get(SRC_INDEX))
-                    .setDstIndex(config.get(DST_INDEX))
-                    .setRankIndex(config.get(RANK_INDEX))
+                    .setSrcIndex(config.get(SRC_ID_INDEX))
+                    .setDstIndex(config.get(DST_ID_INDEX))
+                    .setRankIndex(config.get(RANK_ID_INDEX))
                     .setPositions(positions)
                     .setGraphSpace(config.get(GRAPH_SPACE))
                     .setEdge(context.getObjectIdentifier().getObjectName())
@@ -226,9 +226,9 @@ public class NebulaDynamicTableFactory implements DynamicTableSourceFactory,
         set.add(GRAPH_SPACE);
         set.add(DATA_TYPE);
         set.add(TIMEOUT);
-        set.add(SRC_INDEX);
-        set.add(DST_INDEX);
-        set.add(RANK_INDEX);
+        set.add(SRC_ID_INDEX);
+        set.add(DST_ID_INDEX);
+        set.add(RANK_ID_INDEX);
         return set;
     }
 }

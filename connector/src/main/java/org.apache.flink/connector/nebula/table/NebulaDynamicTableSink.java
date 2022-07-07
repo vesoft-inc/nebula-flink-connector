@@ -1,5 +1,11 @@
+/* Copyright (c) 2021 vesoft inc. All rights reserved.
+ *
+ * This source code is licensed under Apache 2.0 License.
+ */
+
 package org.apache.flink.connector.nebula.table;
 
+import java.util.Arrays;
 import org.apache.flink.connector.nebula.connection.NebulaClientOptions;
 import org.apache.flink.connector.nebula.connection.NebulaGraphConnectionProvider;
 import org.apache.flink.connector.nebula.connection.NebulaMetaConnectionProvider;
@@ -11,8 +17,6 @@ import org.apache.flink.table.connector.sink.OutputFormatProvider;
 import org.apache.flink.table.types.DataType;
 import org.apache.flink.table.types.logical.LogicalType;
 import org.apache.flink.types.RowKind;
-
-import java.util.Arrays;
 
 public class NebulaDynamicTableSink implements DynamicTableSink {
     private final NebulaClientOptions nebulaClientOptions;
@@ -37,22 +41,6 @@ public class NebulaDynamicTableSink implements DynamicTableSink {
         }
         return builder.build();
     }
-
-    // @Override
-    // public SinkRuntimeProvider getSinkRuntimeProvider(Context context) {
-    //     DataStructureConverter converter =
-    //             context.createDataStructureConverter(tableSchema.toPhysicalRowDataType());
-    //     NebulaGraphConnectionProvider graphProvider =
-    //             new NebulaGraphConnectionProvider(nebulaClientOptions);
-    //     NebulaMetaConnectionProvider metaProvider =
-    //             new NebulaMetaConnectionProvider(nebulaClientOptions);
-    //     NebulaBatchOutputFormat<RowData> outPutFormat =
-    //             new NebulaRowDataOutputFormat(graphProvider, metaProvider, converter);
-    //     outPutFormat.setExecutionOptions(executionOptions);
-    //     NebulaSinkFunction<RowData> sinkFunction = new NebulaSinkFunction<>(outPutFormat);
-    //     return SinkFunctionProvider.of(sinkFunction);
-    //     // return OutputFormatProvider.of(outPutFormat);
-    // }
 
     @Override
     public SinkRuntimeProvider getSinkRuntimeProvider(Context context) {

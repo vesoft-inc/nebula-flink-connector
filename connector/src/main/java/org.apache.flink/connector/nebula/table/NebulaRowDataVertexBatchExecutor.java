@@ -5,7 +5,8 @@
 
 package org.apache.flink.connector.nebula.table;
 
-
+import java.sql.SQLException;
+import java.util.Map;
 import org.apache.flink.connector.nebula.sink.NebulaRowVertexOutputFormatConverter;
 import org.apache.flink.connector.nebula.sink.NebulaVertexBatchExecutor;
 import org.apache.flink.connector.nebula.statement.ExecutionOptions;
@@ -13,9 +14,6 @@ import org.apache.flink.connector.nebula.statement.VertexExecutionOptions;
 import org.apache.flink.connector.nebula.utils.NebulaVertex;
 import org.apache.flink.connector.nebula.utils.VidTypeEnum;
 import org.apache.flink.table.data.RowData;
-
-import java.sql.SQLException;
-import java.util.Map;
 
 public class NebulaRowDataVertexBatchExecutor extends NebulaVertexBatchExecutor<RowData> {
     private final NebulaRowDataConverter nebulaConverter;
@@ -39,7 +37,9 @@ public class NebulaRowDataVertexBatchExecutor extends NebulaVertexBatchExecutor<
                 (VertexExecutionOptions) executionOptions, vidType, schema);
         NebulaVertex vertex = null;
         try {
-            vertex = converter.createVertex(this.nebulaConverter.toExternal(record), executionOptions.getPolicy());
+            vertex = converter.createVertex(
+                    this.nebulaConverter.toExternal(record),
+                    executionOptions.getPolicy());
         } catch (SQLException e) {
             e.printStackTrace();
         }

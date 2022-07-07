@@ -5,6 +5,8 @@
 
 package org.apache.flink.connector.nebula.table;
 
+import java.sql.SQLException;
+import java.util.Map;
 import org.apache.flink.connector.nebula.sink.NebulaEdgeBatchExecutor;
 import org.apache.flink.connector.nebula.sink.NebulaRowEdgeOutputFormatConverter;
 import org.apache.flink.connector.nebula.statement.EdgeExecutionOptions;
@@ -13,8 +15,6 @@ import org.apache.flink.connector.nebula.utils.NebulaEdge;
 import org.apache.flink.connector.nebula.utils.VidTypeEnum;
 import org.apache.flink.table.data.RowData;
 
-import java.sql.SQLException;
-import java.util.Map;
 
 public class NebulaRowDataEdgeBatchExecutor extends NebulaEdgeBatchExecutor<RowData> {
 
@@ -35,7 +35,9 @@ public class NebulaRowDataEdgeBatchExecutor extends NebulaEdgeBatchExecutor<RowD
                         vidType, schema);
         NebulaEdge edge = null;
         try {
-            edge = converter.createEdge(this.nebulaConverter.toExternal(record), executionOptions.getPolicy());
+            edge = converter.createEdge(
+                    this.nebulaConverter.toExternal(record),
+                    executionOptions.getPolicy());
         } catch (SQLException e) {
             e.printStackTrace();
         }

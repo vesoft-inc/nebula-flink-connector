@@ -5,6 +5,8 @@
 
 package org.apache.flink.connector.nebula.table;
 
+
+import java.util.Arrays;
 import org.apache.flink.api.common.io.InputFormat;
 import org.apache.flink.connector.nebula.connection.NebulaClientOptions;
 import org.apache.flink.connector.nebula.connection.NebulaStorageConnectionProvider;
@@ -18,8 +20,6 @@ import org.apache.flink.table.connector.source.ScanTableSource;
 import org.apache.flink.table.data.RowData;
 import org.apache.flink.table.types.DataType;
 import org.apache.flink.table.types.logical.LogicalType;
-
-import java.util.Arrays;
 
 public class NebulaDynamicTableSource implements ScanTableSource {
 

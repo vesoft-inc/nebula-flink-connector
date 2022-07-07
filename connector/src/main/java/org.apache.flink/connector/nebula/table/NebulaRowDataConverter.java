@@ -5,22 +5,13 @@
 
 package org.apache.flink.connector.nebula.table;
 
+import static org.apache.flink.util.Preconditions.checkNotNull;
+
 import com.vesoft.nebula.client.graph.data.DateTimeWrapper;
 import com.vesoft.nebula.client.graph.data.DateWrapper;
 import com.vesoft.nebula.client.graph.data.TimeWrapper;
 import com.vesoft.nebula.client.graph.data.ValueWrapper;
 import com.vesoft.nebula.client.storage.data.BaseTableRow;
-import org.apache.flink.connector.nebula.source.NebulaConverter;
-import org.apache.flink.table.data.GenericRowData;
-import org.apache.flink.table.data.RowData;
-import org.apache.flink.table.data.StringData;
-import org.apache.flink.table.data.TimestampData;
-import org.apache.flink.table.types.logical.LocalZonedTimestampType;
-import org.apache.flink.table.types.logical.LogicalType;
-import org.apache.flink.table.types.logical.RowType;
-import org.apache.flink.table.types.logical.TimestampType;
-import org.apache.flink.types.Row;
-
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.sql.Date;
@@ -31,8 +22,16 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
-
-import static org.apache.flink.util.Preconditions.checkNotNull;
+import org.apache.flink.connector.nebula.source.NebulaConverter;
+import org.apache.flink.table.data.GenericRowData;
+import org.apache.flink.table.data.RowData;
+import org.apache.flink.table.data.StringData;
+import org.apache.flink.table.data.TimestampData;
+import org.apache.flink.table.types.logical.LocalZonedTimestampType;
+import org.apache.flink.table.types.logical.LogicalType;
+import org.apache.flink.table.types.logical.RowType;
+import org.apache.flink.table.types.logical.TimestampType;
+import org.apache.flink.types.Row;
 
 /**
  * convert nebula {@link BaseTableRow} to flink {@link RowData}
@@ -66,7 +65,8 @@ public class NebulaRowDataConverter implements NebulaConverter<RowData> {
             ValueWrapper valueWrapper = values.get(pos);
             if (valueWrapper != null) {
                 try {
-                    genericRowData.setField(pos, toInternalConverters[pos].deserialize(valueWrapper));
+                    genericRowData.setField(pos,
+                            toInternalConverters[pos].deserialize(valueWrapper));
                 } catch (SQLException e) {
                     e.printStackTrace();
                 }
@@ -79,11 +79,11 @@ public class NebulaRowDataConverter implements NebulaConverter<RowData> {
 
     public Row toExternal(RowData rowData) throws SQLException {
         Row row = new Row(rowData.getArity());
-        for(int i = 0; i < rowData.getArity(); i++) {
+        for (int i = 0; i < rowData.getArity(); i++) {
             if (!rowData.isNullAt(i)) {
                 toExternalConverters[i].serialize(rowData, i, row);
             } else {
-               row.setField(i, null);
+                row.setField(i, null);
             }
         }
         return row;
@@ -95,11 +95,11 @@ public class NebulaRowDataConverter implements NebulaConverter<RowData> {
     @FunctionalInterface
     interface NebulaDeserializationConverter extends Serializable {
         /**
-         * Convert a Nebula DataStructure of {@link BaseTableRow} to the internal data structure object.
-         *
-         * @param baseTableRow
+         * Convert a Nebula DataStructure of {@link BaseTableRow}
+         * to the internal data structure object.
          */
-        Object deserialize(ValueWrapper baseTableRow) throws SQLException, UnsupportedEncodingException;
+        Object deserialize(ValueWrapper baseTableRow)
+                throws SQLException, UnsupportedEncodingException;
     }
 
     @FunctionalInterface
@@ -150,7 +150,8 @@ public class NebulaRowDataConverter implements NebulaConverter<RowData> {
                 return val -> {
                     if (val.isDateTime()) {
                         DateTimeWrapper t = val.asDateTime();
-                        LocalDateTime localDateTime = LocalDateTime.of(t.getYear(), t.getMonth(), t.getDay(),
+                        LocalDateTime localDateTime = LocalDateTime.of(
+                                t.getYear(), t.getMonth(), t.getDay(),
                                 t.getHour(), t.getMinute(), t.getSecond());
                         return TimestampData.fromLocalDateTime(localDateTime);
                     } else {

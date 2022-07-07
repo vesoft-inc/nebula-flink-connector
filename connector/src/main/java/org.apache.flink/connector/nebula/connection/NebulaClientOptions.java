@@ -221,7 +221,7 @@ public class NebulaClientOptions implements Serializable {
                     case SELF:
                         if (selfSignParams == null) {
                             throw new IllegalArgumentException("ssl is enabled and sign type is "
-                                    + "SELF, selfSignParam must not be null");
+                                    + "CA, selfSignParam must not be null");
                         }
                         break;
                     default:

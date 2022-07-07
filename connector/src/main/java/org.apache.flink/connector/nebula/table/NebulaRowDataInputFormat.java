@@ -5,9 +5,8 @@
 
 package org.apache.flink.connector.nebula.table;
 
-import java.io.IOException;
-
 import com.vesoft.nebula.client.storage.data.BaseTableRow;
+import java.io.IOException;
 import org.apache.flink.connector.nebula.connection.NebulaStorageConnectionProvider;
 import org.apache.flink.connector.nebula.source.NebulaInputFormat;
 import org.apache.flink.connector.nebula.statement.ExecutionOptions;

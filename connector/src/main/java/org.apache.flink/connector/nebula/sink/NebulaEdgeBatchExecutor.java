@@ -21,7 +21,7 @@ import org.slf4j.LoggerFactory;
 
 public class NebulaEdgeBatchExecutor<T> extends NebulaBatchExecutor<T> {
     private static final Logger LOG = LoggerFactory.getLogger(NebulaEdgeBatchExecutor.class);
-    private final List<NebulaEdge> nebulaEdgeList;
+    protected final List<NebulaEdge> nebulaEdgeList;
 
     public NebulaEdgeBatchExecutor(ExecutionOptions executionOptions,
                                    VidTypeEnum vidType, Map<String, Integer> schema) {
@@ -33,7 +33,7 @@ public class NebulaEdgeBatchExecutor<T> extends NebulaBatchExecutor<T> {
      * put record into buffer
      */
     @Override
-    void addToBatch(T record) {
+    protected void addToBatch(T record) {
         NebulaRowEdgeOutputFormatConverter converter =
                 new NebulaRowEdgeOutputFormatConverter((EdgeExecutionOptions) executionOptions,
                         vidType, schema);

@@ -22,7 +22,7 @@ import org.slf4j.LoggerFactory;
 public class NebulaVertexBatchExecutor<T> extends NebulaBatchExecutor<T> {
     private static final Logger LOG = LoggerFactory.getLogger(NebulaVertexBatchExecutor.class);
 
-    private final List<NebulaVertex> nebulaVertexList;
+    protected final List<NebulaVertex> nebulaVertexList;
 
     public NebulaVertexBatchExecutor(ExecutionOptions executionOptions,
                                      VidTypeEnum vidType, Map<String, Integer> schema) {
@@ -36,7 +36,7 @@ public class NebulaVertexBatchExecutor<T> extends NebulaBatchExecutor<T> {
      * @param record represent vertex or edge
      */
     @Override
-    void addToBatch(T record) {
+    protected void addToBatch(T record) {
         NebulaRowVertexOutputFormatConverter converter = new NebulaRowVertexOutputFormatConverter(
                 (VertexExecutionOptions) executionOptions, vidType, schema);
         NebulaVertex vertex = converter.createVertex((Row) record, executionOptions.getPolicy());
@@ -90,5 +90,4 @@ public class NebulaVertexBatchExecutor<T> extends NebulaBatchExecutor<T> {
         nebulaVertexList.clear();
         return null;
     }
-
 }

@@ -42,11 +42,11 @@ public class NebulaBatchOutputFormat<T> extends RichOutputFormat<T> implements F
     private volatile AtomicLong numPendingRow;
     private NebulaPool nebulaPool;
     private Session session;
-    private MetaClient metaClient;
-    private NebulaBatchExecutor nebulaBatchExecutor;
+    protected MetaClient metaClient;
+    private NebulaBatchExecutor<T> nebulaBatchExecutor;
     private NebulaGraphConnectionProvider graphProvider;
-    private NebulaMetaConnectionProvider metaProvider;
-    private ExecutionOptions executionOptions;
+    protected NebulaMetaConnectionProvider metaProvider;
+    protected ExecutionOptions executionOptions;
     private List<String> errorBuffer = new ArrayList<>();
 
     private transient ScheduledExecutorService scheduler;
@@ -100,16 +100,7 @@ public class NebulaBatchOutputFormat<T> extends RichOutputFormat<T> implements F
 
         VidTypeEnum vidType = metaProvider.getVidType(metaClient, executionOptions.getGraphSpace());
         boolean isVertex = executionOptions.getDataType().isVertex();
-        Map<String, Integer> schema;
-        if (isVertex) {
-            schema = metaProvider.getTagSchema(metaClient, executionOptions.getGraphSpace(),
-                    executionOptions.getLabel());
-            nebulaBatchExecutor = new NebulaVertexBatchExecutor(executionOptions, vidType, schema);
-        } else {
-            schema = metaProvider.getEdgeSchema(metaClient, executionOptions.getGraphSpace(),
-                    executionOptions.getLabel());
-            nebulaBatchExecutor = new NebulaEdgeBatchExecutor(executionOptions, vidType, schema);
-        }
+        nebulaBatchExecutor = getBatchExecutor(vidType, isVertex);
         // start the schedule task: submit the buffer records every batchInterval.
         // If batchIntervalMs is 0, do not start the scheduler task.
         if (executionOptions.getBatchIntervalMs() != 0 && executionOptions.getBatch() != 1) {
@@ -124,6 +115,19 @@ public class NebulaBatchOutputFormat<T> extends RichOutputFormat<T> implements F
                     executionOptions.getBatchIntervalMs(),
                     executionOptions.getBatchIntervalMs(),
                     TimeUnit.MILLISECONDS);
+        }
+    }
+
+    protected NebulaBatchExecutor<T> getBatchExecutor(VidTypeEnum vidType, boolean isVertex) {
+        Map<String, Integer> schema;
+        if (isVertex) {
+            schema = metaProvider.getTagSchema(metaClient, executionOptions.getGraphSpace(),
+                    executionOptions.getLabel());
+            return new NebulaVertexBatchExecutor<>(executionOptions, vidType, schema);
+        } else {
+            schema = metaProvider.getEdgeSchema(metaClient, executionOptions.getGraphSpace(),
+                    executionOptions.getLabel());
+            return new NebulaEdgeBatchExecutor<>(executionOptions, vidType, schema);
         }
     }
 

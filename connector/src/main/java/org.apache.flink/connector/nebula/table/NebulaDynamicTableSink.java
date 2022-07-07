@@ -3,28 +3,28 @@ package org.apache.flink.connector.nebula.table;
 import org.apache.flink.connector.nebula.connection.NebulaClientOptions;
 import org.apache.flink.connector.nebula.connection.NebulaGraphConnectionProvider;
 import org.apache.flink.connector.nebula.connection.NebulaMetaConnectionProvider;
-import org.apache.flink.connector.nebula.sink.NebulaBatchOutputFormat;
-import org.apache.flink.connector.nebula.sink.NebulaSinkFunction;
+import org.apache.flink.connector.nebula.statement.ExecutionOptions;
+import org.apache.flink.table.api.TableSchema;
 import org.apache.flink.table.connector.ChangelogMode;
 import org.apache.flink.table.connector.sink.DynamicTableSink;
-import org.apache.flink.table.connector.sink.SinkFunctionProvider;
-import org.apache.flink.table.data.RowData;
+import org.apache.flink.table.connector.sink.OutputFormatProvider;
+import org.apache.flink.table.types.DataType;
+import org.apache.flink.table.types.logical.LogicalType;
 import org.apache.flink.types.RowKind;
 
+import java.util.Arrays;
+
 public class NebulaDynamicTableSink implements DynamicTableSink {
-    private final String metaAddress;
-    private final String graphAddress;
+    private final NebulaClientOptions nebulaClientOptions;
+    private final ExecutionOptions executionOptions;
+    private final TableSchema tableSchema;
 
-
-    private final String username;
-    private final String password;
-
-    public NebulaDynamicTableSink(String metaAddress, String graphAddress, String username,
-                                  String password) {
-        this.metaAddress = metaAddress;
-        this.graphAddress = graphAddress;
-        this.username = username;
-        this.password = password;
+    public NebulaDynamicTableSink(NebulaClientOptions nebulaClientOptions,
+                                  ExecutionOptions executionOptions,
+                                  TableSchema tableSchema) {
+        this.nebulaClientOptions = nebulaClientOptions;
+        this.executionOptions = executionOptions;
+        this.tableSchema = tableSchema;
     }
 
     @Override
@@ -38,31 +38,45 @@ public class NebulaDynamicTableSink implements DynamicTableSink {
         return builder.build();
     }
 
+    // @Override
+    // public SinkRuntimeProvider getSinkRuntimeProvider(Context context) {
+    //     DataStructureConverter converter =
+    //             context.createDataStructureConverter(tableSchema.toPhysicalRowDataType());
+    //     NebulaGraphConnectionProvider graphProvider =
+    //             new NebulaGraphConnectionProvider(nebulaClientOptions);
+    //     NebulaMetaConnectionProvider metaProvider =
+    //             new NebulaMetaConnectionProvider(nebulaClientOptions);
+    //     NebulaBatchOutputFormat<RowData> outPutFormat =
+    //             new NebulaRowDataOutputFormat(graphProvider, metaProvider, converter);
+    //     outPutFormat.setExecutionOptions(executionOptions);
+    //     NebulaSinkFunction<RowData> sinkFunction = new NebulaSinkFunction<>(outPutFormat);
+    //     return SinkFunctionProvider.of(sinkFunction);
+    //     // return OutputFormatProvider.of(outPutFormat);
+    // }
+
     @Override
     public SinkRuntimeProvider getSinkRuntimeProvider(Context context) {
-
-        NebulaClientOptions builder = new NebulaClientOptions.NebulaClientOptionsBuilder()
-                .setMetaAddress(metaAddress)
-                .setGraphAddress(graphAddress)
-                .setUsername(username)
-                .setPassword(password)
-                .build();
-
-        NebulaGraphConnectionProvider graphProvider = new NebulaGraphConnectionProvider(builder);
-        NebulaMetaConnectionProvider metaProvider = new NebulaMetaConnectionProvider(builder);
-        NebulaBatchOutputFormat<RowData> outPutFormat = new NebulaBatchOutputFormat(graphProvider,
-                metaProvider);
-        NebulaSinkFunction<RowData> sinkFunction = new NebulaSinkFunction<>(outPutFormat);
-        return SinkFunctionProvider.of(sinkFunction);
+        DataType[] fieldDataTypes = tableSchema.getFieldDataTypes();
+        LogicalType[] logicalTypes = Arrays.stream(fieldDataTypes)
+                .map(DataType::getLogicalType)
+                .toArray(LogicalType[]::new);
+        NebulaGraphConnectionProvider graphProvider =
+                new NebulaGraphConnectionProvider(nebulaClientOptions);
+        NebulaMetaConnectionProvider metaProvider =
+                new NebulaMetaConnectionProvider(nebulaClientOptions);
+        NebulaRowDataOutputFormat outPutFormat =
+                new NebulaRowDataOutputFormat(graphProvider, metaProvider, logicalTypes);
+        outPutFormat.setExecutionOptions(executionOptions);
+        return OutputFormatProvider.of(outPutFormat);
     }
 
     @Override
     public DynamicTableSink copy() {
-        return null;
+        return new NebulaDynamicTableSink(nebulaClientOptions, executionOptions, tableSchema);
     }
 
     @Override
     public String asSummaryString() {
-        return null;
+        return "NebulaDynamicTableSink";
     }
 }

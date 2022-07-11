@@ -28,13 +28,17 @@ public enum WriteModeEnum {
     }
 
     public static boolean checkValidWriteMode(String modeName) {
-        return chooseWriteMode(modeName) != INSERT ||
-                INSERT.name().equalsIgnoreCase(modeName);
+        return chooseWriteMode(modeName) != INSERT
+                || INSERT.name().equalsIgnoreCase(modeName);
     }
 
     public static WriteModeEnum chooseWriteMode(String modeName) {
-        if (UPDATE.name().equalsIgnoreCase(modeName)) return UPDATE;
-        if (DELETE.name().equalsIgnoreCase(modeName)) return DELETE;
+        if (UPDATE.name().equalsIgnoreCase(modeName)) {
+            return UPDATE;
+        }
+        if (DELETE.name().equalsIgnoreCase(modeName)) {
+            return DELETE;
+        }
         return INSERT;
     }
 }

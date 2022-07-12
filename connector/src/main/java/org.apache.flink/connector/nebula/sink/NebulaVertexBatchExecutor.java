@@ -22,7 +22,7 @@ import org.slf4j.LoggerFactory;
 public class NebulaVertexBatchExecutor<T> extends NebulaBatchExecutor<T> {
     private static final Logger LOG = LoggerFactory.getLogger(NebulaVertexBatchExecutor.class);
 
-    private final List<NebulaVertex> nebulaVertexList;
+    protected final List<NebulaVertex> nebulaVertexList;
 
     public NebulaVertexBatchExecutor(ExecutionOptions executionOptions,
                                      VidTypeEnum vidType, Map<String, Integer> schema) {

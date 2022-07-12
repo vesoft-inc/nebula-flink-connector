@@ -70,6 +70,10 @@ public class NebulaClientOptions implements Serializable {
         return addresses;
     }
 
+    public String getRawMetaAddress() {
+        return metaAddress;
+    }
+
     public String getGraphAddress() {
         return graphAddress;
     }

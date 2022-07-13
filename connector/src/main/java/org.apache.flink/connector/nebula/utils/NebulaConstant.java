@@ -24,6 +24,10 @@ public class NebulaConstant {
     public static String DELETE_EDGE_TEMPLATE = "DELETE EDGE `%s` %s";
     public static String EDGE_ENDPOINT_TEMPLATE = "%s->%s@%d";
 
+    // template for create space statement
+    public static String CREATE_SPACE_TEMPLATE = "CREATE SPACE `%s` (%s)";
+    public static String CREATE_SPACE_COMMENT = " COMMENT = '%s'";
+
     // Delimiter
     public static String COMMA = ",";
     public static String SUB_LINE = "_";
@@ -44,4 +48,12 @@ public class NebulaConstant {
     public static final int DEFAULT_CONNECT_RETRY = 3;
     public static final int DEFAULT_EXECUTION_RETRY = 3;
 
+    // params for create space
+    public static final String CREATE_VID_TYPE = "vid_type";
+    public static final String CREATE_PARTITION_NUM = "partition_num";
+    public static final String CREATE_REPLICA_FACTOR = "replica_factor";
+
+    // default params for create space
+    public static final int DEFAULT_PARTITION_NUM = 100;
+    public static final int DEFAULT_REPLICA_FACTOR = 1;
 }

@@ -5,6 +5,8 @@
 
 package org.apache.flink.connector.nebula.catalog;
 
+import static org.apache.flink.util.Preconditions.checkArgument;
+
 import com.facebook.thrift.TException;
 import com.vesoft.nebula.client.graph.data.HostAddress;
 import com.vesoft.nebula.client.graph.exception.ClientServerIncompatibleException;
@@ -29,8 +31,10 @@ import org.apache.flink.table.catalog.stats.CatalogColumnStatistics;
 import org.apache.flink.table.catalog.stats.CatalogTableStatistics;
 import org.apache.flink.table.expressions.Expression;
 import org.apache.flink.table.factories.Factory;
+import org.apache.flink.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 
 /**
  * AbstractNebulaCatalog is used to get nebula schema
@@ -43,12 +47,21 @@ public abstract class AbstractNebulaCatalog extends AbstractCatalog {
     protected final String username;
     protected final String password;
     protected final String address;
-
+    private static final String DEFAULT_DATABASE = "default";
 
     public AbstractNebulaCatalog(String catalogName, String defaultDatabase, String username,
                                  String pwd, String address) {
-        super(catalogName, defaultDatabase);
-        // TODO check arguments
+        super(catalogName, defaultDatabase == null ? DEFAULT_DATABASE : defaultDatabase);
+        checkArgument(
+                !StringUtils.isNullOrWhitespaceOnly(username),
+                "username cannot be null or empty.");
+        checkArgument(
+                !StringUtils.isNullOrWhitespaceOnly(pwd),
+                "password cannot be null or empty.");
+        checkArgument(
+                !StringUtils.isNullOrWhitespaceOnly(address),
+                "address cannot be null or empty."
+        );
         this.username = username;
         this.password = pwd;
         this.address = address;

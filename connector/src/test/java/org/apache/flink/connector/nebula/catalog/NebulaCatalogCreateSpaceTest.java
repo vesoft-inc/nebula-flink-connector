@@ -16,8 +16,8 @@ public class NebulaCatalogCreateSpaceTest {
     private static final String GRAPH_SPACE = "default";
     private static final String USERNAME = "root";
     private static final String PASSWORD = "nebula";
-    private static final String META_ADDRESS = "192.168.200.135:9559";
-    private static final String GRAPH_ADDRESS = "192.168.200.135:9669";
+    private static final String META_ADDRESS = "127.0.0.1:9559";
+    private static final String GRAPH_ADDRESS = "127.0.0.1:9669";
 
     @Test
     public void testCreateGraphSpace() {

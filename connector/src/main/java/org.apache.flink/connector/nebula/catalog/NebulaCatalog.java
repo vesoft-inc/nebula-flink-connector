@@ -178,10 +178,10 @@ public class NebulaCatalog extends AbstractNebulaCatalog {
         }
         Map<String, String> properties = catalogDatabase.getProperties();
         Map<String, String> newProperties = properties.entrySet().stream().collect(
-                Collectors.toMap(
-                        entry -> entry.getKey().toLowerCase(),
-                        entry -> entry.getValue().toUpperCase()
-                )
+            Collectors.toMap(
+                entry -> entry.getKey().toLowerCase(),
+                entry -> entry.getValue().toUpperCase()
+            )
         );
         if (!newProperties.containsKey(NebulaConstant.CREATE_VID_TYPE)) {
             LOG.error("failed to create graph space {}, missing VID type param", properties);

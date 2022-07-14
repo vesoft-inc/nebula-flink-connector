@@ -17,7 +17,7 @@ import org.apache.flink.connector.nebula.statement.ExecutionOptions;
 /**
  * Nebula Graph Vertex reader
  */
-public class NebulaVertexSource extends NebulaSource {
+public class NebulaVertexSource extends NebulaSource<BaseTableRow> {
     ScanVertexResultIterator iterator = null;
     Iterator<VertexTableRow> dataIterator = null;
     Iterator<Integer> scanPartIterator;

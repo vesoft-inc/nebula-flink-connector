@@ -108,7 +108,9 @@ public class NebulaDynamicTableFactory implements DynamicTableSourceFactory,
         helper.validate();
         validateConfigOptions(config);
         return new NebulaDynamicTableSink(
-                getClientOptions(config), getExecutionOptions(context, config), producedDataType);
+                getClientOptions(config),
+                getSinkExecutionOptions(context, config),
+                producedDataType);
     }
 
     private void validateConfigOptions(ReadableConfig config) {
@@ -157,7 +159,7 @@ public class NebulaDynamicTableFactory implements DynamicTableSourceFactory,
                 .build();
     }
 
-    private ExecutionOptions getExecutionOptions(Context context, ReadableConfig config) {
+    private ExecutionOptions getSinkExecutionOptions(Context context, ReadableConfig config) {
         List<String> fields = new ArrayList<>();
         List<Integer> positions = new ArrayList<>();
         List<Column> columns = context.getCatalogTable().getResolvedSchema().getColumns();
@@ -198,11 +200,48 @@ public class NebulaDynamicTableFactory implements DynamicTableSourceFactory,
 
     @Override
     public DynamicTableSource createDynamicTableSource(Context context) {
-        String address = METAADDRESS.key();
-        String username = USERNAME.key();
-        String password = PASSWORD.key();
+        final FactoryUtil.TableFactoryHelper helper =
+                FactoryUtil.createTableFactoryHelper(this, context);
+        final ReadableConfig config = helper.getOptions();
 
-        return new NebulaDynamicTableSource(address, username, password);
+        final DataType producedDataType =
+                context.getCatalogTable().getResolvedSchema().toPhysicalRowDataType();
+
+        helper.validate();
+        validateConfigOptions(config);
+
+        return new NebulaDynamicTableSource(
+                getClientOptions(config),
+                getSourceExecutionOptions(context, config),
+                producedDataType);
+    }
+
+    private ExecutionOptions getSourceExecutionOptions(Context context, ReadableConfig config) {
+        List<String> fields = new ArrayList<>();
+        List<Integer> positions = new ArrayList<>();
+        List<Column> columns = context.getCatalogTable().getResolvedSchema().getColumns();
+
+        if (config.get(DATA_TYPE).isVertex()) {
+            for (int i = 1; i < columns.size(); i++) {
+                positions.add(i);
+                fields.add(columns.get(i).getName());
+            }
+            return new VertexExecutionOptions.ExecutionOptionBuilder()
+                    .setFields(fields)
+                    .setGraphSpace(config.get(GRAPH_SPACE))
+                    .setTag(context.getObjectIdentifier().getObjectName())
+                    .builder();
+        } else {
+            for (int i = 3; i < columns.size(); i++) {
+                positions.add(i);
+                fields.add(columns.get(i).getName());
+            }
+            return new EdgeExecutionOptions.ExecutionOptionBuilder()
+                    .setFields(fields)
+                    .setGraphSpace(config.get(GRAPH_SPACE))
+                    .setEdge(context.getObjectIdentifier().getObjectName())
+                    .builder();
+        }
     }
 
     @Override

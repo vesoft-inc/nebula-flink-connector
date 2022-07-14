@@ -17,13 +17,15 @@ import org.apache.flink.connector.nebula.connection.NebulaStorageConnectionProvi
 import org.apache.flink.connector.nebula.statement.ExecutionOptions;
 import org.apache.flink.connector.nebula.utils.PartitionUtils;
 import org.apache.flink.streaming.api.functions.source.RichParallelSourceFunction;
+import org.apache.flink.table.connector.source.DynamicTableSource;
+import org.apache.flink.types.Row;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * Implementation of {@link RichParallelSourceFunction} to get NebulaGraph vertex and edge.
  */
-public class NebulaSourceFunction extends RichParallelSourceFunction<BaseTableRow> {
+public class NebulaSourceFunction<T> extends RichParallelSourceFunction<T> {
 
     private static final Logger LOG = LoggerFactory.getLogger(NebulaSourceFunction.class);
 
@@ -34,6 +36,8 @@ public class NebulaSourceFunction extends RichParallelSourceFunction<BaseTableRo
     private final NebulaStorageConnectionProvider storageConnectionProvider;
     private final NebulaMetaConnectionProvider metaConnectionProvider;
     private ExecutionOptions executionOptions;
+    private final NebulaRowConverter nebulaRowConverter;
+    private DynamicTableSource.DataStructureConverter converter;
     /**
      * the number of graph partitions
      */
@@ -41,6 +45,7 @@ public class NebulaSourceFunction extends RichParallelSourceFunction<BaseTableRo
 
     public NebulaSourceFunction(NebulaStorageConnectionProvider storageConnectionProvider) {
         super();
+        this.nebulaRowConverter = new NebulaRowConverter();
         this.storageConnectionProvider = storageConnectionProvider;
         NebulaClientOptions nebulaClientOptions =
                 storageConnectionProvider.getNebulaClientOptions();
@@ -80,14 +85,14 @@ public class NebulaSourceFunction extends RichParallelSourceFunction<BaseTableRo
      * execute scan nebula data
      */
     @Override
-    public void run(SourceContext<BaseTableRow> sourceContext) throws Exception {
+    public void run(SourceContext<T> sourceContext) throws Exception {
         RuntimeContext runtimeContext = getRuntimeContext();
         List<Integer> scanParts = PartitionUtils.getScanParts(
                 runtimeContext.getIndexOfThisSubtask() + 1,
                 numPart,
                 runtimeContext.getNumberOfParallelSubtasks());
 
-        NebulaSource nebulaSource;
+        NebulaSource<BaseTableRow> nebulaSource;
         if (executionOptions.getDataType().isVertex()) {
             nebulaSource = new NebulaVertexSource(storageClient, executionOptions, scanParts);
         } else {
@@ -95,8 +100,9 @@ public class NebulaSourceFunction extends RichParallelSourceFunction<BaseTableRo
         }
 
         while (nebulaSource.hasNext()) {
-            BaseTableRow row = nebulaSource.next();
-            sourceContext.collect(row);
+            BaseTableRow baseTableRow = nebulaSource.next();
+            Row row = nebulaRowConverter.convert(baseTableRow);
+            sourceContext.collect((T) converter.toInternal(row));
         }
     }
 
@@ -114,8 +120,14 @@ public class NebulaSourceFunction extends RichParallelSourceFunction<BaseTableRo
         }
     }
 
-    public NebulaSourceFunction setExecutionOptions(ExecutionOptions executionOptions) {
+    public NebulaSourceFunction<T> setExecutionOptions(ExecutionOptions executionOptions) {
         this.executionOptions = executionOptions;
+        return this;
+    }
+
+    public NebulaSourceFunction<T> setConverter(
+        DynamicTableSource.DataStructureConverter converter) {
+        this.converter = converter;
         return this;
     }
 }

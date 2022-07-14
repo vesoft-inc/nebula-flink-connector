@@ -6,13 +6,12 @@
 package org.apache.flink.connector.nebula.source;
 
 import com.vesoft.nebula.client.storage.StorageClient;
-import com.vesoft.nebula.client.storage.data.BaseTableRow;
 import org.apache.flink.connector.nebula.statement.ExecutionOptions;
 
 /**
  * NebulaSource is the reader to read NebulaGraph's data iteratively.
  */
-abstract class NebulaSource {
+abstract class NebulaSource<T> {
 
     StorageClient storageClient;
     ExecutionOptions executionOptions;
@@ -30,5 +29,5 @@ abstract class NebulaSource {
     /**
      * get another Nebula Graph data
      */
-    abstract BaseTableRow next();
+    abstract T next();
 }

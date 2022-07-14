@@ -17,7 +17,7 @@ import org.apache.flink.connector.nebula.statement.ExecutionOptions;
 /**
  * Nebula Graph Edge reader
  */
-public class NebulaEdgeSource extends NebulaSource {
+public class NebulaEdgeSource extends NebulaSource<BaseTableRow> {
     ScanEdgeResultIterator iterator = null;
     Iterator<EdgeTableRow> dataIterator = null;
     Iterator<Integer> scanPartIterator;

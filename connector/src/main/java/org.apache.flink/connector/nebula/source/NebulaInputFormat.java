@@ -49,7 +49,7 @@ abstract class NebulaInputFormat<T> extends RichInputFormat<T, InputSplit> {
     protected Boolean hasNext = false;
     protected List<BaseTableRow> rows;
 
-    private NebulaSource nebulaSource;
+    private NebulaSource<BaseTableRow> nebulaSource;
     protected NebulaConverter<T> nebulaConverter;
 
     private long scannedRows;
@@ -169,7 +169,7 @@ abstract class NebulaInputFormat<T> extends RichInputFormat<T, InputSplit> {
         LOG.info("Closing split (scanned {} rows)", scannedRows);
     }
 
-    public NebulaInputFormat setExecutionOptions(ExecutionOptions executionOptions) {
+    public NebulaInputFormat<T> setExecutionOptions(ExecutionOptions executionOptions) {
         this.executionOptions = executionOptions;
         return this;
     }

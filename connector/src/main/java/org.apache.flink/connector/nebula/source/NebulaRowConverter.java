@@ -7,6 +7,7 @@ package org.apache.flink.connector.nebula.source;
 
 import com.vesoft.nebula.client.graph.data.ValueWrapper;
 import com.vesoft.nebula.client.storage.data.BaseTableRow;
+import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.util.List;
 import org.apache.flink.types.Row;
@@ -14,7 +15,9 @@ import org.apache.flink.types.Row;
 /**
  * convert nebula {@link BaseTableRow} to flink {@link Row}
  */
-public class NebulaRowConverter implements NebulaConverter<Row> {
+public class NebulaRowConverter implements NebulaConverter<Row>, Serializable {
+
+    private static final long serialVersionUID = 7823753627300856104L;
 
     @Override
     public Row convert(BaseTableRow row) throws UnsupportedEncodingException {

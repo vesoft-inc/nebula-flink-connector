@@ -133,10 +133,10 @@ public class NebulaCatalog extends AbstractNebulaCatalog {
         List<String> tables = new ArrayList<>();
         try {
             for (TagItem tag : metaClient.getTags(graphSpace)) {
-                tables.add("VERTEX" + NebulaConstant.POINT + tag.tag_name);
+                tables.add("VERTEX" + NebulaConstant.POINT + new String(tag.tag_name));
             }
             for (EdgeItem edge : metaClient.getEdges(graphSpace)) {
-                tables.add("EDGE" + NebulaConstant.POINT + edge.edge_name);
+                tables.add("EDGE" + NebulaConstant.POINT + new String(edge.edge_name));
             }
         } catch (TException | ExecuteFailedException e) {
             LOG.error("get tags or edges error,", e);

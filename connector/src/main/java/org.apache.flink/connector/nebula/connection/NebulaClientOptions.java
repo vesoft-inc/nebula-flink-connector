@@ -70,6 +70,10 @@ public class NebulaClientOptions implements Serializable {
         return addresses;
     }
 
+    public String getRawMetaAddress() {
+        return metaAddress;
+    }
+
     public String getGraphAddress() {
         return graphAddress;
     }
@@ -221,7 +225,7 @@ public class NebulaClientOptions implements Serializable {
                     case SELF:
                         if (selfSignParams == null) {
                             throw new IllegalArgumentException("ssl is enabled and sign type is "
-                                    + "CA, selfSignParam must not be null");
+                                    + "SELF, selfSignParam must not be null");
                         }
                         break;
                     default:

@@ -34,15 +34,15 @@ public class AbstractNebulaInputFormatITTest {
 
     private static final Logger LOGGER =
             LoggerFactory.getLogger(AbstractNebulaInputFormatITTest.class);
-    private static final String META_ADDRESS = "192.168.200.135:9559";
-    private static final String GRAPH_ADDRESS = "192.168.200.135:9669";
+    private static final String META_ADDRESS = "127.0.0.1:9559";
+    private static final String GRAPH_ADDRESS = "127.0.0.1:9669";
     private static final String USERNAME = "root";
     private static final String PASSWORD = "nebula";
 
     private static final String[] stats = new String[]{
-        "CREATE SPACE IF NOT EXISTS `flinkSink722` (partition_num = 100, charset = utf8,"
+        "CREATE SPACE IF NOT EXISTS `flinkSink` (partition_num = 100, charset = utf8,"
                     + " replica_factor = 3, collate = utf8_bin, vid_type = INT64);"
-                    + "USE `flinkSink722`;",
+                    + "USE `flinkSink`;",
         "CREATE TAG IF NOT EXISTS person (col1 string, col2 fixed_string(8), col3 int8,"
                     + " col4 int16, col5 int32,"
                     + " col6 int64, col7 date, col8 datetime, col9 timestamp, col10 bool,"
@@ -166,7 +166,7 @@ public class AbstractNebulaInputFormatITTest {
             boolean initResult = pool.init(addresses, nebulaPoolConfig);
             if (!initResult) {
                 LOGGER.error("pool init failed.");
-                assert false;
+                assert (false);
             }
             session = pool.getSession(USERNAME, PASSWORD, true);
             createSchema(session);
@@ -206,12 +206,12 @@ public class AbstractNebulaInputFormatITTest {
                 + " col14 STRING"
                 + ") WITH ("
                 + " 'connector' = 'nebula',"
-                + " 'meta-address' = '192.168.200.135:9559',"
-                + " 'graph-address' = '192.168.200.135:9669',"
+                + " 'meta-address' = '127.0.0.1:9559',"
+                + " 'graph-address' = '127.0.0.1:9669',"
                 + " 'username' = 'root',"
                 + " 'password' = 'nebula',"
                 + " 'data-type' = 'vertex',"
-                + " 'graph-space' = 'flinkSink722'"
+                + " 'graph-space' = 'flinkSink'"
                 + ")";
         tableEnv.executeSql(creatSourceDDL);
 
@@ -267,11 +267,11 @@ public class AbstractNebulaInputFormatITTest {
                 + " col14 STRING"
                 + ") WITH ("
                 + " 'connector' = 'nebula',"
-                + " 'meta-address' = '192.168.200.135:9559',"
-                + " 'graph-address' = '192.168.200.135:9669',"
+                + " 'meta-address' = '127.0.0.1:9559',"
+                + " 'graph-address' = '127.0.0.1:9669',"
                 + " 'username' = 'root',"
                 + " 'password' = 'nebula',"
-                + " 'graph-space' = 'flinkSink722',"
+                + " 'graph-space' = 'flinkSink',"
                 + " 'data-type'='edge',"
                 + " 'src-id-index'='0',"
                 + " 'dst-id-index'='1',"

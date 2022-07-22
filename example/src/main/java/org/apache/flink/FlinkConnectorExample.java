@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
  * make sure your nebula graph has create Space, space schema:
  *
  * <p>"CREATE SPACE `flinkSink` (partition_num = 100, replica_factor = 3, charset = utf8,
- * collate = utf8_bin, vid_type = INT64, atomic_edge = false) ON default"
+ * collate = utf8_bin, vid_type = INT64, atomic_edge = false)"
  *
  * <p>"USE `flinkSink`"
  *

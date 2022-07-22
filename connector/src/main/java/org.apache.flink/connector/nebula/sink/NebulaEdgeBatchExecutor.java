@@ -33,7 +33,7 @@ public class NebulaEdgeBatchExecutor<T> extends NebulaBatchExecutor<T> {
      * put record into buffer
      */
     @Override
-    protected void addToBatch(T record) {
+    void addToBatch(T record) {
         NebulaRowEdgeOutputFormatConverter converter =
                 new NebulaRowEdgeOutputFormatConverter((EdgeExecutionOptions) executionOptions,
                         vidType, schema);

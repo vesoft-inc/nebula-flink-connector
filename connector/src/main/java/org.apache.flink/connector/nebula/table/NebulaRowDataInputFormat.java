@@ -18,11 +18,6 @@ import org.apache.flink.table.types.logical.RowType;
 /**
  * implementation of NebulaInputFormat.
  * Read NebulaGraph data in nebula's {@link BaseTableRow} format.
- * <b>how to use:
- *   NebulaInputTableRowFormat inputFormat = new NebulaInputTableRowFormat
- *                                          (storageConnectionProvider, vertexExecutionOptions);
- *   DataSource dataSource = env.createInput(inputFormat);
- * </b>
  */
 public class NebulaRowDataInputFormat extends NebulaInputFormat<RowData> {
 

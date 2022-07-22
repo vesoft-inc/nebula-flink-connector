@@ -28,7 +28,7 @@ public abstract class NebulaBatchExecutor<T> {
      *
      * @param record represent vertex or edge
      */
-    protected abstract void addToBatch(T record);
+    abstract void addToBatch(T record);
 
     /**
      * execute the insert statement

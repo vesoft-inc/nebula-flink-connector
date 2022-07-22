@@ -36,7 +36,7 @@ public class NebulaVertexBatchExecutor<T> extends NebulaBatchExecutor<T> {
      * @param record represent vertex or edge
      */
     @Override
-    protected void addToBatch(T record) {
+    void addToBatch(T record) {
         NebulaRowVertexOutputFormatConverter converter = new NebulaRowVertexOutputFormatConverter(
                 (VertexExecutionOptions) executionOptions, vidType, schema);
         NebulaVertex vertex = converter.createVertex((Row) record, executionOptions.getPolicy());

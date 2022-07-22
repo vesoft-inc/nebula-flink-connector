@@ -105,7 +105,7 @@ public class NebulaRowDataConverter implements NebulaConverter<RowData> {
     @FunctionalInterface
     interface NebulaSerializationConverter extends Serializable {
         /**
-         * Convert a internal field to java object and fill into the Row.
+         * Convert an internal field to java object and fill into the Row.
          */
         void serialize(RowData rowData, int index, Row row) throws SQLException;
     }
@@ -127,9 +127,18 @@ public class NebulaRowDataConverter implements NebulaConverter<RowData> {
                 return ValueWrapper::asDouble;
             case CHAR:
             case VARCHAR:
-                return val -> val.isGeography() ? StringData.fromString(
-                        val.asGeography().toString())
-                        : StringData.fromString(val.asString());
+                return val -> {
+                    if (val.isGeography()) {
+                        return StringData.fromString(
+                                val.asGeography().toString()
+                        );
+                    } else {
+                        return StringData.fromString(val.asString());
+                    }
+                };
+                // return val -> val.isGeography() ? StringData.fromString(
+                //         val.asGeography().toString())
+                //         : StringData.fromString(val.asString());
             case DATE:
                 return val -> {
                     DateWrapper dateWrapper = val.asDate();

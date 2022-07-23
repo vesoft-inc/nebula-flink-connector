@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
  * Space schema:
  *
  * <p>"CREATE SPACE `flinkSource` (partition_num = 100, replica_factor = 3, charset = utf8,
- * collate = utf8_bin, vid_type = INT64, atomic_edge = false) ON default"
+ * collate = utf8_bin, vid_type = INT64, atomic_edge = false)"
  *
  * <p>"USE `flinkSource`"
  *
@@ -79,6 +79,7 @@ public class FlinkConnectorSourceExample {
 
         NebulaClientOptions nebulaClientOptionsWithCaSSL =
                 new NebulaClientOptions.NebulaClientOptionsBuilder()
+                        .setMetaAddress("127.0.0.1:9559")
                         .setEnableMetaSSL(true)
                         .setEnableStorageSSL(true)
                         .setSSLSignType(SSLSighType.CA)
@@ -91,10 +92,11 @@ public class FlinkConnectorSourceExample {
 
         NebulaClientOptions nebulaClientOptionsWithSelfSSL =
                 new NebulaClientOptions.NebulaClientOptionsBuilder()
+                        .setMetaAddress("127.0.0.1:9559")
                         .setEnableMetaSSL(true)
                         .setEnableStorageSSL(true)
                         .setSSLSignType(SSLSighType.SELF)
-                        .setCaSignParam("example/src/main/resources/ssl/selfsigned.pem",
+                        .setSelfSignParam("example/src/main/resources/ssl/selfsigned.pem",
                                 "example/src/main/resources/ssl/selfsigned.key",
                                 "vesoft")
                         .build();

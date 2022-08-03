@@ -1,4 +1,4 @@
-/* Copyright (c) 2020 vesoft inc. All rights reserved.
+/* Copyright (c) 2022 vesoft inc. All rights reserved.
  *
  * This source code is licensed under Apache 2.0 License.
  */
@@ -119,7 +119,6 @@ public class NebulaRowDataConverter implements NebulaConverter<RowData> {
             case TINYINT:
             case SMALLINT:
             case INTEGER:
-                return val -> (int) val.asLong();
             case BIGINT:
                 return ValueWrapper::asLong;
             case FLOAT:
@@ -127,18 +126,9 @@ public class NebulaRowDataConverter implements NebulaConverter<RowData> {
                 return ValueWrapper::asDouble;
             case CHAR:
             case VARCHAR:
-                return val -> {
-                    if (val.isGeography()) {
-                        return StringData.fromString(
-                                val.asGeography().toString()
-                        );
-                    } else {
-                        return StringData.fromString(val.asString());
-                    }
-                };
-                // return val -> val.isGeography() ? StringData.fromString(
-                //         val.asGeography().toString())
-                //         : StringData.fromString(val.asString());
+                return val -> val.isGeography() ? StringData.fromString(
+                        val.asGeography().toString())
+                        : StringData.fromString(val.asString());
             case DATE:
                 return val -> {
                     DateWrapper dateWrapper = val.asDate();

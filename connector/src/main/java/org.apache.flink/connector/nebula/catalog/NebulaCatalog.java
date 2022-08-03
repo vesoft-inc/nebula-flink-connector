@@ -161,19 +161,21 @@ public class NebulaCatalog extends AbstractNebulaCatalog {
     }
 
     /**
-     * @param s database name (same as graph space name)
-     * @param catalogDatabase catalog impl
-     * @param b true if contains [if not exists] else false
+     * @param dataBaseName same as graph space name in nebula graph
+     * @param catalogDatabase catalog implementation
+     * @param ignoreIfExists true if contains [if not exists] clause else false
      */
     @Override
-    public void createDatabase(String s, CatalogDatabase catalogDatabase, boolean b)
+    public void createDatabase(String dataBaseName,
+                               CatalogDatabase catalogDatabase,
+                               boolean ignoreIfExists)
             throws CatalogException {
         checkArgument(
-                !isNullOrWhitespaceOnly(s), "space name cannot be null or empty.");
+                !isNullOrWhitespaceOnly(dataBaseName), "space name cannot be null or empty.");
         checkNotNull(catalogDatabase, "space cannot be null.");
 
-        if (b && listDatabases().contains(s)) {
-            LOG.error("failed to create graph space {}, already exists", s);
+        if (ignoreIfExists && listDatabases().contains(dataBaseName)) {
+            LOG.error("failed to create graph space {}, already exists", dataBaseName);
             throw new CatalogException("nebula create graph space failed.");
         }
         Map<String, String> properties = catalogDatabase.getProperties();
@@ -192,7 +194,8 @@ public class NebulaCatalog extends AbstractNebulaCatalog {
             LOG.error("VID type not satisfy {}", vidType);
             throw new CatalogException("nebula graph dont support VID type.");
         }
-        NebulaSpace space = new NebulaSpace(s, catalogDatabase.getComment(), newProperties);
+        NebulaSpace space = new NebulaSpace(
+                dataBaseName,catalogDatabase.getComment(), newProperties);
         NebulaSpaces nebulaSpaces = new NebulaSpaces(space);
         String statement = nebulaSpaces.getCreateStatement();
         ResultSet execResult = null;
@@ -207,7 +210,7 @@ public class NebulaCatalog extends AbstractNebulaCatalog {
             LOG.debug("create space success.");
         } else {
             LOG.error("create space failed: {}", execResult.getErrorMessage());
-            throw new CatalogException("create space failed.");
+            throw new CatalogException("create space failed, " + execResult.getErrorMessage());
         }
     }
 

@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
  * @see NebulaStorageConnectionProvider
  * @see ExecutionOptions
  */
-abstract class NebulaInputFormat<T> extends RichInputFormat<T, InputSplit> {
+public abstract class NebulaInputFormat<T> extends RichInputFormat<T, InputSplit> {
     protected static final Logger LOG = LoggerFactory.getLogger(NebulaInputFormat.class);
     private static final long serialVersionUID = 902031944252613459L;
 
@@ -151,7 +151,7 @@ abstract class NebulaInputFormat<T> extends RichInputFormat<T, InputSplit> {
         if (!hasNext) {
             return null;
         }
-        LOG.info("nextRecord: {}", times++);
+        LOG.info("source nextRecord: {}", times++);
 
         BaseTableRow row = nebulaSource.next();
         try {
@@ -169,9 +169,8 @@ abstract class NebulaInputFormat<T> extends RichInputFormat<T, InputSplit> {
         LOG.info("Closing split (scanned {} rows)", scannedRows);
     }
 
-    public NebulaInputFormat setExecutionOptions(ExecutionOptions executionOptions) {
+    public NebulaInputFormat<T> setExecutionOptions(ExecutionOptions executionOptions) {
         this.executionOptions = executionOptions;
         return this;
     }
-
 }

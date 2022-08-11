@@ -5,39 +5,34 @@
 
 package org.apache.flink.connector.nebula.table;
 
+
+import java.util.Arrays;
+import org.apache.flink.api.common.io.InputFormat;
+import org.apache.flink.connector.nebula.connection.NebulaClientOptions;
+import org.apache.flink.connector.nebula.connection.NebulaStorageConnectionProvider;
+import org.apache.flink.connector.nebula.statement.ExecutionOptions;
+import org.apache.flink.core.io.InputSplit;
+import org.apache.flink.table.api.TableSchema;
 import org.apache.flink.table.connector.ChangelogMode;
 import org.apache.flink.table.connector.source.DynamicTableSource;
-import org.apache.flink.table.connector.source.LookupTableSource;
+import org.apache.flink.table.connector.source.InputFormatProvider;
 import org.apache.flink.table.connector.source.ScanTableSource;
-import org.apache.flink.table.connector.source.abilities.SupportsProjectionPushDown;
+import org.apache.flink.table.data.RowData;
+import org.apache.flink.table.types.DataType;
+import org.apache.flink.table.types.logical.LogicalType;
 
-public class NebulaDynamicTableSource implements ScanTableSource, LookupTableSource,
-        SupportsProjectionPushDown {
+public class NebulaDynamicTableSource implements ScanTableSource {
 
-    private final String address;
-    private final String username;
-    private final String password;
+    private final NebulaClientOptions nebulaClientOptions;
+    private final ExecutionOptions executionOptions;
+    private final TableSchema tableSchema;
 
-    public NebulaDynamicTableSource(String address, String username, String password) {
-        this.address = address;
-        this.username = username;
-        this.password = password;
-    }
-
-    @Override
-    public DynamicTableSource copy() {
-        return new NebulaDynamicTableSource(address, username, password);
-    }
-
-    @Override
-    public String asSummaryString() {
-        return "Nebula";
-    }
-
-    @Override
-    public LookupRuntimeProvider getLookupRuntimeProvider(LookupContext context) {
-
-        return null;
+    public NebulaDynamicTableSource(NebulaClientOptions nebulaClientOptions,
+                                    ExecutionOptions executionOptions,
+                                    TableSchema tableSchema) {
+        this.nebulaClientOptions = nebulaClientOptions;
+        this.executionOptions = executionOptions;
+        this.tableSchema = tableSchema;
     }
 
     @Override
@@ -47,17 +42,26 @@ public class NebulaDynamicTableSource implements ScanTableSource, LookupTableSou
 
     @Override
     public ScanRuntimeProvider getScanRuntimeProvider(ScanContext runtimeProviderContext) {
+        DataType[] fieldDataTypes = tableSchema.getFieldDataTypes();
+        LogicalType[] logicalTypes = Arrays.stream(fieldDataTypes)
+                .map(DataType::getLogicalType)
+                .toArray(LogicalType[]::new);
 
-        return null;
+        InputFormat<RowData, InputSplit> inputFormat = new NebulaRowDataInputFormat(
+                new NebulaStorageConnectionProvider(this.nebulaClientOptions),
+                this.executionOptions,
+                logicalTypes
+        );
+        return InputFormatProvider.of(inputFormat);
     }
 
     @Override
-    public boolean supportsNestedProjection() {
-        return false;
+    public DynamicTableSource copy() {
+        return new NebulaDynamicTableSource(nebulaClientOptions, executionOptions, tableSchema);
     }
 
     @Override
-    public void applyProjection(int[][] projectedFields) {
-
+    public String asSummaryString() {
+        return "NebulaDynamicTableSource";
     }
 }

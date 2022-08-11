@@ -90,5 +90,4 @@ public class NebulaVertexBatchExecutor<T> extends NebulaBatchExecutor<T> {
         nebulaVertexList.clear();
         return null;
     }
-
 }

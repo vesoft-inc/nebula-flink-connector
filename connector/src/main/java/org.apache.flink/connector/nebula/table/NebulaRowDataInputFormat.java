@@ -1,64 +1,39 @@
+/* Copyright (c) 2020 vesoft inc. All rights reserved.
+ *
+ * This source code is licensed under Apache 2.0 License.
+ */
+
 package org.apache.flink.connector.nebula.table;
 
+import com.vesoft.nebula.client.storage.data.BaseTableRow;
 import java.io.IOException;
-import org.apache.flink.api.common.io.DefaultInputSplitAssigner;
-import org.apache.flink.api.common.io.RichInputFormat;
-import org.apache.flink.api.common.io.statistics.BaseStatistics;
-import org.apache.flink.configuration.Configuration;
-import org.apache.flink.core.io.GenericInputSplit;
+import org.apache.flink.connector.nebula.connection.NebulaStorageConnectionProvider;
+import org.apache.flink.connector.nebula.source.NebulaInputFormat;
+import org.apache.flink.connector.nebula.statement.ExecutionOptions;
 import org.apache.flink.core.io.InputSplit;
-import org.apache.flink.core.io.InputSplitAssigner;
 import org.apache.flink.table.data.RowData;
+import org.apache.flink.table.types.logical.LogicalType;
+import org.apache.flink.table.types.logical.RowType;
 
-public class NebulaRowDataInputFormat extends RichInputFormat<RowData, InputSplit> {
+/**
+ * implementation of NebulaInputFormat.
+ * Read NebulaGraph data in nebula's {@link BaseTableRow} format.
+ */
+public class NebulaRowDataInputFormat extends NebulaInputFormat<RowData> {
 
-    @Override
-    public void openInputFormat() throws IOException {
-        super.openInputFormat();
+    private final LogicalType[] logicalTypes;
+
+    public NebulaRowDataInputFormat(NebulaStorageConnectionProvider storageConnectionProvider,
+                                    ExecutionOptions executionOptions,
+                                    LogicalType[] logicalTypes) {
+        super(storageConnectionProvider, executionOptions);
+        this.logicalTypes = logicalTypes;
     }
 
     @Override
-    public void closeInputFormat() throws IOException {
-        super.closeInputFormat();
-    }
-
-    @Override
-    public void configure(Configuration parameters) {
-
-    }
-
-    @Override
-    public BaseStatistics getStatistics(BaseStatistics cachedStatistics) throws IOException {
-        return null;
-    }
-
-    @Override
-    public InputSplit[] createInputSplits(int minNumSplits) throws IOException {
-        return new GenericInputSplit[]{new GenericInputSplit(0, 1)};
-    }
-
-    @Override
-    public InputSplitAssigner getInputSplitAssigner(InputSplit[] inputSplits) {
-        return new DefaultInputSplitAssigner(inputSplits);
-    }
-
-    @Override
-    public void open(InputSplit split) throws IOException {
-
-    }
-
-    @Override
-    public boolean reachedEnd() throws IOException {
-        return false;
-    }
-
-    @Override
-    public RowData nextRecord(RowData reuse) throws IOException {
-        return null;
-    }
-
-    @Override
-    public void close() throws IOException {
-
+    public void open(InputSplit inputSplit) throws IOException {
+        super.open(inputSplit);
+        RowType rowType = RowType.of(logicalTypes);
+        super.nebulaConverter = new NebulaRowDataConverter(rowType);
     }
 }

@@ -18,6 +18,7 @@ import org.apache.flink.connector.nebula.statement.ExecutionOptions;
 import org.apache.flink.connector.nebula.statement.VertexExecutionOptions;
 import org.apache.flink.connector.nebula.utils.DataTypeEnum;
 import org.apache.flink.connector.nebula.utils.NebulaConstant;
+import org.apache.flink.table.api.TableSchema;
 import org.apache.flink.table.catalog.Column;
 import org.apache.flink.table.connector.sink.DynamicTableSink;
 import org.apache.flink.table.connector.source.DynamicTableSource;
@@ -25,6 +26,8 @@ import org.apache.flink.table.factories.DynamicTableSinkFactory;
 import org.apache.flink.table.factories.DynamicTableSourceFactory;
 import org.apache.flink.table.factories.FactoryUtil;
 import org.apache.flink.table.types.DataType;
+import org.apache.flink.table.utils.TableSchemaUtils;
+
 
 public class NebulaDynamicTableFactory implements DynamicTableSourceFactory,
         DynamicTableSinkFactory {
@@ -76,25 +79,25 @@ public class NebulaDynamicTableFactory implements DynamicTableSourceFactory,
             .key("timeout")
             .intType()
             .defaultValue(NebulaConstant.DEFAULT_TIMEOUT_MS)
-            .withDescription("the nebula execute timeout duration");
+            .withDescription("the nebula execute timeout duration.");
 
     public static final ConfigOption<Integer> SRC_ID_INDEX = ConfigOptions
             .key("src-id-index")
             .intType()
             .defaultValue(NebulaConstant.DEFAULT_ROW_INFO_INDEX)
-            .withDescription("the nebula execute edge src index");
+            .withDescription("the nebula execute edge src index.");
 
     public static final ConfigOption<Integer> DST_ID_INDEX = ConfigOptions
             .key("dst-id-index")
             .intType()
             .defaultValue(NebulaConstant.DEFAULT_ROW_INFO_INDEX)
-            .withDescription("the nebula execute edge dst index");
+            .withDescription("the nebula execute edge dst index.");
 
     public static final ConfigOption<Integer> RANK_ID_INDEX = ConfigOptions
             .key("rank-id-index")
             .intType()
             .defaultValue(NebulaConstant.DEFAULT_ROW_INFO_INDEX)
-            .withDescription("the nebula execute rank index");
+            .withDescription("the nebula execute rank index.");
 
     @Override
     public DynamicTableSink createDynamicTableSink(Context context) {
@@ -111,37 +114,22 @@ public class NebulaDynamicTableFactory implements DynamicTableSourceFactory,
                 getClientOptions(config), getExecutionOptions(context, config), producedDataType);
     }
 
+    @Override
+    public DynamicTableSource createDynamicTableSource(Context context) {
+        final FactoryUtil.TableFactoryHelper helper =
+                FactoryUtil.createTableFactoryHelper(this, context);
+        final ReadableConfig readableConfig = helper.getOptions();
+        helper.validate();
+        validateConfigOptions(readableConfig);
+        TableSchema physicalSchema =
+                TableSchemaUtils.getPhysicalSchema(context.getCatalogTable().getSchema());
+        ExecutionOptions executionOptions = getExecutionOptions(context, readableConfig);
+        NebulaClientOptions nebulaClientOptions = getClientOptions(readableConfig);
+        return new NebulaDynamicTableSource(nebulaClientOptions, executionOptions, physicalSchema);
+    }
+
     private void validateConfigOptions(ReadableConfig config) {
-        if (!config.getOptional(METAADDRESS).isPresent()) {
-            throw new IllegalArgumentException(
-                    String.format("The value of '%s' option should not be null",
-                            METAADDRESS.key()));
-        }
-
-        if (!config.getOptional(GRAPHADDRESS).isPresent()) {
-            throw new IllegalArgumentException(
-                    String.format("The value of '%s' option should not be null",
-                            GRAPHADDRESS.key()));
-        }
-
-        if (!config.getOptional(USERNAME).isPresent()) {
-            throw new IllegalArgumentException(
-                    String.format("The value of '%s' option should not be null",
-                            USERNAME.key()));
-        }
-
-        if (!config.getOptional(PASSWORD).isPresent()) {
-            throw new IllegalArgumentException(
-                    String.format("The value of '%s' option should not be null", PASSWORD.key()));
-        }
-
-        if (!config.getOptional(GRAPH_SPACE).isPresent()) {
-            throw new IllegalArgumentException(
-                    String.format("The value of '%s' option should not be null",
-                            GRAPH_SPACE.key()));
-        }
-
-        if (config.get(TIMEOUT) < 0) {
+        if (config.getOptional(TIMEOUT).isPresent() && config.get(TIMEOUT) < 0) {
             throw new IllegalArgumentException(
                     String.format("The value of '%s' option should not be negative, but is %s.",
                             TIMEOUT.key(), config.get(TIMEOUT)));
@@ -161,7 +149,6 @@ public class NebulaDynamicTableFactory implements DynamicTableSourceFactory,
         List<String> fields = new ArrayList<>();
         List<Integer> positions = new ArrayList<>();
         List<Column> columns = context.getCatalogTable().getResolvedSchema().getColumns();
-
 
         if (config.get(DATA_TYPE).isVertex()) {
             for (int i = 1; i < columns.size(); i++) {
@@ -194,15 +181,6 @@ public class NebulaDynamicTableFactory implements DynamicTableSourceFactory,
                     .setEdge(context.getObjectIdentifier().getObjectName())
                     .builder();
         }
-    }
-
-    @Override
-    public DynamicTableSource createDynamicTableSource(Context context) {
-        String address = METAADDRESS.key();
-        String username = USERNAME.key();
-        String password = PASSWORD.key();
-
-        return new NebulaDynamicTableSource(address, username, password);
     }
 
     @Override

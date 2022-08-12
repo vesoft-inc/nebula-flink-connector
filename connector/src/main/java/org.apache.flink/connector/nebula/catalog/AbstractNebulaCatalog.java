@@ -50,20 +50,20 @@ public abstract class AbstractNebulaCatalog extends AbstractCatalog {
     private static final String DEFAULT_DATABASE = "default";
 
     public AbstractNebulaCatalog(String catalogName, String defaultDatabase, String username,
-                                 String pwd, String address) {
+                                 String password, String address) {
         super(catalogName, defaultDatabase == null ? DEFAULT_DATABASE : defaultDatabase);
         checkArgument(
                 !StringUtils.isNullOrWhitespaceOnly(username),
                 "username cannot be null or empty.");
         checkArgument(
-                !StringUtils.isNullOrWhitespaceOnly(pwd),
+                !StringUtils.isNullOrWhitespaceOnly(password),
                 "password cannot be null or empty.");
         checkArgument(
                 !StringUtils.isNullOrWhitespaceOnly(address),
                 "address cannot be null or empty."
         );
         this.username = username;
-        this.password = pwd;
+        this.password = password;
         this.address = address;
     }
 
@@ -113,59 +113,64 @@ public abstract class AbstractNebulaCatalog extends AbstractCatalog {
      * operators for nebula graph
      */
     @Override
-    public boolean databaseExists(String graphName) throws CatalogException {
-        return listDatabases().contains(graphName);
+    public boolean databaseExists(String dataBaseName) throws CatalogException {
+        return listDatabases().contains(dataBaseName);
     }
 
     @Override
-    public void createDatabase(String s, CatalogDatabase catalogDatabase, boolean b)
+    public void createDatabase(String dataBaseName,
+                               CatalogDatabase catalogDatabase,
+                               boolean ignoreIfExists) throws CatalogException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void dropDatabase(String dataBaseName, boolean ignoreIfNotExists)
+            throws CatalogException {
+        dropDatabase(dataBaseName, ignoreIfNotExists, false);
+    }
+
+    @Override
+    public void dropDatabase(String dataBaseName, boolean ignoreIfNotExists, boolean cascade)
             throws CatalogException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void dropDatabase(String name, boolean ignoreIfNotExists) throws CatalogException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void dropDatabase(String s, boolean b, boolean b1) throws CatalogException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void alterDatabase(String s, CatalogDatabase catalogDatabase, boolean b)
-            throws CatalogException {
+    public void alterDatabase(String dataBaseName, CatalogDatabase newDatabase,
+                              boolean ignoreIfNotExists) throws CatalogException {
         throw new UnsupportedOperationException();
     }
 
     /**
-     * operator for nebula graph tag and edge, parameter should be graphName.tag or graphName.edge
+     * operator for nebula graph tag and edge, parameter should be databaseName.tag or
+     * databaseName.edge
      */
     @Override
-    public List<String> listViews(String graphName) throws CatalogException {
+    public List<String> listViews(String databaseName) throws CatalogException {
         return Collections.emptyList();
     }
 
-
     @Override
-    public void dropTable(ObjectPath objectPath, boolean b) throws CatalogException {
+    public void dropTable(ObjectPath tablePath,boolean ignoreIfNotExists) throws CatalogException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void renameTable(ObjectPath objectPath, String s, boolean b) throws CatalogException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void createTable(ObjectPath objectPath, CatalogBaseTable catalogBaseTable, boolean b)
+    public void renameTable(ObjectPath tablePath, String newTableName, boolean ignoreIfNotExists)
             throws CatalogException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void alterTable(ObjectPath objectPath, CatalogBaseTable catalogBaseTable, boolean b)
+    public void createTable(ObjectPath tablePath, CatalogBaseTable table, boolean ignoreIfExists)
+            throws CatalogException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void alterTable(
+            ObjectPath tablePath, CatalogBaseTable newTable, boolean ignoreIfNotExists)
             throws CatalogException {
         throw new UnsupportedOperationException();
     }
@@ -174,56 +179,61 @@ public abstract class AbstractNebulaCatalog extends AbstractCatalog {
      * operator for partition
      */
     @Override
-    public List<CatalogPartitionSpec> listPartitions(ObjectPath objectPath)
+    public List<CatalogPartitionSpec> listPartitions(ObjectPath tablePath)
             throws CatalogException {
         return Collections.emptyList();
     }
 
     @Override
-    public List<CatalogPartitionSpec> listPartitions(ObjectPath objectPath,
-                                                     CatalogPartitionSpec catalogPartitionSpec)
+    public List<CatalogPartitionSpec> listPartitions(ObjectPath tablePath,
+                                                     CatalogPartitionSpec partitionSpec)
             throws CatalogException {
         return Collections.emptyList();
     }
 
     @Override
-    public List<CatalogPartitionSpec> listPartitionsByFilter(ObjectPath objectPath,
-                                                             List<Expression> list)
+    public List<CatalogPartitionSpec> listPartitionsByFilter(ObjectPath tablePath,
+                                                             List<Expression> filters)
             throws CatalogException {
         return Collections.emptyList();
     }
 
     @Override
-    public CatalogPartition getPartition(ObjectPath objectPath,
-                                         CatalogPartitionSpec catalogPartitionSpec)
+    public CatalogPartition getPartition(ObjectPath tablePath,
+                                         CatalogPartitionSpec partitionSpec)
             throws CatalogException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public boolean partitionExists(ObjectPath objectPath,
-                                   CatalogPartitionSpec catalogPartitionSpec)
+    public boolean partitionExists(ObjectPath tablePath,
+                                   CatalogPartitionSpec partitionSpec)
             throws CatalogException {
         return false;
     }
 
     @Override
-    public void createPartition(ObjectPath objectPath, CatalogPartitionSpec catalogPartitionSpec,
-                                CatalogPartition catalogPartition, boolean b)
+    public void createPartition(
+            ObjectPath tablePath,
+            CatalogPartitionSpec partitionSpec,
+            CatalogPartition partition,
+            boolean ignoreIfExists) throws CatalogException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void dropPartition(
+            ObjectPath tablePath, CatalogPartitionSpec partitionSpec, boolean ignoreIfNotExists)
             throws CatalogException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void dropPartition(ObjectPath objectPath, CatalogPartitionSpec catalogPartitionSpec,
-                              boolean b) throws CatalogException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void alterPartition(ObjectPath objectPath, CatalogPartitionSpec catalogPartitionSpec,
-                               CatalogPartition catalogPartition, boolean b)
-            throws CatalogException {
+    public void alterPartition(
+            ObjectPath tablePath,
+            CatalogPartitionSpec partitionSpec,
+            CatalogPartition newPartition,
+            boolean ignoreIfNotExists) throws CatalogException {
         throw new UnsupportedOperationException();
     }
 
@@ -231,95 +241,101 @@ public abstract class AbstractNebulaCatalog extends AbstractCatalog {
      * operator for function
      */
     @Override
-    public List<String> listFunctions(String s) throws CatalogException {
+    public List<String> listFunctions(String dbName) throws CatalogException {
         return Collections.emptyList();
     }
 
     @Override
-    public CatalogFunction getFunction(ObjectPath objectPath) throws FunctionNotExistException,
+    public CatalogFunction getFunction(ObjectPath functionPath) throws FunctionNotExistException,
             CatalogException {
-        throw new FunctionNotExistException(getName(), objectPath);
+        throw new FunctionNotExistException(getName(), functionPath);
     }
 
     @Override
-    public boolean functionExists(ObjectPath objectPath) throws CatalogException {
+    public boolean functionExists(ObjectPath functionPath) throws CatalogException {
         return false;
     }
 
     @Override
-    public void createFunction(ObjectPath objectPath, CatalogFunction catalogFunction, boolean b)
+    public void createFunction(
+            ObjectPath functionPath, CatalogFunction function, boolean ignoreIfExists)
             throws CatalogException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void alterFunction(ObjectPath objectPath, CatalogFunction catalogFunction, boolean b)
+    public void alterFunction(
+            ObjectPath functionPath, CatalogFunction newFunction, boolean ignoreIfNotExists)
             throws CatalogException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void dropFunction(ObjectPath objectPath, boolean b) throws CatalogException {
-
+    public void dropFunction(
+            ObjectPath functionPath, boolean ignoreIfNotExists) throws CatalogException {
+        throw new UnsupportedOperationException();
     }
 
     /**
      * operator for stat
      */
     @Override
-    public CatalogTableStatistics getTableStatistics(ObjectPath objectPath)
-            throws CatalogException {
+    public CatalogTableStatistics getTableStatistics(ObjectPath tablePath) throws CatalogException {
         return CatalogTableStatistics.UNKNOWN;
     }
 
     @Override
-    public CatalogColumnStatistics getTableColumnStatistics(ObjectPath objectPath)
+    public CatalogColumnStatistics getTableColumnStatistics(ObjectPath tablePath)
             throws CatalogException {
         return CatalogColumnStatistics.UNKNOWN;
     }
 
     @Override
-    public CatalogTableStatistics getPartitionStatistics(ObjectPath objectPath,
-                                                         CatalogPartitionSpec catalogPartitionSpec)
+    public CatalogTableStatistics getPartitionStatistics(ObjectPath tablePath,
+                                                         CatalogPartitionSpec partitionSpec)
             throws CatalogException {
         return CatalogTableStatistics.UNKNOWN;
     }
 
     @Override
     public CatalogColumnStatistics getPartitionColumnStatistics(
-            ObjectPath objectPath,
-            CatalogPartitionSpec catalogPartitionSpec)
+            ObjectPath tablePath,
+            CatalogPartitionSpec partitionSpec)
             throws CatalogException {
         return CatalogColumnStatistics.UNKNOWN;
     }
 
     @Override
-    public void alterTableStatistics(ObjectPath objectPath,
-                                     CatalogTableStatistics catalogTableStatistics, boolean b)
-            throws CatalogException {
+    public void alterTableStatistics(
+            ObjectPath tablePath,
+            CatalogTableStatistics tableStatistics,
+            boolean ignoreIfNotExists) throws CatalogException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void alterTableColumnStatistics(ObjectPath objectPath,
-                                           CatalogColumnStatistics catalogColumnStatistics,
-                                           boolean b) throws CatalogException {
+    public void alterTableColumnStatistics(
+            ObjectPath tablePath,
+            CatalogColumnStatistics columnStatistics,
+            boolean ignoreIfNotExists) throws CatalogException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void alterPartitionStatistics(ObjectPath objectPath,
-                                         CatalogPartitionSpec catalogPartitionSpec,
-                                         CatalogTableStatistics catalogTableStatistics,
-                                         boolean b) throws CatalogException {
+    public void alterPartitionStatistics(
+            ObjectPath tablePath,
+            CatalogPartitionSpec partitionSpec,
+            CatalogTableStatistics partitionStatistics,
+            boolean ignoreIfNotExists) throws CatalogException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void alterPartitionColumnStatistics(ObjectPath objectPath,
-                                               CatalogPartitionSpec catalogPartitionSpec,
-                                               CatalogColumnStatistics catalogColumnStatistics,
-                                               boolean b) throws CatalogException {
+    public void alterPartitionColumnStatistics(
+            ObjectPath tablePath,
+            CatalogPartitionSpec partitionSpec,
+            CatalogColumnStatistics columnStatistics,
+            boolean ignoreIfNotExists) throws CatalogException {
         throw new UnsupportedOperationException();
     }
 }

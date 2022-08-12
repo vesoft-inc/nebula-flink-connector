@@ -27,7 +27,7 @@ public class NebulaSpaces implements Serializable {
         Map<String, String> props = nebulaSpace.getProps();
         StringBuilder sb = new StringBuilder();
         addParams(sb, NebulaConstant.CREATE_PARTITION_NUM, NebulaConstant.DEFAULT_PARTITION_NUM);
-        addParams(sb, NebulaConstant.CREATE_REPLICA_FACTOR, NebulaConstant.DEFAULT_PARTITION_NUM);
+        addParams(sb, NebulaConstant.CREATE_REPLICA_FACTOR, NebulaConstant.DEFAULT_REPLICA_FACTOR);
         sb.append(NebulaConstant.CREATE_VID_TYPE)
                 .append(" = ")
                 .append(props.get(NebulaConstant.CREATE_VID_TYPE));

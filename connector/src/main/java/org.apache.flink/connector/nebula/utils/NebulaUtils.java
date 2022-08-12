@@ -9,6 +9,8 @@ import com.vesoft.nebula.PropertyType;
 import com.vesoft.nebula.client.graph.data.HostAddress;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class NebulaUtils {
 
@@ -115,5 +117,21 @@ public class NebulaUtils {
         }
         builder.append(end);
         return builder.toString();
+    }
+
+    /**
+     * Check valid VID definition
+     * @param vidType vid define string
+     * @return true if INT | INT64 | FIXED_STRING(n)
+     */
+    public static boolean checkValidVidType(String vidType) {
+        if ("INT".equals(vidType) || "INT64".equals(vidType)) {
+            return true;
+        }
+        String regex = "FIXED_STRING\\(\\d+\\)";
+        Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
+        Matcher matcher = pattern.matcher(vidType);
+
+        return matcher.matches();
     }
 }

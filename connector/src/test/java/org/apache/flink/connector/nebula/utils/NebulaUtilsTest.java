@@ -62,4 +62,15 @@ public class NebulaUtilsTest extends TestCase {
         assertEquals("\"test\"", NebulaUtils.mkString("test", "\"", "", "\""));
         assertEquals("\"t,e,s,t\"", NebulaUtils.mkString("test", "\"", ",", "\""));
     }
+
+    public void testCheckValidVidType() {
+        assertTrue(NebulaUtils.checkValidVidType("INT"));
+        assertTrue(NebulaUtils.checkValidVidType("INT64"));
+        assertTrue(NebulaUtils.checkValidVidType("FIXED_STRING(10)"));
+
+        assertFalse(NebulaUtils.checkValidVidType("INT32"));
+        assertFalse(NebulaUtils.checkValidVidType("FIXED_STRING"));
+        assertFalse(NebulaUtils.checkValidVidType("FIXED_STRING(-1)"));
+        assertFalse(NebulaUtils.checkValidVidType("FIXED_STRING(aaa)"));
+    }
 }

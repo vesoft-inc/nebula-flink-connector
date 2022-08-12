@@ -175,8 +175,8 @@ public class NebulaCatalog extends AbstractNebulaCatalog {
         checkNotNull(catalogDatabase, "space cannot be null.");
 
         if (ignoreIfExists && listDatabases().contains(dataBaseName)) {
-            LOG.error("failed to create graph space {}, already exists", dataBaseName);
-            throw new CatalogException("nebula create graph space failed.");
+            LOG.info("Repeat to create space, {} already exists, no effect.", dataBaseName);
+            return;
         }
         Map<String, String> properties = catalogDatabase.getProperties();
         Map<String, String> newProperties = properties.entrySet().stream().collect(

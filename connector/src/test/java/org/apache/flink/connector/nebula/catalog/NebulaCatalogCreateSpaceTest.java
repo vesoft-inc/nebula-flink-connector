@@ -54,7 +54,16 @@ public class NebulaCatalogCreateSpaceTest {
                 + " 'vid_type' = 'INT'"
                 + ")";
 
+        String createSameDataBase = "CREATE DATABASE IF NOT EXISTS `db1`"
+                + " COMMENT 'same name as space 1'"
+                + " WITH ("
+                + " 'partition_num' = '10',"
+                + " 'replica_factor' = '2',"
+                + " 'vid_type' = 'INT64'"
+                + ")";
+
         tableEnv.executeSql(createDataBase1);
         tableEnv.executeSql(createDataBase2);
+        tableEnv.executeSql(createSameDataBase);
     }
 }

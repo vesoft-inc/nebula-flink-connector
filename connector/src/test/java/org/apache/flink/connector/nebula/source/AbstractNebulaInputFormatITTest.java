@@ -311,11 +311,6 @@ public class AbstractNebulaInputFormatITTest {
         executeSql(getEdgeInsertStat(), session);
     }
 
-    @Test
-    public void state() {
-        System.out.println(getEdgeInsertStat());
-    }
-
     private String getVertexInsertStat() {
         List<List<String>> persons = constructVertexSourceData();
         List<NebulaVertex> vertices = new ArrayList<>();

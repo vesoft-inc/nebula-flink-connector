@@ -18,7 +18,10 @@ import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+import org.apache.flink.configuration.Configuration;
+import org.apache.flink.connector.nebula.utils.NebulaConstant;
 import org.apache.flink.table.api.EnvironmentSettings;
+import org.apache.flink.table.api.StatementSet;
 import org.apache.flink.table.api.TableEnvironment;
 import org.junit.Before;
 import org.junit.Test;
@@ -26,22 +29,25 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class AbstractNebulaOutPutFormatITTest {
-    static final String META_ADDRESS = "127.0.0.1:9559";
-    static final String GRAPH_ADDRESS = "127.0.0.1:9669";
-    static final String USER_NAME = "root";
-    static final String PASSWORD = "nebula";
+
     private static final Logger LOGGER =
             LoggerFactory.getLogger(AbstractNebulaOutPutFormatITTest.class);
+
+    static final String STATIC_IP = "192.168.200.135";
+    static final String META_ADDRESS = STATIC_IP + NebulaConstant.COLON + "9559";
+    static final String GRAPH_ADDRESS = STATIC_IP + NebulaConstant.COLON + "9669";
+    static final String USER_NAME = "root";
+    static final String PASSWORD = "nebula";
 
     @Before
     public void mockData() {
         NebulaPoolConfig nebulaPoolConfig = new NebulaPoolConfig();
-        List<HostAddress> addresses = Arrays.asList(new HostAddress("127.0.0.1", 9669));
+        List<HostAddress> addresses = Arrays.asList(new HostAddress(STATIC_IP, 9669));
         NebulaPool pool = new NebulaPool();
         Session session = null;
         try {
             pool.init(addresses, nebulaPoolConfig);
-            session = pool.getSession("root", "nebula", true);
+            session = pool.getSession(USER_NAME, PASSWORD, true);
 
             ResultSet respFlinkSinkSpace = session.execute(createFlinkSinkSpace());
             ResultSet respTagPerson = session.execute(createTagPerson());
@@ -115,8 +121,11 @@ public class AbstractNebulaOutPutFormatITTest {
         TableEnvironment tableEnvironment =
                 TableEnvironment.create(EnvironmentSettings.inStreamingMode());
 
+        Configuration configuration = tableEnvironment.getConfig().getConfiguration();
+        configuration.setString("table.dml-sync", "true");
+
         tableEnvironment.executeSql(
-                "CREATE TABLE person ("
+                "CREATE TABLE personTable ("
                         + "vid STRING,"
                         + "col1 STRING,"
                         + "col2 STRING,"
@@ -148,15 +157,28 @@ public class AbstractNebulaOutPutFormatITTest {
                         + PASSWORD
                         + "',"
                         + "'graph-space'='flinkSink',"
+                        + "'table-name'='person',"
                         + "'data-type'='vertex'"
                         + ")");
 
-        tableEnvironment
-                .executeSql(
-                        "insert into person values ('89', 'aba', 'abcdefgh', '1', '1111',"
-                                + " '22222', '6412233', '2019-01-01', '2019-01-01T12:12:12',"
-                                + " '435463424', 'false', '1.2', '1.0', '11:12:12', 'POINT(1 3)')")
-                .await();
+        StatementSet stmtSet = tableEnvironment.createStatementSet();
+        stmtSet.addInsertSql(
+                "insert into personTable values ('61', 'aba', 'abcdefgh', '61', '1111',"
+                        + " '22222', '6412233', '2019-01-01', '2019-01-01T12:12:12',"
+                        + " '435463424', 'false', '1.2', '1.0', '11:12:12', 'POINT(1 3)')"
+        );
+        stmtSet.addInsertSql(
+                "insert into personTable values ('62', 'aba', 'abcdefgh', '62', '1111',"
+                        + " '22222', '6412233', '2019-01-01', '2019-01-01T12:12:12',"
+                        + " '435463424', 'false', '1.2', '1.0', '11:12:12', 'POINT(1 3)')"
+        );
+        stmtSet.addInsertSql(
+                "insert into personTable values ('89', 'aba', 'abcdefgh', '1', '1111',"
+                        + " '22222', '6412233', '2019-01-01', '2019-01-01T12:12:12',"
+                        + " '435463424', 'false', '1.2', '1.0', '11:12:12', 'POINT(1 3)')"
+        );
+
+        stmtSet.execute().await();
     }
 
     /** sink Nebula Graph Edge Data with default INSERT mode */
@@ -166,7 +188,7 @@ public class AbstractNebulaOutPutFormatITTest {
                 TableEnvironment.create(EnvironmentSettings.inStreamingMode());
 
         tableEnvironment.executeSql(
-                "CREATE TABLE friend ("
+                "CREATE TABLE friendTable ("
                         + "src STRING,"
                         + "dst STRING,"
                         + "col1 STRING,"
@@ -199,6 +221,7 @@ public class AbstractNebulaOutPutFormatITTest {
                         + PASSWORD
                         + "',"
                         + "'graph-space'='flinkSink',"
+                        + "'table-name'='friend',"
                         + "'src-id-index'='0',"
                         + "'dst-id-index'='1',"
                         + "'rank-id-index'='4',"
@@ -207,21 +230,21 @@ public class AbstractNebulaOutPutFormatITTest {
 
         tableEnvironment
                 .executeSql(
-                        "insert into friend values ('61', '62', 'aba', 'abcdefgh',"
+                        "insert into friendTable values ('61', '62', 'aba', 'abcdefgh',"
                                 + " '1', '1111', '22222', '6412233', '2019-01-01',"
                                 + " '2019-01-01T12:12:12',"
                                 + " '435463424', 'false', '1.2', '1.0', '11:12:12', 'POINT(1 3)')")
                 .await();
     }
 
-    /** sink Nebula Graph Edge Data with default INSERT mode */
+    /** sink Nebula Graph Edge Data without rank with default INSERT mode */
     @Test
     public void sinkEdgeDataWithoutRank() throws ExecutionException, InterruptedException {
         TableEnvironment tableEnvironment =
                 TableEnvironment.create(EnvironmentSettings.inStreamingMode());
 
         tableEnvironment.executeSql(
-                "CREATE TABLE friend ("
+                "CREATE TABLE friendTableWithoutRank ("
                         + "src STRING,"
                         + "dst STRING,"
                         + "col1 STRING,"
@@ -254,6 +277,7 @@ public class AbstractNebulaOutPutFormatITTest {
                         + PASSWORD
                         + "',"
                         + "'graph-space'='flinkSink',"
+                        + "'table-name'='friend',"
                         + "'src-id-index'='0',"
                         + "'dst-id-index'='1',"
                         + "'data-type'='edge'"
@@ -261,7 +285,7 @@ public class AbstractNebulaOutPutFormatITTest {
 
         tableEnvironment
                 .executeSql(
-                        "insert into friend values ('61', '89', 'aba', 'abcdefgh',"
+                        "insert into friendTableWithoutRank values ('61', '89', 'aba', 'abcdefgh',"
                                 + " '1', '1111', '22222', '6412233', '2019-01-01',"
                                 + " '2019-01-01T12:12:12', '435463424', 'false', '1.2', '1.0',"
                                 + " '11:12:12', 'POINT(1 3)')")

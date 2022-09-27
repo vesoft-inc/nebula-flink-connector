@@ -34,15 +34,16 @@ public class AbstractNebulaInputFormatITTest {
 
     private static final Logger LOGGER =
             LoggerFactory.getLogger(AbstractNebulaInputFormatITTest.class);
-    private static final String META_ADDRESS = "127.0.0.1:9559";
-    private static final String GRAPH_ADDRESS = "127.0.0.1:9669";
+    private static final String STATIC_IP = "192.168.200.135";
+    private static final String META_ADDRESS = STATIC_IP + NebulaConstant.COLON + "9559";
+    private static final String GRAPH_ADDRESS = STATIC_IP + NebulaConstant.COLON + "9669";
     private static final String USERNAME = "root";
     private static final String PASSWORD = "nebula";
 
     private static final String[] stats = new String[]{
-        "CREATE SPACE IF NOT EXISTS `flinkSink` (partition_num = 100, charset = utf8,"
+        "CREATE SPACE IF NOT EXISTS `flinkSinkInput` (partition_num = 100, charset = utf8,"
                     + " replica_factor = 3, collate = utf8_bin, vid_type = INT64);"
-                    + "USE `flinkSink`;",
+                    + "USE `flinkSinkInput`;",
         "CREATE TAG IF NOT EXISTS person (col1 string, col2 fixed_string(8), col3 int8,"
                     + " col4 int16, col5 int32,"
                     + " col6 int64, col7 date, col8 datetime, col9 timestamp, col10 bool,"
@@ -61,8 +62,8 @@ public class AbstractNebulaInputFormatITTest {
      * construct flink vertex data
      */
     private static List<List<String>> constructVertexSourceData() {
-        List<List<String>> players = new ArrayList<>();
-        List<String> fields1 = Arrays.asList("61", "\"aba\"", "\"abcdefgh\"", "1", "1111", "22222",
+        List<List<String>> persons = new ArrayList<>();
+        List<String> fields1 = Arrays.asList("61", "\"aba\"", "\"abcdefgh\"", "22", "1111", "22222",
                 "6412233", "date(\"2019-01-01\")", "datetime(\"2019-01-01T12:12:12\")",
                 "435463424", "false", "1.2", "1.0", "time(\"11:12:12\")",
                 "ST_GeogFromText(\"POINT(1 3)\")");
@@ -94,15 +95,15 @@ public class AbstractNebulaInputFormatITTest {
                 "6412233", "date(\"2019-01-01\")", "datetime(\"2019-01-01T12:12:12\")",
                 "435463424", "true", "1.2", "1.0", "time(\"11:12:12\")",
                 "ST_GeogFromText(\"POLYGON((0 1,1 2,2 3,0 1))\")");
-        players.add(fields1);
-        players.add(fields2);
-        players.add(fields3);
-        players.add(fields4);
-        players.add(fields5);
-        players.add(fields6);
-        players.add(fields7);
-        players.add(fields8);
-        return players;
+        persons.add(fields1);
+        persons.add(fields2);
+        persons.add(fields3);
+        persons.add(fields4);
+        persons.add(fields5);
+        persons.add(fields6);
+        persons.add(fields7);
+        persons.add(fields8);
+        return persons;
     }
 
     /**
@@ -110,7 +111,7 @@ public class AbstractNebulaInputFormatITTest {
      */
     private static List<List<String>> constructEdgeSourceData() {
         List<List<String>> friends = new ArrayList<>();
-        List<String> fields1 = Arrays.asList("61", "62", "\"aba\"", "\"abcdefgh\"", "1", "1111",
+        List<String> fields1 = Arrays.asList("61", "62", "\"aba\"", "\"abcdefgh\"", "22", "1111",
                 "22222", "6412233", "date(\"2019-01-01\")", "datetime(\"2019-01-01T12:12:12\")",
                 "435463424", "false", "1.2", "1.0", "time(\"11:12:12\")",
                 "ST_GeogFromText(\"POINT(1 3)\")");
@@ -188,7 +189,7 @@ public class AbstractNebulaInputFormatITTest {
                 .build();
         TableEnvironment tableEnv = TableEnvironment.create(settings);
 
-        String creatSourceDDL = "CREATE TABLE `person` ("
+        String creatSourceDDL = "CREATE TABLE `personTable` ("
                 + " vid BIGINT,"
                 + " col1 STRING,"
                 + " col2 STRING,"
@@ -206,16 +207,17 @@ public class AbstractNebulaInputFormatITTest {
                 + " col14 STRING"
                 + ") WITH ("
                 + " 'connector' = 'nebula',"
-                + " 'meta-address' = '127.0.0.1:9559',"
-                + " 'graph-address' = '127.0.0.1:9669',"
+                + " 'meta-address' = '" + META_ADDRESS + "',"
+                + " 'graph-address' = '" + GRAPH_ADDRESS + "',"
                 + " 'username' = 'root',"
                 + " 'password' = 'nebula',"
                 + " 'data-type' = 'vertex',"
-                + " 'graph-space' = 'flinkSink'"
+                + " 'graph-space' = 'flinkSinkInput',"
+                + " 'table-name' = 'person'"
                 + ")";
         tableEnv.executeSql(creatSourceDDL);
 
-        String creatSinkDDL = "CREATE TABLE `personSink` ("
+        String creatSinkDDL = "CREATE TABLE `personSinkTable` ("
                 + " vid BIGINT,"
                 + " col1 STRING,"
                 + " col2 STRING,"
@@ -236,8 +238,8 @@ public class AbstractNebulaInputFormatITTest {
                 + ")";
         tableEnv.executeSql(creatSinkDDL);
 
-        Table table = tableEnv.sqlQuery("SELECT * FROM `person`");
-        table.executeInsert("`personSink`").await();
+        Table table = tableEnv.sqlQuery("SELECT * FROM `personTable`");
+        table.executeInsert("`personSinkTable`").await();
     }
 
     @Test
@@ -247,7 +249,7 @@ public class AbstractNebulaInputFormatITTest {
                 .build();
         TableEnvironment tableEnv = TableEnvironment.create(settings);
 
-        String creatSourceDDL = "CREATE TABLE `friend` ("
+        String creatSourceDDL = "CREATE TABLE `friendTable` ("
                 + " sid BIGINT,"
                 + " did BIGINT,"
                 + " rid BIGINT,"
@@ -267,11 +269,12 @@ public class AbstractNebulaInputFormatITTest {
                 + " col14 STRING"
                 + ") WITH ("
                 + " 'connector' = 'nebula',"
-                + " 'meta-address' = '127.0.0.1:9559',"
-                + " 'graph-address' = '127.0.0.1:9669',"
+                + " 'meta-address' = '" + META_ADDRESS + "',"
+                + " 'graph-address' = '" + GRAPH_ADDRESS + "',"
                 + " 'username' = 'root',"
                 + " 'password' = 'nebula',"
-                + " 'graph-space' = 'flinkSink',"
+                + " 'graph-space' = 'flinkSinkInput',"
+                + " 'table-name' = 'friend',"
                 + " 'data-type'='edge',"
                 + " 'src-id-index'='0',"
                 + " 'dst-id-index'='1',"
@@ -279,7 +282,7 @@ public class AbstractNebulaInputFormatITTest {
                 + ")";
         tableEnv.executeSql(creatSourceDDL);
 
-        String creatSinkDDL = "CREATE TABLE `friendSink` ("
+        String creatSinkDDL = "CREATE TABLE `friendSinkTable` ("
                 + " sid BIGINT,"
                 + " did BIGINT,"
                 + " rid BIGINT,"
@@ -302,8 +305,8 @@ public class AbstractNebulaInputFormatITTest {
                 + ")";
         tableEnv.executeSql(creatSinkDDL);
 
-        Table table = tableEnv.sqlQuery("SELECT * FROM `friend`");
-        table.executeInsert("`friendSink`").await();
+        Table table = tableEnv.sqlQuery("SELECT * FROM `friendTable`");
+        table.executeInsert("`friendSinkTable`").await();
     }
 
     private void insertData(Session session) throws IOErrorException {
@@ -312,11 +315,11 @@ public class AbstractNebulaInputFormatITTest {
     }
 
     private String getVertexInsertStat() {
-        List<List<String>> players = constructVertexSourceData();
+        List<List<String>> persons = constructVertexSourceData();
         List<NebulaVertex> vertices = new ArrayList<>();
-        for (List<String> player : players) {
+        for (List<String> person : persons) {
             vertices.add(new NebulaVertex(
-                    player.get(0), player.subList(1, player.size())));
+                    person.get(0), person.subList(1, person.size())));
         }
         NebulaVertices nebulaVertices = new NebulaVertices(
                 "person",

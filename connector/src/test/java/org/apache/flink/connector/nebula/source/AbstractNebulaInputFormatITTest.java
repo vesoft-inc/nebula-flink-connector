@@ -62,7 +62,7 @@ public class AbstractNebulaInputFormatITTest {
      */
     private static List<List<String>> constructVertexSourceData() {
         List<List<String>> persons = new ArrayList<>();
-        List<String> fields1 = Arrays.asList("61", "\"aba\"", "\"abcdefgh\"", "222", "1111", "22222",
+        List<String> fields1 = Arrays.asList("61", "\"aba\"", "\"abcdefgh\"", "22", "1111", "22222",
                 "6412233", "date(\"2019-01-01\")", "datetime(\"2019-01-01T12:12:12\")",
                 "435463424", "false", "1.2", "1.0", "time(\"11:12:12\")",
                 "ST_GeogFromText(\"POINT(1 3)\")");

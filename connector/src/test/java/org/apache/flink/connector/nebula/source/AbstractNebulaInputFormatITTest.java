@@ -110,7 +110,7 @@ public class AbstractNebulaInputFormatITTest {
      */
     private static List<List<String>> constructEdgeSourceData() {
         List<List<String>> friends = new ArrayList<>();
-        List<String> fields1 = Arrays.asList("61", "62", "\"aba\"", "\"abcdefgh\"", "1", "1111",
+        List<String> fields1 = Arrays.asList("61", "62", "\"aba\"", "\"abcdefgh\"", "22", "1111",
                 "22222", "6412233", "date(\"2019-01-01\")", "datetime(\"2019-01-01T12:12:12\")",
                 "435463424", "false", "1.2", "1.0", "time(\"11:12:12\")",
                 "ST_GeogFromText(\"POINT(1 3)\")");
@@ -309,6 +309,11 @@ public class AbstractNebulaInputFormatITTest {
     private void insertData(Session session) throws IOErrorException {
         executeSql(getVertexInsertStat(), session);
         executeSql(getEdgeInsertStat(), session);
+    }
+
+    @Test
+    public void state() {
+        System.out.println(getEdgeInsertStat());
     }
 
     private String getVertexInsertStat() {

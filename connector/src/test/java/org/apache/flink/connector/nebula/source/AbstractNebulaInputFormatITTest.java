@@ -34,7 +34,7 @@ public class AbstractNebulaInputFormatITTest {
 
     private static final Logger LOGGER =
             LoggerFactory.getLogger(AbstractNebulaInputFormatITTest.class);
-    private static final String STATIC_IP = "192.168.200.135";
+    private static final String STATIC_IP = "127.0.0.1";
     private static final String META_ADDRESS = STATIC_IP + NebulaConstant.COLON + "9559";
     private static final String GRAPH_ADDRESS = STATIC_IP + NebulaConstant.COLON + "9669";
     private static final String USERNAME = "root";

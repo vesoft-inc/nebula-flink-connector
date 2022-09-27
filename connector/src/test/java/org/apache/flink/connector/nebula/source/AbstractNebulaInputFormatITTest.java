@@ -40,9 +40,9 @@ public class AbstractNebulaInputFormatITTest {
     private static final String PASSWORD = "nebula";
 
     private static final String[] stats = new String[]{
-        "CREATE SPACE IF NOT EXISTS `flinkSink` (partition_num = 100, charset = utf8,"
+        "CREATE SPACE IF NOT EXISTS `flinkSinkInput` (partition_num = 100, charset = utf8,"
                     + " replica_factor = 3, collate = utf8_bin, vid_type = INT64);"
-                    + "USE `flinkSink`;",
+                    + "USE `flinkSinkInput`;",
         "CREATE TAG IF NOT EXISTS person (col1 string, col2 fixed_string(8), col3 int8,"
                     + " col4 int16, col5 int32,"
                     + " col6 int64, col7 date, col8 datetime, col9 timestamp, col10 bool,"
@@ -62,7 +62,7 @@ public class AbstractNebulaInputFormatITTest {
      */
     private static List<List<String>> constructVertexSourceData() {
         List<List<String>> persons = new ArrayList<>();
-        List<String> fields1 = Arrays.asList("61", "\"aba\"", "\"abcdefgh\"", "1", "1111", "22222",
+        List<String> fields1 = Arrays.asList("61", "\"aba\"", "\"abcdefgh\"", "222", "1111", "22222",
                 "6412233", "date(\"2019-01-01\")", "datetime(\"2019-01-01T12:12:12\")",
                 "435463424", "false", "1.2", "1.0", "time(\"11:12:12\")",
                 "ST_GeogFromText(\"POINT(1 3)\")");
@@ -211,7 +211,7 @@ public class AbstractNebulaInputFormatITTest {
                 + " 'username' = 'root',"
                 + " 'password' = 'nebula',"
                 + " 'data-type' = 'vertex',"
-                + " 'graph-space' = 'flinkSink'"
+                + " 'graph-space' = 'flinkSinkInput'"
                 + ")";
         tableEnv.executeSql(creatSourceDDL);
 
@@ -271,7 +271,7 @@ public class AbstractNebulaInputFormatITTest {
                 + " 'graph-address' = '127.0.0.1:9669',"
                 + " 'username' = 'root',"
                 + " 'password' = 'nebula',"
-                + " 'graph-space' = 'flinkSink',"
+                + " 'graph-space' = 'flinkSinkInput',"
                 + " 'data-type'='edge',"
                 + " 'src-id-index'='0',"
                 + " 'dst-id-index'='1',"

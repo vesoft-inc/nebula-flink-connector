@@ -63,7 +63,7 @@ public class NebulaRowDataConverter implements NebulaConverter<RowData> {
         GenericRowData genericRowData = new GenericRowData(rowType.getFieldCount());
         for (int pos = 0; pos < rowType.getFieldCount(); pos++) {
             ValueWrapper valueWrapper = values.get(pos);
-            if (valueWrapper != null) {
+            if (!valueWrapper.isNull()) {
                 try {
                     genericRowData.setField(pos,
                             toInternalConverters[pos].deserialize(valueWrapper));
@@ -98,7 +98,7 @@ public class NebulaRowDataConverter implements NebulaConverter<RowData> {
          * Convert a Nebula DataStructure of {@link BaseTableRow}
          * to the internal data structure object.
          */
-        Object deserialize(ValueWrapper baseTableRow)
+        Object deserialize(ValueWrapper valueWrapper)
                 throws SQLException, UnsupportedEncodingException;
     }
 

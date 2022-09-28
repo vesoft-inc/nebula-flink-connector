@@ -157,7 +157,7 @@ public class AbstractNebulaOutPutFormatITTest {
                         + PASSWORD
                         + "',"
                         + "'graph-space'='flinkSink',"
-                        + "'table-name'='person',"
+                        + "'label-name'='person',"
                         + "'data-type'='vertex'"
                         + ")");
 
@@ -221,7 +221,7 @@ public class AbstractNebulaOutPutFormatITTest {
                         + PASSWORD
                         + "',"
                         + "'graph-space'='flinkSink',"
-                        + "'table-name'='friend',"
+                        + "'label-name'='friend',"
                         + "'src-id-index'='0',"
                         + "'dst-id-index'='1',"
                         + "'rank-id-index'='4',"
@@ -277,7 +277,7 @@ public class AbstractNebulaOutPutFormatITTest {
                         + PASSWORD
                         + "',"
                         + "'graph-space'='flinkSink',"
-                        + "'table-name'='friend',"
+                        + "'label-name'='friend',"
                         + "'src-id-index'='0',"
                         + "'dst-id-index'='1',"
                         + "'data-type'='edge'"

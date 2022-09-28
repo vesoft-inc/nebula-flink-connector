@@ -213,7 +213,7 @@ public class AbstractNebulaInputFormatITTest {
                 + " 'password' = 'nebula',"
                 + " 'data-type' = 'vertex',"
                 + " 'graph-space' = 'flinkSinkInput',"
-                + " 'table-name' = 'person'"
+                + " 'label-name' = 'person'"
                 + ")";
         tableEnv.executeSql(creatSourceDDL);
 
@@ -274,7 +274,7 @@ public class AbstractNebulaInputFormatITTest {
                 + " 'username' = 'root',"
                 + " 'password' = 'nebula',"
                 + " 'graph-space' = 'flinkSinkInput',"
-                + " 'table-name' = 'friend',"
+                + " 'label-name' = 'friend',"
                 + " 'data-type'='edge',"
                 + " 'src-id-index'='0',"
                 + " 'dst-id-index'='1',"

@@ -34,8 +34,9 @@ public class AbstractNebulaInputFormatITTest {
 
     private static final Logger LOGGER =
             LoggerFactory.getLogger(AbstractNebulaInputFormatITTest.class);
-    private static final String META_ADDRESS = "127.0.0.1:9559";
-    private static final String GRAPH_ADDRESS = "127.0.0.1:9669";
+    private static final String STATIC_IP = "127.0.0.1";
+    private static final String META_ADDRESS = STATIC_IP + NebulaConstant.COLON + "9559";
+    private static final String GRAPH_ADDRESS = STATIC_IP + NebulaConstant.COLON + "9669";
     private static final String USERNAME = "root";
     private static final String PASSWORD = "nebula";
 
@@ -188,7 +189,7 @@ public class AbstractNebulaInputFormatITTest {
                 .build();
         TableEnvironment tableEnv = TableEnvironment.create(settings);
 
-        String creatSourceDDL = "CREATE TABLE `person` ("
+        String creatSourceDDL = "CREATE TABLE `personTable` ("
                 + " vid BIGINT,"
                 + " col1 STRING,"
                 + " col2 STRING,"
@@ -206,16 +207,17 @@ public class AbstractNebulaInputFormatITTest {
                 + " col14 STRING"
                 + ") WITH ("
                 + " 'connector' = 'nebula',"
-                + " 'meta-address' = '127.0.0.1:9559',"
-                + " 'graph-address' = '127.0.0.1:9669',"
+                + " 'meta-address' = '" + META_ADDRESS + "',"
+                + " 'graph-address' = '" + GRAPH_ADDRESS + "',"
                 + " 'username' = 'root',"
                 + " 'password' = 'nebula',"
                 + " 'data-type' = 'vertex',"
-                + " 'graph-space' = 'flinkSinkInput'"
+                + " 'graph-space' = 'flinkSinkInput',"
+                + " 'label-name' = 'person'"
                 + ")";
         tableEnv.executeSql(creatSourceDDL);
 
-        String creatSinkDDL = "CREATE TABLE `personSink` ("
+        String creatSinkDDL = "CREATE TABLE `personSinkTable` ("
                 + " vid BIGINT,"
                 + " col1 STRING,"
                 + " col2 STRING,"
@@ -236,8 +238,8 @@ public class AbstractNebulaInputFormatITTest {
                 + ")";
         tableEnv.executeSql(creatSinkDDL);
 
-        Table table = tableEnv.sqlQuery("SELECT * FROM `person`");
-        table.executeInsert("`personSink`").await();
+        Table table = tableEnv.sqlQuery("SELECT * FROM `personTable`");
+        table.executeInsert("`personSinkTable`").await();
     }
 
     @Test
@@ -247,7 +249,7 @@ public class AbstractNebulaInputFormatITTest {
                 .build();
         TableEnvironment tableEnv = TableEnvironment.create(settings);
 
-        String creatSourceDDL = "CREATE TABLE `friend` ("
+        String creatSourceDDL = "CREATE TABLE `friendTable` ("
                 + " sid BIGINT,"
                 + " did BIGINT,"
                 + " rid BIGINT,"
@@ -267,11 +269,12 @@ public class AbstractNebulaInputFormatITTest {
                 + " col14 STRING"
                 + ") WITH ("
                 + " 'connector' = 'nebula',"
-                + " 'meta-address' = '127.0.0.1:9559',"
-                + " 'graph-address' = '127.0.0.1:9669',"
+                + " 'meta-address' = '" + META_ADDRESS + "',"
+                + " 'graph-address' = '" + GRAPH_ADDRESS + "',"
                 + " 'username' = 'root',"
                 + " 'password' = 'nebula',"
                 + " 'graph-space' = 'flinkSinkInput',"
+                + " 'label-name' = 'friend',"
                 + " 'data-type'='edge',"
                 + " 'src-id-index'='0',"
                 + " 'dst-id-index'='1',"
@@ -279,7 +282,7 @@ public class AbstractNebulaInputFormatITTest {
                 + ")";
         tableEnv.executeSql(creatSourceDDL);
 
-        String creatSinkDDL = "CREATE TABLE `friendSink` ("
+        String creatSinkDDL = "CREATE TABLE `friendSinkTable` ("
                 + " sid BIGINT,"
                 + " did BIGINT,"
                 + " rid BIGINT,"
@@ -302,8 +305,8 @@ public class AbstractNebulaInputFormatITTest {
                 + ")";
         tableEnv.executeSql(creatSinkDDL);
 
-        Table table = tableEnv.sqlQuery("SELECT * FROM `friend`");
-        table.executeInsert("`friendSink`").await();
+        Table table = tableEnv.sqlQuery("SELECT * FROM `friendTable`");
+        table.executeInsert("`friendSinkTable`").await();
     }
 
     private void insertData(Session session) throws IOErrorException {

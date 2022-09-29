@@ -149,6 +149,7 @@ public class NebulaDynamicTableFactory implements DynamicTableSourceFactory,
         List<String> fields = new ArrayList<>();
         List<Integer> positions = new ArrayList<>();
         List<Column> columns = context.getCatalogTable().getResolvedSchema().getColumns();
+        String labelName = config.get(LABEL_NAME);
 
         if (config.get(DATA_TYPE).isVertex()) {
             for (int i = 1; i < columns.size(); i++) {
@@ -161,7 +162,7 @@ public class NebulaDynamicTableFactory implements DynamicTableSourceFactory,
                     .setIdIndex(0)
                     .setPositions(positions)
                     .setGraphSpace(config.get(GRAPH_SPACE))
-                    .setTag(context.getObjectIdentifier().getObjectName())
+                    .setTag(labelName)
                     .builder();
         } else {
             for (int i = 2; i < columns.size(); i++) {
@@ -178,7 +179,7 @@ public class NebulaDynamicTableFactory implements DynamicTableSourceFactory,
                     .setRankIndex(config.get(RANK_ID_INDEX))
                     .setPositions(positions)
                     .setGraphSpace(config.get(GRAPH_SPACE))
-                    .setEdge(context.getObjectIdentifier().getObjectName())
+                    .setEdge(labelName)
                     .builder();
         }
     }
@@ -202,6 +203,7 @@ public class NebulaDynamicTableFactory implements DynamicTableSourceFactory,
     public Set<ConfigOption<?>> optionalOptions() {
         Set<ConfigOption<?>> set = new HashSet<>();
         set.add(GRAPH_SPACE);
+        set.add(LABEL_NAME);
         set.add(DATA_TYPE);
         set.add(TIMEOUT);
         set.add(SRC_ID_INDEX);

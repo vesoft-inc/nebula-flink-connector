@@ -92,7 +92,6 @@ public class VertexExecutionOptions extends ExecutionOptions {
             return this;
         }
 
-
         public ExecutionOptionBuilder setFields(List<String> fields) {
             this.fields = fields;
             return this;
@@ -148,7 +147,7 @@ public class VertexExecutionOptions extends ExecutionOptions {
             return this;
         }
 
-        public ExecutionOptionBuilder setBathIntervalMs(long batchIntervalMs) {
+        public ExecutionOptionBuilder setBatchIntervalMs(long batchIntervalMs) {
             this.batchIntervalMs = batchIntervalMs;
             return this;
         }

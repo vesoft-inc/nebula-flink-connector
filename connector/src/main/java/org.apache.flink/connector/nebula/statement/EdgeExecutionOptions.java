@@ -172,7 +172,7 @@ public class EdgeExecutionOptions extends ExecutionOptions {
             return this;
         }
 
-        public ExecutionOptionBuilder setBathIntervalMs(long batchIntervalMs) {
+        public ExecutionOptionBuilder setBatchIntervalMs(long batchIntervalMs) {
             this.batchIntervalMs = batchIntervalMs;
             return this;
         }

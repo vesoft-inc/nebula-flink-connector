@@ -35,31 +35,37 @@
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-table-api-java-bridge_${scala.binary.version}</artifactId>
             <version>${flink.version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-streaming-java_${scala.binary.version}</artifactId>
             <version>${flink.version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-clients_${scala.binary.version}</artifactId>
             <version>${flink.version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-table-planner_${scala.binary.version}</artifactId>
             <version>${flink.version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-table-common</artifactId>
             <version>${flink.version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-core</artifactId>
             <version>${flink.version}</version>
+            <scope>provided</scope>
         </dependency>
 
         <!-- junit-->
@@ -207,7 +213,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>3.2.1</version>
+                <version>3.4.1</version>
                 <executions>
                     <execution>
                         <phase>package</phase>
@@ -238,9 +244,47 @@
                                         <exclude>META-INF/*.SF</exclude>
                                         <exclude>META-INF/*.DSA</exclude>
                                         <exclude>META-INF/*.RSA</exclude>
+                                        <exclude>META-INF/versions/**</exclude>
+                                        <exclude>META-INF/LICENSE.txt</exclude>
+                                        <exclude>META-INF/NOTICE.txt</exclude>
+                                        <exclude>META-INF/MANIFEST.MF</exclude>
                                     </excludes>
                                 </filter>
                             </filters>
+                            <relocations>
+                                <relocation>
+                                    <pattern>javax.servlet</pattern>
+                                    <shadedPattern>org.apache.flink.connector.nebula.shaded.javax.servlet</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org.apache.commons</pattern>
+                                    <shadedPattern>org.apache.flink.connector.nebula.shaded.org.apache.commons</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>com.google</pattern>
+                                    <shadedPattern>org.apache.flink.connector.nebula.shaded.com.google</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>com.facebook</pattern>
+                                    <shadedPattern>org.apache.flink.connector.nebula.shaded.com.facebook</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>com.alibaba</pattern>
+                                    <shadedPattern>org.apache.flink.connector.nebula.shaded.com.alibaba</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org.slf4j</pattern>
+                                    <shadedPattern>org.apache.flink.connector.nebula.shaded.org.slf4j</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org.bouncycastle</pattern>
+                                    <shadedPattern>org.apache.flink.connector.nebula.shaded.org.bouncycastle</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>org.locationtech</pattern>
+                                    <shadedPattern>org.apache.flink.connector.nebula.shaded.org.locationtech</shadedPattern>
+                                </relocation>
+                            </relocations>
                         </configuration>
                     </execution>
                 </executions>

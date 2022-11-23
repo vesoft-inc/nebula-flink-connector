@@ -95,12 +95,12 @@ public class NebulaVertexBatchExecutorTest {
      */
     @Test
     public void testAddToBatchWithInsert() {
-        ExecutionOptions options = builder
+        VertexExecutionOptions options = builder
                 .setGraphSpace("test_int")
                 .setWriteMode(WriteModeEnum.INSERT)
-                .builder();
-        NebulaVertexBatchExecutor<Row> vertexBatchExecutor =
-                new NebulaVertexBatchExecutor<>(options, VidTypeEnum.INT, schema);
+                .build();
+        NebulaVertexBatchExecutor vertexBatchExecutor =
+                new NebulaVertexBatchExecutor(options, VidTypeEnum.INT, schema);
         vertexBatchExecutor.addToBatch(row1);
     }
 
@@ -109,13 +109,13 @@ public class NebulaVertexBatchExecutorTest {
      */
     @Test
     public void testAddToBatchWithInsertPolicy() {
-        ExecutionOptions options = builder
+        VertexExecutionOptions options = builder
                 .setGraphSpace("test_int")
                 .setPolicy("HASH")
                 .setWriteMode(WriteModeEnum.INSERT)
-                .builder();
-        NebulaVertexBatchExecutor<Row> vertexBatchExecutor =
-                new NebulaVertexBatchExecutor<>(options, VidTypeEnum.INT, schema);
+                .build();
+        NebulaVertexBatchExecutor vertexBatchExecutor =
+                new NebulaVertexBatchExecutor(options, VidTypeEnum.INT, schema);
         vertexBatchExecutor.addToBatch(row1);
     }
 
@@ -124,12 +124,12 @@ public class NebulaVertexBatchExecutorTest {
      */
     @Test
     public void testAddToBatchWithUpdate() {
-        ExecutionOptions options = builder
+        VertexExecutionOptions options = builder
                 .setGraphSpace("test_int")
                 .setWriteMode(WriteModeEnum.UPDATE)
-                .builder();
-        NebulaVertexBatchExecutor<Row> vertexBatchExecutor =
-                new NebulaVertexBatchExecutor<>(options, VidTypeEnum.INT, schema);
+                .build();
+        NebulaVertexBatchExecutor vertexBatchExecutor =
+                new NebulaVertexBatchExecutor(options, VidTypeEnum.INT, schema);
         vertexBatchExecutor.addToBatch(row1);
     }
 
@@ -138,13 +138,13 @@ public class NebulaVertexBatchExecutorTest {
      */
     @Test
     public void testAddToBatchWithUpdatePolicy() {
-        ExecutionOptions options = builder
+        VertexExecutionOptions options = builder
                 .setGraphSpace("test_int")
                 .setPolicy("HASH")
                 .setWriteMode(WriteModeEnum.UPDATE)
-                .builder();
-        NebulaVertexBatchExecutor<Row> vertexBatchExecutor =
-                new NebulaVertexBatchExecutor<>(options, VidTypeEnum.INT, schema);
+                .build();
+        NebulaVertexBatchExecutor vertexBatchExecutor =
+                new NebulaVertexBatchExecutor(options, VidTypeEnum.INT, schema);
         vertexBatchExecutor.addToBatch(row1);
     }
 
@@ -153,12 +153,12 @@ public class NebulaVertexBatchExecutorTest {
      */
     @Test
     public void testAddToBatchWithDelete() {
-        ExecutionOptions options = builder
+        VertexExecutionOptions options = builder
                 .setGraphSpace("test_int")
                 .setWriteMode(WriteModeEnum.DELETE)
-                .builder();
-        NebulaVertexBatchExecutor<Row> vertexBatchExecutor =
-                new NebulaVertexBatchExecutor<>(options, VidTypeEnum.INT, schema);
+                .build();
+        NebulaVertexBatchExecutor vertexBatchExecutor =
+                new NebulaVertexBatchExecutor(options, VidTypeEnum.INT, schema);
         vertexBatchExecutor.addToBatch(row1);
     }
 
@@ -167,13 +167,13 @@ public class NebulaVertexBatchExecutorTest {
      */
     @Test
     public void testAddToBatchWithDeletePolicy() {
-        ExecutionOptions options = builder
+        VertexExecutionOptions options = builder
                 .setGraphSpace("test_int")
                 .setPolicy("HASH")
                 .setWriteMode(WriteModeEnum.DELETE)
-                .builder();
-        NebulaVertexBatchExecutor<Row> vertexBatchExecutor =
-                new NebulaVertexBatchExecutor<>(options, VidTypeEnum.INT, schema);
+                .build();
+        NebulaVertexBatchExecutor vertexBatchExecutor =
+                new NebulaVertexBatchExecutor(options, VidTypeEnum.INT, schema);
         vertexBatchExecutor.addToBatch(row1);
     }
 
@@ -182,13 +182,13 @@ public class NebulaVertexBatchExecutorTest {
      */
     @Test
     public void testExecuteBatch() {
-        ExecutionOptions options = builder
+        VertexExecutionOptions options = builder
                 .setGraphSpace("test_int")
                 .setPolicy("HASH")
                 .setWriteMode(WriteModeEnum.INSERT)
-                .builder();
-        NebulaVertexBatchExecutor<Row> vertexBatchExecutor =
-                new NebulaVertexBatchExecutor<>(options, VidTypeEnum.INT, schema);
+                .build();
+        NebulaVertexBatchExecutor vertexBatchExecutor =
+                new NebulaVertexBatchExecutor(options, VidTypeEnum.INT, schema);
         vertexBatchExecutor.addToBatch(row1);
         vertexBatchExecutor.addToBatch(row2);
 
@@ -214,13 +214,13 @@ public class NebulaVertexBatchExecutorTest {
     @Test
     public void testExecuteBatchWithUpdate() {
         testExecuteBatch();
-        ExecutionOptions options = builder
+        VertexExecutionOptions options = builder
                 .setGraphSpace("test_int")
                 .setPolicy("HASH")
                 .setWriteMode(WriteModeEnum.UPDATE)
-                .builder();
-        NebulaVertexBatchExecutor<Row> vertexBatchExecutor =
-                new NebulaVertexBatchExecutor<>(options, VidTypeEnum.INT, schema);
+                .build();
+        NebulaVertexBatchExecutor vertexBatchExecutor =
+                new NebulaVertexBatchExecutor(options, VidTypeEnum.INT, schema);
         vertexBatchExecutor.addToBatch(row1);
         vertexBatchExecutor.addToBatch(row2);
 
@@ -245,12 +245,12 @@ public class NebulaVertexBatchExecutorTest {
      */
     @Test
     public void testExecuteBatchWithDelete() {
-        ExecutionOptions options = builder.setGraphSpace("test_int")
+        VertexExecutionOptions options = builder.setGraphSpace("test_int")
                 .setPolicy("HASH")
                 .setWriteMode(WriteModeEnum.DELETE)
-                .builder();
-        NebulaVertexBatchExecutor<Row> vertexBatchExecutor =
-                new NebulaVertexBatchExecutor<>(options, VidTypeEnum.INT, schema);
+                .build();
+        NebulaVertexBatchExecutor vertexBatchExecutor =
+                new NebulaVertexBatchExecutor(options, VidTypeEnum.INT, schema);
         vertexBatchExecutor.addToBatch(row1);
         vertexBatchExecutor.addToBatch(row2);
 
@@ -275,12 +275,12 @@ public class NebulaVertexBatchExecutorTest {
      */
     @Test
     public void testExecuteBatchWithStringVidAndInsert() {
-        ExecutionOptions options = builder
+        VertexExecutionOptions options = builder
                 .setGraphSpace("test_string")
                 .setWriteMode(WriteModeEnum.INSERT)
-                .builder();
-        NebulaVertexBatchExecutor<Row> vertexBatchExecutor =
-                new NebulaVertexBatchExecutor<>(options, VidTypeEnum.STRING, schema);
+                .build();
+        NebulaVertexBatchExecutor vertexBatchExecutor =
+                new NebulaVertexBatchExecutor(options, VidTypeEnum.STRING, schema);
         vertexBatchExecutor.addToBatch(row1);
         vertexBatchExecutor.addToBatch(row2);
 
@@ -306,12 +306,12 @@ public class NebulaVertexBatchExecutorTest {
     @Test
     public void testExecuteBatchWithStringVidAndUpdate() {
         testExecuteBatchWithStringVidAndInsert();
-        ExecutionOptions options = builder
+        VertexExecutionOptions options = builder
                 .setGraphSpace("test_string")
                 .setWriteMode(WriteModeEnum.UPDATE)
-                .builder();
-        NebulaVertexBatchExecutor<Row> vertexBatchExecutor =
-                new NebulaVertexBatchExecutor<>(options, VidTypeEnum.STRING, schema);
+                .build();
+        NebulaVertexBatchExecutor vertexBatchExecutor =
+                new NebulaVertexBatchExecutor(options, VidTypeEnum.STRING, schema);
         vertexBatchExecutor.addToBatch(row1);
         vertexBatchExecutor.addToBatch(row2);
 
@@ -336,12 +336,12 @@ public class NebulaVertexBatchExecutorTest {
      */
     @Test
     public void testExecuteBatchWithStringVidAndDelete() {
-        ExecutionOptions options = builder
+        VertexExecutionOptions options = builder
                 .setGraphSpace("test_string")
                 .setWriteMode(WriteModeEnum.DELETE)
-                .builder();
-        NebulaVertexBatchExecutor<Row> vertexBatchExecutor =
-                new NebulaVertexBatchExecutor<>(options, VidTypeEnum.STRING, schema);
+                .build();
+        NebulaVertexBatchExecutor vertexBatchExecutor =
+                new NebulaVertexBatchExecutor(options, VidTypeEnum.STRING, schema);
         vertexBatchExecutor.addToBatch(row1);
         vertexBatchExecutor.addToBatch(row2);
 

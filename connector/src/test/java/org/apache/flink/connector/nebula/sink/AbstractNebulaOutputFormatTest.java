@@ -17,29 +17,29 @@ import junit.framework.TestCase;
 import org.apache.flink.connector.nebula.connection.NebulaClientOptions;
 import org.apache.flink.connector.nebula.connection.NebulaGraphConnectionProvider;
 import org.apache.flink.connector.nebula.connection.NebulaMetaConnectionProvider;
-import org.apache.flink.connector.nebula.statement.ExecutionOptions;
 import org.apache.flink.connector.nebula.statement.VertexExecutionOptions;
 import org.apache.flink.types.Row;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AbstractNebulaOutPutFormatTest extends TestCase {
+public class AbstractNebulaOutputFormatTest extends TestCase {
     private static final Logger LOGGER =
-            LoggerFactory.getLogger(AbstractNebulaOutPutFormatTest.class);
+            LoggerFactory.getLogger(AbstractNebulaOutputFormatTest.class);
 
     @Test
     public void testWrite() throws IOException {
         mockNebulaData();
         List<String> cols = Arrays.asList("name", "age");
-        ExecutionOptions executionOptions = new VertexExecutionOptions.ExecutionOptionBuilder()
-                .setGraphSpace("flinkSink")
-                .setTag("player")
-                .setFields(cols)
-                .setPositions(Arrays.asList(1, 2))
-                .setIdIndex(0)
-                .setBatch(1)
-                .builder();
+        VertexExecutionOptions executionOptions =
+                new VertexExecutionOptions.ExecutionOptionBuilder()
+                        .setGraphSpace("flinkSink")
+                        .setTag("player")
+                        .setFields(cols)
+                        .setPositions(Arrays.asList(1, 2))
+                        .setIdIndex(0)
+                        .setBatchSize(1)
+                        .build();
 
         NebulaClientOptions clientOptions = new NebulaClientOptions
                 .NebulaClientOptionsBuilder()
@@ -54,12 +54,11 @@ public class AbstractNebulaOutPutFormatTest extends TestCase {
         row.setField(1, "jena");
         row.setField(2, 12);
 
-        NebulaBatchOutputFormat outPutFormat =
-                new NebulaBatchOutputFormat(graphProvider, metaProvider)
-                        .setExecutionOptions(executionOptions);
+        NebulaVertexBatchOutputFormat outputFormat =
+                new NebulaVertexBatchOutputFormat(graphProvider, metaProvider, executionOptions);
 
-        outPutFormat.open(1, 2);
-        outPutFormat.writeRecord(row);
+        outputFormat.open(1, 2);
+        outputFormat.writeRecord(row);
     }
 
     private void mockNebulaData() {

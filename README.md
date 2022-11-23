@@ -41,19 +41,18 @@ NebulaClientOptions nebulaClientOptions = new NebulaClientOptions.NebulaClientOp
 NebulaGraphConnectionProvider graphConnectionProvider = new NebulaGraphConnectionProvider(nebulaClientOptions);
 NebulaMetaConnectionProvider metaConnectionProvider = new NebulaMetaConnectionProvider(nebulaClientOptions);
 
-ExecutionOptions executionOptions = new VertexExecutionOptions.ExecutionOptionBuilder()
+VertexExecutionOptions executionOptions = new VertexExecutionOptions.ExecutionOptionBuilder()
                 .setGraphSpace("flinkSink")
                 .setTag("player")
                 .setIdIndex(0)
                 .setFields(Arrays.asList("name", "age"))
                 .setPositions(Arrays.asList(1, 2))
-                .setBatch(2)
-                .builder();
+                .setBatchSize(2)
+                .build();
 
-NebulaBatchOutputFormat outPutFormat =
-                new NebulaBatchOutputFormat(graphConnectionProvider, metaConnectionProvider)
-                        .setExecutionOptions(executionOptions);
-NebulaSinkFunction nebulaSinkFunction = new NebulaSinkFunction(outPutFormat);
+NebulaVertexBatchOutputFormat outputFormat = new NebulaVertexBatchOutputFormat(
+                graphConnectionProvider, metaConnectionProvider, executionOptions);
+NebulaSinkFunction<Row> nebulaSinkFunction = new NebulaSinkFunction<>(outputFormat);
 DataStream<Row> dataStream = playerSource.map(row -> {
             Row record = new org.apache.flink.types.Row(row.size());
             for (int i = 0; i < row.size(); i++) {

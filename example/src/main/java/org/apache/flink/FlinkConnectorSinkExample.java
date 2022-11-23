@@ -11,10 +11,10 @@ import java.util.List;
 import org.apache.flink.connector.nebula.connection.NebulaClientOptions;
 import org.apache.flink.connector.nebula.connection.NebulaGraphConnectionProvider;
 import org.apache.flink.connector.nebula.connection.NebulaMetaConnectionProvider;
-import org.apache.flink.connector.nebula.sink.NebulaBatchOutputFormat;
+import org.apache.flink.connector.nebula.sink.NebulaEdgeBatchOutputFormat;
 import org.apache.flink.connector.nebula.sink.NebulaSinkFunction;
+import org.apache.flink.connector.nebula.sink.NebulaVertexBatchOutputFormat;
 import org.apache.flink.connector.nebula.statement.EdgeExecutionOptions;
-import org.apache.flink.connector.nebula.statement.ExecutionOptions;
 import org.apache.flink.connector.nebula.statement.VertexExecutionOptions;
 import org.apache.flink.connector.nebula.utils.SSLSighType;
 import org.apache.flink.connector.nebula.utils.WriteModeEnum;
@@ -40,8 +40,8 @@ import org.slf4j.LoggerFactory;
  * col5 int32, col6 int64, col7 date, col8 datetime, col9 timestamp, col10 bool, col11 double,
  * col12 float, col13 time, col14 geography);"
  */
-public class FlinkConnectorExample {
-    private static final Logger LOG = LoggerFactory.getLogger(FlinkConnectorExample.class);
+public class FlinkConnectorSinkExample {
+    private static final Logger LOG = LoggerFactory.getLogger(FlinkConnectorSinkExample.class);
 
     public static void main(String[] args) {
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
@@ -144,21 +144,21 @@ public class FlinkConnectorExample {
         NebulaMetaConnectionProvider metaConnectionProvider =
                 new NebulaMetaConnectionProvider(nebulaClientOptions);
 
-        ExecutionOptions executionOptions = new VertexExecutionOptions.ExecutionOptionBuilder()
-                .setGraphSpace("flinkSink")
-                .setTag("person")
-                .setIdIndex(0)
-                .setFields(Arrays.asList("col1", "col2", "col3", "col4", "col5", "col6", "col7",
-                        "col8",
-                        "col9", "col10", "col11", "col12", "col13", "col14"))
-                .setPositions(Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14))
-                .setBatch(2)
-                .builder();
+        VertexExecutionOptions executionOptions =
+                new VertexExecutionOptions.ExecutionOptionBuilder()
+                        .setGraphSpace("flinkSink")
+                        .setTag("person")
+                        .setIdIndex(0)
+                        .setFields(Arrays.asList("col1", "col2", "col3", "col4", "col5", "col6",
+                                "col7", "col8", "col9", "col10", "col11", "col12",
+                                "col13", "col14"))
+                        .setPositions(Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14))
+                        .setBatchSize(2)
+                        .build();
 
-        NebulaBatchOutputFormat outPutFormat =
-                new NebulaBatchOutputFormat(graphConnectionProvider, metaConnectionProvider)
-                        .setExecutionOptions(executionOptions);
-        NebulaSinkFunction nebulaSinkFunction = new NebulaSinkFunction(outPutFormat);
+        NebulaVertexBatchOutputFormat outputFormat = new NebulaVertexBatchOutputFormat(
+                graphConnectionProvider, metaConnectionProvider, executionOptions);
+        NebulaSinkFunction<Row> nebulaSinkFunction = new NebulaSinkFunction<>(outputFormat);
         DataStream<Row> dataStream = playerSource.map(row -> {
             org.apache.flink.types.Row record = new org.apache.flink.types.Row(row.size());
             for (int i = 0; i < row.size(); i++) {
@@ -186,20 +186,20 @@ public class FlinkConnectorExample {
         NebulaMetaConnectionProvider metaConnectionProvider =
                 new NebulaMetaConnectionProvider(nebulaClientOptions);
 
-        ExecutionOptions executionOptions = new VertexExecutionOptions.ExecutionOptionBuilder()
-                .setGraphSpace("flinkSink")
-                .setTag("person")
-                .setIdIndex(0)
-                .setFields(Arrays.asList("col1", "col2"))
-                .setPositions(Arrays.asList(1, 2))
-                .setWriteMode(WriteModeEnum.UPDATE)
-                .setBatch(2)
-                .builder();
+        VertexExecutionOptions executionOptions =
+                new VertexExecutionOptions.ExecutionOptionBuilder()
+                        .setGraphSpace("flinkSink")
+                        .setTag("person")
+                        .setIdIndex(0)
+                        .setFields(Arrays.asList("col1", "col2"))
+                        .setPositions(Arrays.asList(1, 2))
+                        .setWriteMode(WriteModeEnum.UPDATE)
+                        .setBatchSize(2)
+                        .build();
 
-        NebulaBatchOutputFormat outPutFormat =
-                new NebulaBatchOutputFormat(graphConnectionProvider, metaConnectionProvider)
-                        .setExecutionOptions(executionOptions);
-        NebulaSinkFunction nebulaSinkFunction = new NebulaSinkFunction(outPutFormat);
+        NebulaVertexBatchOutputFormat outputFormat = new NebulaVertexBatchOutputFormat(
+                graphConnectionProvider, metaConnectionProvider, executionOptions);
+        NebulaSinkFunction<Row> nebulaSinkFunction = new NebulaSinkFunction<>(outputFormat);
         DataStream<Row> dataStream = playerSource.map(row -> {
             org.apache.flink.types.Row record = new org.apache.flink.types.Row(row.size());
             for (int i = 0; i < row.size(); i++) {
@@ -227,20 +227,20 @@ public class FlinkConnectorExample {
         NebulaMetaConnectionProvider metaConnectionProvider =
                 new NebulaMetaConnectionProvider(nebulaClientOptions);
 
-        ExecutionOptions executionOptions = new VertexExecutionOptions.ExecutionOptionBuilder()
-                .setGraphSpace("flinkSink")
-                .setTag("person")
-                .setIdIndex(0)
-                .setFields(Arrays.asList("col1", "col2"))
-                .setPositions(Arrays.asList(1, 2))
-                .setWriteMode(WriteModeEnum.DELETE)
-                .setBatch(2)
-                .builder();
+        VertexExecutionOptions executionOptions =
+                new VertexExecutionOptions.ExecutionOptionBuilder()
+                        .setGraphSpace("flinkSink")
+                        .setTag("person")
+                        .setIdIndex(0)
+                        .setFields(Arrays.asList("col1", "col2"))
+                        .setPositions(Arrays.asList(1, 2))
+                        .setWriteMode(WriteModeEnum.DELETE)
+                        .setBatchSize(2)
+                        .build();
 
-        NebulaBatchOutputFormat outPutFormat =
-                new NebulaBatchOutputFormat(graphConnectionProvider, metaConnectionProvider)
-                        .setExecutionOptions(executionOptions);
-        NebulaSinkFunction nebulaSinkFunction = new NebulaSinkFunction(outPutFormat);
+        NebulaVertexBatchOutputFormat outputFormat = new NebulaVertexBatchOutputFormat(
+                graphConnectionProvider, metaConnectionProvider, executionOptions);
+        NebulaSinkFunction<Row> nebulaSinkFunction = new NebulaSinkFunction<>(outputFormat);
         DataStream<Row> dataStream = playerSource.map(row -> {
             org.apache.flink.types.Row record = new org.apache.flink.types.Row(row.size());
             for (int i = 0; i < row.size(); i++) {
@@ -311,7 +311,7 @@ public class FlinkConnectorExample {
         NebulaMetaConnectionProvider metaConnectionProvider =
                 new NebulaMetaConnectionProvider(nebulaClientOptions);
 
-        ExecutionOptions executionOptions = new EdgeExecutionOptions.ExecutionOptionBuilder()
+        EdgeExecutionOptions executionOptions = new EdgeExecutionOptions.ExecutionOptionBuilder()
                 .setGraphSpace("flinkSink")
                 .setEdge("friend")
                 .setSrcIndex(0)
@@ -320,13 +320,12 @@ public class FlinkConnectorExample {
                 .setFields(Arrays.asList("col1", "col2", "col3", "col4", "col5", "col6", "col7",
                         "col8", "col9", "col10", "col11", "col12", "col13", "col14"))
                 .setPositions(Arrays.asList(2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15))
-                .setBatch(2)
-                .builder();
+                .setBatchSize(2)
+                .build();
 
-        NebulaBatchOutputFormat outPutFormat =
-                new NebulaBatchOutputFormat(graphConnectionProvider, metaConnectionProvider)
-                        .setExecutionOptions(executionOptions);
-        NebulaSinkFunction nebulaSinkFunction = new NebulaSinkFunction(outPutFormat);
+        NebulaEdgeBatchOutputFormat outputFormat = new NebulaEdgeBatchOutputFormat(
+                graphConnectionProvider, metaConnectionProvider, executionOptions);
+        NebulaSinkFunction<Row> nebulaSinkFunction = new NebulaSinkFunction<>(outputFormat);
         DataStream<Row> dataStream = playerSource.map(row -> {
             org.apache.flink.types.Row record = new org.apache.flink.types.Row(row.size());
             for (int i = 0; i < row.size(); i++) {
@@ -354,7 +353,7 @@ public class FlinkConnectorExample {
         NebulaMetaConnectionProvider metaConnectionProvider =
                 new NebulaMetaConnectionProvider(nebulaClientOptions);
 
-        ExecutionOptions executionOptions = new EdgeExecutionOptions.ExecutionOptionBuilder()
+        EdgeExecutionOptions executionOptions = new EdgeExecutionOptions.ExecutionOptionBuilder()
                 .setGraphSpace("flinkSink")
                 .setEdge("friend")
                 .setSrcIndex(0)
@@ -363,13 +362,12 @@ public class FlinkConnectorExample {
                 .setFields(Arrays.asList("col1", "col2"))
                 .setPositions(Arrays.asList(2, 3))
                 .setWriteMode(WriteModeEnum.UPDATE)
-                .setBatch(2)
-                .builder();
+                .setBatchSize(2)
+                .build();
 
-        NebulaBatchOutputFormat outPutFormat =
-                new NebulaBatchOutputFormat(graphConnectionProvider, metaConnectionProvider)
-                        .setExecutionOptions(executionOptions);
-        NebulaSinkFunction nebulaSinkFunction = new NebulaSinkFunction(outPutFormat);
+        NebulaEdgeBatchOutputFormat outputFormat = new NebulaEdgeBatchOutputFormat(
+                graphConnectionProvider, metaConnectionProvider, executionOptions);
+        NebulaSinkFunction<Row> nebulaSinkFunction = new NebulaSinkFunction<>(outputFormat);
         DataStream<Row> dataStream = playerSource.map(row -> {
             org.apache.flink.types.Row record = new org.apache.flink.types.Row(row.size());
             for (int i = 0; i < row.size(); i++) {
@@ -398,7 +396,7 @@ public class FlinkConnectorExample {
         NebulaMetaConnectionProvider metaConnectionProvider =
                 new NebulaMetaConnectionProvider(nebulaClientOptions);
 
-        ExecutionOptions executionOptions = new EdgeExecutionOptions.ExecutionOptionBuilder()
+        EdgeExecutionOptions executionOptions = new EdgeExecutionOptions.ExecutionOptionBuilder()
                 .setGraphSpace("flinkSink")
                 .setEdge("friend")
                 .setSrcIndex(0)
@@ -407,13 +405,12 @@ public class FlinkConnectorExample {
                 .setFields(Arrays.asList("col1", "col2"))
                 .setPositions(Arrays.asList(2, 3))
                 .setWriteMode(WriteModeEnum.DELETE)
-                .setBatch(2)
-                .builder();
+                .setBatchSize(2)
+                .build();
 
-        NebulaBatchOutputFormat outPutFormat =
-                new NebulaBatchOutputFormat(graphConnectionProvider, metaConnectionProvider)
-                        .setExecutionOptions(executionOptions);
-        NebulaSinkFunction nebulaSinkFunction = new NebulaSinkFunction(outPutFormat);
+        NebulaEdgeBatchOutputFormat outputFormat = new NebulaEdgeBatchOutputFormat(
+                graphConnectionProvider, metaConnectionProvider, executionOptions);
+        NebulaSinkFunction<Row> nebulaSinkFunction = new NebulaSinkFunction<>(outputFormat);
         DataStream<Row> dataStream = playerSource.map(row -> {
             org.apache.flink.types.Row record = new org.apache.flink.types.Row(row.size());
             for (int i = 0; i < row.size(); i++) {

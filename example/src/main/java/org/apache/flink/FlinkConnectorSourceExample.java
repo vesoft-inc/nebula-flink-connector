@@ -110,7 +110,7 @@ public class FlinkConnectorSourceExample {
                 .setNoColumn(false)
                 .setFields(Arrays.asList())
                 .setLimit(100)
-                .builder();
+                .build();
 
         // read specific properties
         // if you want to read all properties, config: setFields(Arrays.asList())
@@ -120,7 +120,7 @@ public class FlinkConnectorSourceExample {
                 //.setFields(Arrays.asList("col1", "col2","col3"))
                 .setFields(Arrays.asList())
                 .setLimit(100)
-                .builder();
+                .build();
 
     }
 

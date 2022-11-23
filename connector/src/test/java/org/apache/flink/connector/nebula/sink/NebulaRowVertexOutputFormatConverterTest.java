@@ -59,10 +59,9 @@ public class NebulaRowVertexOutputFormatConverterTest {
 
     @Test
     public void testCreateVertex() {
-        ExecutionOptions options = builder.builder();
+        VertexExecutionOptions options = builder.build();
         NebulaRowVertexOutputFormatConverter converter =
-                new NebulaRowVertexOutputFormatConverter((VertexExecutionOptions) options,
-                        VidTypeEnum.INT, schema);
+                new NebulaRowVertexOutputFormatConverter(options, VidTypeEnum.INT, schema);
         NebulaVertex vertex = converter.createVertex(row, null);
         assert (vertex.getVid().equals("1"));
         assert (vertex.getPropValuesString().equals("\"Tom\",\"Tom\",10,1.0,date(\"2021-01-01\"),"
@@ -74,10 +73,9 @@ public class NebulaRowVertexOutputFormatConverterTest {
      */
     @Test
     public void testCreateVertexPolicy() {
-        ExecutionOptions options = builder.setPolicy("HASH").builder();
+        VertexExecutionOptions options = builder.setPolicy("HASH").build();
         NebulaRowVertexOutputFormatConverter converter =
-                new NebulaRowVertexOutputFormatConverter((VertexExecutionOptions) options,
-                        VidTypeEnum.INT, schema);
+                new NebulaRowVertexOutputFormatConverter(options, VidTypeEnum.INT, schema);
         NebulaVertex vertex = converter.createVertex(row, null);
         assert (vertex.getVid().equals("1"));
         assert (vertex.getPropValuesString().equals("\"Tom\",\"Tom\",10,1.0,date(\"2021-01-01\"),"
@@ -89,10 +87,9 @@ public class NebulaRowVertexOutputFormatConverterTest {
      */
     @Test
     public void testCreateVertexStringId() {
-        ExecutionOptions options = builder.builder();
+        VertexExecutionOptions options = builder.build();
         NebulaRowVertexOutputFormatConverter converter =
-                new NebulaRowVertexOutputFormatConverter((VertexExecutionOptions) options,
-                        VidTypeEnum.STRING, schema);
+                new NebulaRowVertexOutputFormatConverter(options, VidTypeEnum.STRING, schema);
         NebulaVertex vertex = converter.createVertex(row, null);
         assert (vertex.getVid().equals("\"1\""));
         assert (vertex.getPropValuesString().equals("\"Tom\",\"Tom\",10,1.0,date(\"2021-01-01\"),"

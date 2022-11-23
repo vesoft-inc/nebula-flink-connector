@@ -19,15 +19,18 @@ import org.apache.flink.types.Row;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class NebulaVertexBatchExecutor<T> extends NebulaBatchExecutor<T> {
+public class NebulaVertexBatchExecutor implements NebulaBatchExecutor<Row> {
     private static final Logger LOG = LoggerFactory.getLogger(NebulaVertexBatchExecutor.class);
+    private final VertexExecutionOptions executionOptions;
+    private final List<NebulaVertex> nebulaVertexList;
+    private final NebulaRowVertexOutputFormatConverter converter;
 
-    protected final List<NebulaVertex> nebulaVertexList;
-
-    public NebulaVertexBatchExecutor(ExecutionOptions executionOptions,
+    public NebulaVertexBatchExecutor(VertexExecutionOptions executionOptions,
                                      VidTypeEnum vidType, Map<String, Integer> schema) {
-        super(executionOptions, vidType, schema);
-        nebulaVertexList = new ArrayList<>();
+        this.executionOptions = executionOptions;
+        this.nebulaVertexList = new ArrayList<>();
+        this.converter = new NebulaRowVertexOutputFormatConverter(executionOptions,
+                vidType, schema);
     }
 
     /**
@@ -36,10 +39,8 @@ public class NebulaVertexBatchExecutor<T> extends NebulaBatchExecutor<T> {
      * @param record represent vertex or edge
      */
     @Override
-    void addToBatch(T record) {
-        NebulaRowVertexOutputFormatConverter converter = new NebulaRowVertexOutputFormatConverter(
-                (VertexExecutionOptions) executionOptions, vidType, schema);
-        NebulaVertex vertex = converter.createVertex((Row) record, executionOptions.getPolicy());
+    public void addToBatch(Row record) {
+        NebulaVertex vertex = converter.createVertex(record, executionOptions.getPolicy());
         if (vertex == null) {
             return;
         }
@@ -47,7 +48,7 @@ public class NebulaVertexBatchExecutor<T> extends NebulaBatchExecutor<T> {
     }
 
     @Override
-    String executeBatch(Session session) {
+    public String executeBatch(Session session) {
         if (nebulaVertexList.size() == 0) {
             return null;
         }

@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import org.apache.flink.connector.nebula.statement.EdgeExecutionOptions;
-import org.apache.flink.connector.nebula.statement.ExecutionOptions;
 import org.apache.flink.connector.nebula.utils.NebulaEdge;
 import org.apache.flink.connector.nebula.utils.NebulaEdges;
 import org.apache.flink.connector.nebula.utils.VidTypeEnum;
@@ -19,25 +18,25 @@ import org.apache.flink.types.Row;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class NebulaEdgeBatchExecutor<T> extends NebulaBatchExecutor<T> {
+public class NebulaEdgeBatchExecutor implements NebulaBatchExecutor<Row> {
     private static final Logger LOG = LoggerFactory.getLogger(NebulaEdgeBatchExecutor.class);
-    protected final List<NebulaEdge> nebulaEdgeList;
+    private final EdgeExecutionOptions executionOptions;
+    private final List<NebulaEdge> nebulaEdgeList;
+    private final NebulaRowEdgeOutputFormatConverter converter;
 
-    public NebulaEdgeBatchExecutor(ExecutionOptions executionOptions,
+    public NebulaEdgeBatchExecutor(EdgeExecutionOptions executionOptions,
                                    VidTypeEnum vidType, Map<String, Integer> schema) {
-        super(executionOptions, vidType, schema);
-        nebulaEdgeList = new ArrayList<>();
+        this.executionOptions = executionOptions;
+        this.nebulaEdgeList = new ArrayList<>();
+        this.converter = new NebulaRowEdgeOutputFormatConverter(executionOptions, vidType, schema);
     }
 
     /**
      * put record into buffer
      */
     @Override
-    void addToBatch(T record) {
-        NebulaRowEdgeOutputFormatConverter converter =
-                new NebulaRowEdgeOutputFormatConverter((EdgeExecutionOptions) executionOptions,
-                        vidType, schema);
-        NebulaEdge edge = converter.createEdge((Row) record, executionOptions.getPolicy());
+    public void addToBatch(Row record) {
+        NebulaEdge edge = converter.createEdge(record, executionOptions.getPolicy());
         if (edge == null) {
             return;
         }
@@ -45,7 +44,7 @@ public class NebulaEdgeBatchExecutor<T> extends NebulaBatchExecutor<T> {
     }
 
     @Override
-    String executeBatch(Session session) {
+    public String executeBatch(Session session) {
         if (nebulaEdgeList.size() == 0) {
             return null;
         }

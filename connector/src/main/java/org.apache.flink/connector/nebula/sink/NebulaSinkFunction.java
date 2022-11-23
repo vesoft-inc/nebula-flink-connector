@@ -13,27 +13,28 @@ import org.apache.flink.runtime.state.FunctionInitializationContext;
 import org.apache.flink.runtime.state.FunctionSnapshotContext;
 import org.apache.flink.streaming.api.checkpoint.CheckpointedFunction;
 import org.apache.flink.streaming.api.functions.sink.RichSinkFunction;
+import org.apache.flink.types.Row;
 
 public class NebulaSinkFunction<T> extends RichSinkFunction<T> implements CheckpointedFunction {
 
     private static final long serialVersionUID = 8100784397926666769L;
 
-    private final NebulaBatchOutputFormat<T> outPutFormat;
+    private final NebulaBatchOutputFormat<T, ?> outputFormat;
 
     private final AtomicReference<Throwable> failureThrowable = new AtomicReference<>();
 
-    public NebulaSinkFunction(NebulaBatchOutputFormat<T> outPutFormat) {
+    public NebulaSinkFunction(NebulaBatchOutputFormat<T, ?> outputFormat) {
         super();
-        this.outPutFormat = outPutFormat;
+        this.outputFormat = outputFormat;
     }
 
     @Override
     public void open(Configuration parameters) throws Exception {
         super.open(parameters);
         RuntimeContext ctx = getRuntimeContext();
-        outPutFormat.setRuntimeContext(ctx);
+        outputFormat.setRuntimeContext(ctx);
         try {
-            outPutFormat.open(ctx.getIndexOfThisSubtask(), ctx.getNumberOfParallelSubtasks());
+            outputFormat.open(ctx.getIndexOfThisSubtask(), ctx.getNumberOfParallelSubtasks());
         } catch (IOException e) {
             failureThrowable.compareAndSet(null, e);
         }
@@ -41,13 +42,13 @@ public class NebulaSinkFunction<T> extends RichSinkFunction<T> implements Checkp
 
     @Override
     public void close() {
-        outPutFormat.close();
+        outputFormat.close();
     }
 
     @Override
     public void invoke(T value, Context context) {
         checkErrorAndRethrow();
-        outPutFormat.writeRecord(value);
+        outputFormat.writeRecord(value);
     }
 
     @Override
@@ -69,6 +70,6 @@ public class NebulaSinkFunction<T> extends RichSinkFunction<T> implements Checkp
     }
 
     private void flush() throws IOException {
-        outPutFormat.flush();
+        outputFormat.flush();
     }
 }

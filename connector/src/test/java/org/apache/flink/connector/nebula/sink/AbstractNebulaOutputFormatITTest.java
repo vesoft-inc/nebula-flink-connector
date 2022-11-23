@@ -28,10 +28,10 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AbstractNebulaOutPutFormatITTest {
+public class AbstractNebulaOutputFormatITTest {
 
     private static final Logger LOGGER =
-            LoggerFactory.getLogger(AbstractNebulaOutPutFormatITTest.class);
+            LoggerFactory.getLogger(AbstractNebulaOutputFormatITTest.class);
 
     static final String STATIC_IP = "127.0.0.1";
     static final String META_ADDRESS = STATIC_IP + NebulaConstant.COLON + "9559";

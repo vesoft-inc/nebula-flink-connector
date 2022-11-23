@@ -182,9 +182,9 @@ public class NebulaDynamicTableFactory implements DynamicTableSourceFactory,
                             .setPositions(positions)
                             .setGraphSpace(config.get(GRAPH_SPACE))
                             .setTag(labelName);
-            config.getOptional(BATCH_SIZE).ifPresent(builder::setBatch);
+            config.getOptional(BATCH_SIZE).ifPresent(builder::setBatchSize);
             config.getOptional(BATCH_INTERVAL_MS).ifPresent(builder::setBatchIntervalMs);
-            return builder.builder();
+            return builder.build();
         } else {
             for (int i = 2; i < columns.size(); i++) {
                 if (config.get(RANK_ID_INDEX) != i) {
@@ -202,9 +202,9 @@ public class NebulaDynamicTableFactory implements DynamicTableSourceFactory,
                             .setPositions(positions)
                             .setGraphSpace(config.get(GRAPH_SPACE))
                             .setEdge(labelName);
-            config.getOptional(BATCH_SIZE).ifPresent(builder::setBatch);
+            config.getOptional(BATCH_SIZE).ifPresent(builder::setBatchSize);
             config.getOptional(BATCH_INTERVAL_MS).ifPresent(builder::setBatchIntervalMs);
-            return builder.builder();
+            return builder.build();
         }
     }
 

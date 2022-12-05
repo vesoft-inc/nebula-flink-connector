@@ -13,7 +13,6 @@ import com.vesoft.nebula.client.graph.net.Session;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
-import junit.framework.TestCase;
 import org.apache.flink.connector.nebula.connection.NebulaClientOptions;
 import org.apache.flink.connector.nebula.connection.NebulaGraphConnectionProvider;
 import org.apache.flink.connector.nebula.connection.NebulaMetaConnectionProvider;
@@ -23,7 +22,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AbstractNebulaOutputFormatTest extends TestCase {
+public class AbstractNebulaOutputFormatTest {
     private static final Logger LOGGER =
             LoggerFactory.getLogger(AbstractNebulaOutputFormatTest.class);
 

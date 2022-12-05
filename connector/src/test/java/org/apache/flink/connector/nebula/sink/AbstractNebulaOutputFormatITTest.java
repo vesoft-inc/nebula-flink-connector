@@ -104,23 +104,23 @@ public class AbstractNebulaOutputFormatITTest extends NebulaITTestBase {
                         rowOf(
                                 valueOf(61), valueOf("aba"), valueOf("abcdefgh"),
                                 valueOf(1), valueOf(1111), valueOf(22222), valueOf(6412233),
-                                dateOf(2019, 1, 1), dateTimeOf(2019, 1, 1, 12, 12, 12, 0),
+                                dateOf(2019, 1, 1), dateTimeOf(2019, 1, 1, 4, 12, 12, 0),
                                 valueOf(435463424), valueOf(false), valueOf(1.2), valueOf(1.0),
-                                timeOf(11, 12, 12, 0), pointOf(1.0, 3.0)
+                                timeOf(3, 12, 12, 0), pointOf(1.0, 3.0)
                         ),
                         rowOf(
                                 valueOf(62), valueOf("aba"), valueOf("abcdefgh"),
                                 valueOf(1), valueOf(1111), valueOf(22222), valueOf(6412233),
-                                dateOf(2019, 1, 1), dateTimeOf(2019, 1, 1, 12, 12, 12, 0),
+                                dateOf(2019, 1, 1), dateTimeOf(2019, 1, 1, 4, 12, 12, 0),
                                 valueOf(435463424), valueOf(false), valueOf(1.2), valueOf(1.0),
-                                timeOf(11, 12, 12, 0), pointOf(1.0, 3.0)
+                                timeOf(3, 12, 12, 0), pointOf(1.0, 3.0)
                         ),
                         rowOf(
                                 valueOf(89), valueOf("aba"), valueOf("abcdefgh"),
                                 valueOf(1), valueOf(1111), valueOf(22222), valueOf(6412233),
-                                dateOf(2019, 1, 1), dateTimeOf(2019, 1, 1, 12, 12, 12, 0),
+                                dateOf(2019, 1, 1), dateTimeOf(2019, 1, 1, 4, 12, 12, 0),
                                 valueOf(435463424), valueOf(false), valueOf(1.2), valueOf(1.0),
-                                timeOf(11, 12, 12, 0), pointOf(1.0, 3.0)
+                                timeOf(3, 12, 12, 0), pointOf(1.0, 3.0)
                         )
                 ),
                 "MATCH (n)"
@@ -290,9 +290,9 @@ public class AbstractNebulaOutputFormatITTest extends NebulaITTestBase {
                                 // col3 is used as the rank so the value is not stored as a property
                                 valueOf(null),
                                 valueOf(1111), valueOf(22222), valueOf(6412233),
-                                dateOf(2019, 1, 1), dateTimeOf(2019, 1, 1, 12, 12, 12, 0),
+                                dateOf(2019, 1, 1), dateTimeOf(2019, 1, 1, 4, 12, 12, 0),
                                 valueOf(435463424), valueOf(false), valueOf(1.2), valueOf(1.0),
-                                timeOf(11, 12, 12, 0), pointOf(1.0, 3.0)
+                                timeOf(3, 12, 12, 0), pointOf(1.0, 3.0)
                         )
                 ),
                 "MATCH ()-[r:friend]->(n:person)"
@@ -366,9 +366,9 @@ public class AbstractNebulaOutputFormatITTest extends NebulaITTestBase {
                                 valueOf(61), valueOf(89), valueOf(0),
                                 valueOf("aba"), valueOf("abcdefgh"),
                                 valueOf(1), valueOf(1111), valueOf(22222), valueOf(6412233),
-                                dateOf(2019, 1, 1), dateTimeOf(2019, 1, 1, 12, 12, 12, 0),
+                                dateOf(2019, 1, 1), dateTimeOf(2019, 1, 1, 4, 12, 12, 0),
                                 valueOf(435463424), valueOf(false), valueOf(1.2), valueOf(1.0),
-                                timeOf(11, 12, 12, 0), pointOf(1.0, 3.0)
+                                timeOf(3, 12, 12, 0), pointOf(1.0, 3.0)
                         )
                 ),
                 "MATCH ()-[r:friend]->(n:person)"

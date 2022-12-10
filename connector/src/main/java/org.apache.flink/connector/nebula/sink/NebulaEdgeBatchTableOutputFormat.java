@@ -30,11 +30,8 @@ public class NebulaEdgeBatchTableOutputFormat
                 metaClient,
                 executionOptions.getGraphSpace(),
                 executionOptions.getLabel());
-        EdgeExecutionOptions insertOptions = executionOptions.toBuilder()
+        EdgeExecutionOptions upsertOptions = executionOptions.toBuilder()
                 .setWriteMode(WriteModeEnum.INSERT)
-                .build();
-        EdgeExecutionOptions updateOptions = executionOptions.toBuilder()
-                .setWriteMode(WriteModeEnum.UPDATE)
                 .build();
         EdgeExecutionOptions deleteOptions = executionOptions.toBuilder()
                 .setWriteMode(WriteModeEnum.DELETE)
@@ -43,8 +40,7 @@ public class NebulaEdgeBatchTableOutputFormat
                 createKeyExtractor(executionOptions.getSrcIndex(),
                         executionOptions.getDstIndex(),
                         executionOptions.getRankIndex()),
-                new NebulaEdgeBatchExecutor(insertOptions, vidType, schema),
-                new NebulaEdgeBatchExecutor(updateOptions, vidType, schema),
+                new NebulaEdgeBatchExecutor(upsertOptions, vidType, schema),
                 new NebulaEdgeBatchExecutor(deleteOptions, vidType, schema));
     }
 

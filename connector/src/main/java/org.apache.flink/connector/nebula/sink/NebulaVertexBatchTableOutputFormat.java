@@ -30,19 +30,15 @@ public class NebulaVertexBatchTableOutputFormat
                 metaClient,
                 executionOptions.getGraphSpace(),
                 executionOptions.getLabel());
-        VertexExecutionOptions insertOptions = executionOptions.toBuilder()
+        VertexExecutionOptions upsertOptions = executionOptions.toBuilder()
                 .setWriteMode(WriteModeEnum.INSERT)
-                .build();
-        VertexExecutionOptions updateOptions = executionOptions.toBuilder()
-                .setWriteMode(WriteModeEnum.UPDATE)
                 .build();
         VertexExecutionOptions deleteOptions = executionOptions.toBuilder()
                 .setWriteMode(WriteModeEnum.DELETE)
                 .build();
         return new NebulaTableBufferReducedExecutor(dataStructureConverter,
                 createKeyExtractor(executionOptions.getIdIndex()),
-                new NebulaVertexBatchExecutor(insertOptions, vidType, schema),
-                new NebulaVertexBatchExecutor(updateOptions, vidType, schema),
+                new NebulaVertexBatchExecutor(upsertOptions, vidType, schema),
                 new NebulaVertexBatchExecutor(deleteOptions, vidType, schema));
     }
 

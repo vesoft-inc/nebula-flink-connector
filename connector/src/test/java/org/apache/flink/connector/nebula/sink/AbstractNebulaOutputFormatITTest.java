@@ -138,7 +138,7 @@ public class AbstractNebulaOutputFormatITTest extends NebulaITTestBase {
     public void testSinkVertexChangelog() throws ExecutionException, InterruptedException {
         int[] vids = new int[]{101, 102};
         String colName = "col1";
-        checkVertexChangelog("person_insert_source", "person_changelog_sink",
+        checkVertexChangelog("person_source_insert", "person_changelog_sink",
                 vids, colName,
                 Arrays.asList(
                         Row.ofKind(RowKind.INSERT, "101", "aaa"),
@@ -149,7 +149,7 @@ public class AbstractNebulaOutputFormatITTest extends NebulaITTestBase {
                         rowOf(valueOf(102), valueOf("bbb"))
                 )
         );
-        checkVertexChangelog("person_update_source", "person_changelog_sink",
+        checkVertexChangelog("person_source_update", "person_changelog_sink",
                 vids, colName,
                 Arrays.asList(
                         Row.ofKind(RowKind.UPDATE_BEFORE, "102", "bbb"),
@@ -160,14 +160,21 @@ public class AbstractNebulaOutputFormatITTest extends NebulaITTestBase {
                         rowOf(valueOf(102), valueOf("ccc"))
                 )
         );
-        checkVertexChangelog("person_delete_source", "person_changelog_sink",
+        checkVertexChangelog("person_source_delete_1", "person_changelog_sink",
                 vids, colName,
                 Arrays.asList(
-                        Row.ofKind(RowKind.DELETE, "102", "ccc")
+                        Row.ofKind(RowKind.UPDATE_BEFORE, "102", "ccc")
                 ),
                 Arrays.asList(
                         rowOf(valueOf(101), valueOf("aaa"))
                 )
+        );
+        checkVertexChangelog("person_source_delete_2", "person_changelog_sink",
+                vids, colName,
+                Arrays.asList(
+                        Row.ofKind(RowKind.DELETE, "101", "aaa")
+                ),
+                Arrays.asList()
         );
     }
 
@@ -387,7 +394,7 @@ public class AbstractNebulaOutputFormatITTest extends NebulaITTestBase {
 
         int[] vids = new int[]{101, 102};
         String colName = "col1";
-        checkEdgeChangelog("friend_insert_source", "friend_changelog_sink",
+        checkEdgeChangelog("friend_source_insert", "friend_changelog_sink",
                 vids, colName,
                 Arrays.asList(
                         Row.ofKind(RowKind.INSERT, "101", "102", "5", "xxx"),
@@ -398,7 +405,7 @@ public class AbstractNebulaOutputFormatITTest extends NebulaITTestBase {
                         rowOf(valueOf(101), valueOf(102), valueOf(6), valueOf("yyy"))
                 )
         );
-        checkEdgeChangelog("friend_update_source", "friend_changelog_sink",
+        checkEdgeChangelog("friend_source_update", "friend_changelog_sink",
                 vids, colName,
                 Arrays.asList(
                         Row.ofKind(RowKind.UPDATE_BEFORE, "101", "102", "6", "yyy"),
@@ -409,14 +416,21 @@ public class AbstractNebulaOutputFormatITTest extends NebulaITTestBase {
                         rowOf(valueOf(101), valueOf(102), valueOf(6), valueOf("zzz"))
                 )
         );
-        checkEdgeChangelog("friend_delete_source", "friend_changelog_sink",
+        checkEdgeChangelog("friend_source_delete_1", "friend_changelog_sink",
                 vids, colName,
                 Arrays.asList(
-                        Row.ofKind(RowKind.DELETE, "101", "102", "5", "xxx")
+                        Row.ofKind(RowKind.UPDATE_BEFORE, "101", "102", "5", "xxx")
                 ),
                 Arrays.asList(
                         rowOf(valueOf(101), valueOf(102), valueOf(6), valueOf("zzz"))
                 )
+        );
+        checkEdgeChangelog("friend_source_delete_2", "friend_changelog_sink",
+                vids, colName,
+                Arrays.asList(
+                        Row.ofKind(RowKind.DELETE, "101", "102", "6", "zzz")
+                ),
+                Arrays.asList()
         );
     }
 

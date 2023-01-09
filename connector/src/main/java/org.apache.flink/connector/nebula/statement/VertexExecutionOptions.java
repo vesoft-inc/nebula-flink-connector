@@ -151,6 +151,11 @@ public class VertexExecutionOptions extends ExecutionOptions {
             return this;
         }
 
+        @Deprecated
+        public ExecutionOptionBuilder setBatch(int batch) {
+            return setBatchSize(batch);
+        }
+
         public ExecutionOptionBuilder setPolicy(String policy) {
             if (policy != null && !policy.trim().isEmpty()) {
                 this.policy = PolicyEnum.valueOf(policy);
@@ -171,6 +176,11 @@ public class VertexExecutionOptions extends ExecutionOptions {
         public ExecutionOptionBuilder setBatchIntervalMs(int batchIntervalMs) {
             this.batchIntervalMs = batchIntervalMs;
             return this;
+        }
+
+        @Deprecated
+        public VertexExecutionOptions builder() {
+            return build();
         }
 
         public VertexExecutionOptions build() {

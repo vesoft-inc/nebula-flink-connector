@@ -15,17 +15,17 @@ import org.apache.flink.types.Row;
 public class NebulaTableBufferReducedExecutor implements NebulaBatchExecutor<RowData> {
     private final DataStructureConverter dataStructureConverter;
     private final Function<Row, Row> keyExtractor;
-    private final NebulaBatchExecutor<Row> upsertExecutor;
+    private final NebulaBatchExecutor<Row> insertExecutor;
     private final NebulaBatchExecutor<Row> deleteExecutor;
     private final Map<Row, Tuple2<Boolean, Row>> reduceBuffer = new HashMap<>();
 
     public NebulaTableBufferReducedExecutor(DataStructureConverter dataStructureConverter,
                                             Function<Row, Row> keyExtractor,
-                                            NebulaBatchExecutor<Row> upsertExecutor,
+                                            NebulaBatchExecutor<Row> insertExecutor,
                                             NebulaBatchExecutor<Row> deleteExecutor) {
         this.dataStructureConverter = dataStructureConverter;
         this.keyExtractor = keyExtractor;
-        this.upsertExecutor = upsertExecutor;
+        this.insertExecutor = insertExecutor;
         this.deleteExecutor = deleteExecutor;
     }
 
@@ -55,15 +55,15 @@ public class NebulaTableBufferReducedExecutor implements NebulaBatchExecutor<Row
             boolean isUpsert = value.f0;
             Row row = value.f1;
             if (isUpsert) {
-                upsertExecutor.addToBatch(row);
+                insertExecutor.addToBatch(row);
             } else {
                 deleteExecutor.addToBatch(row);
             }
         }
-        String upsertErrorStatement = upsertExecutor.executeBatch(session);
+        String insertErrorStatement = insertExecutor.executeBatch(session);
         String deleteErrorStatement = deleteExecutor.executeBatch(session);
         reduceBuffer.clear();
-        String errorStatements = Stream.of(upsertErrorStatement, deleteErrorStatement)
+        String errorStatements = Stream.of(insertErrorStatement, deleteErrorStatement)
                 .filter(Objects::nonNull).collect(Collectors.joining("; "));
         return errorStatements.isEmpty() ? null : errorStatements;
     }

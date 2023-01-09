@@ -195,6 +195,11 @@ public abstract class ExecutionOptions implements Serializable {
         return endTime;
     }
 
+    @Deprecated
+    public int getBatch() {
+        return batchSize;
+    }
+
     public int getBatchSize() {
         return batchSize;
     }

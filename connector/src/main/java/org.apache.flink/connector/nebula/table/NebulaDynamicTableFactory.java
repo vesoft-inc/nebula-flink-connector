@@ -84,7 +84,7 @@ public class NebulaDynamicTableFactory implements DynamicTableSourceFactory,
     public static final ConfigOption<Integer> ID_INDEX = ConfigOptions
             .key("id-index")
             .intType()
-            .defaultValue(0)
+            .defaultValue(NebulaConstant.DEFAULT_VERTEX_ID_INDEX)
             .withDescription("the nebula execute vertex index.");
 
     public static final ConfigOption<Integer> SRC_ID_INDEX = ConfigOptions

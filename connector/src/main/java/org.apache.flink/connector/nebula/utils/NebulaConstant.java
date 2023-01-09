@@ -40,6 +40,7 @@ public class NebulaConstant {
     public static final int DEFAULT_SCAN_LIMIT = 2000;
     public static final int DEFAULT_WRITE_BATCH_SIZE = 2000;
     public static final int DEFAULT_BATCH_INTERVAL_MS = 0;
+    public static final int DEFAULT_VERTEX_ID_INDEX = 0;
     public static final int DEFAULT_ROW_INFO_INDEX = -1;
 
     // default value for connection

@@ -6,6 +6,7 @@
 package org.apache.flink.connector.nebula.statement;
 
 import static org.apache.flink.connector.nebula.utils.NebulaConstant.DEFAULT_BATCH_INTERVAL_MS;
+import static org.apache.flink.connector.nebula.utils.NebulaConstant.DEFAULT_EXECUTION_RETRY;
 import static org.apache.flink.connector.nebula.utils.NebulaConstant.DEFAULT_ROW_INFO_INDEX;
 import static org.apache.flink.connector.nebula.utils.NebulaConstant.DEFAULT_SCAN_LIMIT;
 import static org.apache.flink.connector.nebula.utils.NebulaConstant.DEFAULT_WRITE_BATCH_SIZE;
@@ -14,6 +15,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import org.apache.flink.connector.nebula.utils.DataTypeEnum;
+import org.apache.flink.connector.nebula.utils.FailureHandlerEnum;
 import org.apache.flink.connector.nebula.utils.PolicyEnum;
 import org.apache.flink.connector.nebula.utils.WriteModeEnum;
 
@@ -44,9 +46,10 @@ public class EdgeExecutionOptions extends ExecutionOptions {
                                  List<Integer> positions, boolean noColumn, int limit,
                                  long startTime, long endTime, int batch, PolicyEnum policy,
                                  WriteModeEnum mode, String edge, int srcIndex, int dstIndex,
-                                 int rankIndex, int batchIntervalMs) {
+                                 int rankIndex, int batchIntervalMs,
+                                 FailureHandlerEnum failureHandler, int maxRetries) {
         super(graphSpace, executeStatement, fields, positions, noColumn, limit, startTime,
-                endTime, batch, policy, mode, batchIntervalMs);
+                endTime, batch, policy, mode, batchIntervalMs, failureHandler, maxRetries);
         this.edge = edge;
         this.srcIndex = srcIndex;
         this.dstIndex = dstIndex;
@@ -97,7 +100,9 @@ public class EdgeExecutionOptions extends ExecutionOptions {
                 .setDstIndex(this.getDstIndex())
                 .setRankIndex(this.getRankIndex())
                 .setWriteMode(this.getWriteMode())
-                .setBatchIntervalMs(this.getBatchIntervalMs());
+                .setBatchIntervalMs(this.getBatchIntervalMs())
+                .setFailureHandler(this.getFailureHandler())
+                .setMaxRetries(this.getMaxRetries());
     }
 
     public static class ExecutionOptionBuilder {
@@ -117,6 +122,8 @@ public class EdgeExecutionOptions extends ExecutionOptions {
         private int srcIndex = DEFAULT_ROW_INFO_INDEX;
         private int dstIndex = DEFAULT_ROW_INFO_INDEX;
         private int rankIndex = DEFAULT_ROW_INFO_INDEX;
+        private FailureHandlerEnum failureHandler = FailureHandlerEnum.IGNORE;
+        private int maxRetries = DEFAULT_EXECUTION_RETRY;
 
         public ExecutionOptionBuilder setGraphSpace(String graphSpace) {
             this.graphSpace = graphSpace;
@@ -205,6 +212,16 @@ public class EdgeExecutionOptions extends ExecutionOptions {
             return this;
         }
 
+        public ExecutionOptionBuilder setFailureHandler(FailureHandlerEnum failureHandler) {
+            this.failureHandler = failureHandler;
+            return this;
+        }
+
+        public ExecutionOptionBuilder setMaxRetries(int maxRetries) {
+            this.maxRetries = maxRetries;
+            return this;
+        }
+
         @Deprecated
         public EdgeExecutionOptions builder() {
             return build();
@@ -219,7 +236,7 @@ public class EdgeExecutionOptions extends ExecutionOptions {
             }
             return new EdgeExecutionOptions(graphSpace, executeStatement, fields, positions,
                     noColumn, limit, startTime, endTime, batchSize, policy, mode, edge, srcIndex,
-                    dstIndex, rankIndex, batchIntervalMs);
+                    dstIndex, rankIndex, batchIntervalMs, failureHandler, maxRetries);
         }
     }
 }

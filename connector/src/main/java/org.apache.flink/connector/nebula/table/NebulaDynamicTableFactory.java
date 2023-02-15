@@ -17,6 +17,7 @@ import org.apache.flink.connector.nebula.statement.EdgeExecutionOptions;
 import org.apache.flink.connector.nebula.statement.ExecutionOptions;
 import org.apache.flink.connector.nebula.statement.VertexExecutionOptions;
 import org.apache.flink.connector.nebula.utils.DataTypeEnum;
+import org.apache.flink.connector.nebula.utils.FailureHandlerEnum;
 import org.apache.flink.connector.nebula.utils.NebulaConstant;
 import org.apache.flink.table.api.TableSchema;
 import org.apache.flink.table.catalog.Column;
@@ -117,6 +118,18 @@ public class NebulaDynamicTableFactory implements DynamicTableSourceFactory,
             .noDefaultValue()
             .withDescription("batch commit interval in milliseconds.");
 
+    public static final ConfigOption<FailureHandlerEnum> FAILURE_HANDLER = ConfigOptions
+            .key("failure-handler")
+            .enumType(FailureHandlerEnum.class)
+            .defaultValue(FailureHandlerEnum.IGNORE)
+            .withDescription("failure handler.");
+
+    public static final ConfigOption<Integer> MAX_RETRIES = ConfigOptions
+            .key("max-retries")
+            .intType()
+            .defaultValue(NebulaConstant.DEFAULT_EXECUTION_RETRY)
+            .withDescription("maximum number of retries.");
+
     @Override
     public DynamicTableSink createDynamicTableSink(Context context) {
         final FactoryUtil.TableFactoryHelper helper =
@@ -181,7 +194,9 @@ public class NebulaDynamicTableFactory implements DynamicTableSourceFactory,
                             .setIdIndex(config.get(ID_INDEX))
                             .setPositions(positions)
                             .setGraphSpace(config.get(GRAPH_SPACE))
-                            .setTag(labelName);
+                            .setTag(labelName)
+                            .setFailureHandler(config.get(FAILURE_HANDLER))
+                            .setMaxRetries(config.get(MAX_RETRIES));
             config.getOptional(BATCH_SIZE).ifPresent(builder::setBatchSize);
             config.getOptional(BATCH_INTERVAL_MS).ifPresent(builder::setBatchIntervalMs);
             return builder.build();
@@ -201,7 +216,9 @@ public class NebulaDynamicTableFactory implements DynamicTableSourceFactory,
                             .setRankIndex(config.get(RANK_ID_INDEX))
                             .setPositions(positions)
                             .setGraphSpace(config.get(GRAPH_SPACE))
-                            .setEdge(labelName);
+                            .setEdge(labelName)
+                            .setFailureHandler(config.get(FAILURE_HANDLER))
+                            .setMaxRetries(config.get(MAX_RETRIES));
             config.getOptional(BATCH_SIZE).ifPresent(builder::setBatchSize);
             config.getOptional(BATCH_INTERVAL_MS).ifPresent(builder::setBatchIntervalMs);
             return builder.build();
@@ -236,6 +253,8 @@ public class NebulaDynamicTableFactory implements DynamicTableSourceFactory,
         set.add(RANK_ID_INDEX);
         set.add(BATCH_SIZE);
         set.add(BATCH_INTERVAL_MS);
+        set.add(FAILURE_HANDLER);
+        set.add(MAX_RETRIES);
         return set;
     }
 }

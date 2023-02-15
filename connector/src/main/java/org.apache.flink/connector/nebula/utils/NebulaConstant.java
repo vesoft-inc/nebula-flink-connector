@@ -48,6 +48,7 @@ public class NebulaConstant {
     public static final int DEFAULT_CONNECT_TIMEOUT_MS = 3000;
     public static final int DEFAULT_CONNECT_RETRY = 3;
     public static final int DEFAULT_EXECUTION_RETRY = 3;
+    public static final int EXECUTION_RETRY_WAIT_INCREMENT_MS = 1000;
 
     // params for create space
     public static final String CREATE_VID_TYPE = "vid_type";

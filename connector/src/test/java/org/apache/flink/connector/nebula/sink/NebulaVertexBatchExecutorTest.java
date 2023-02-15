@@ -12,6 +12,7 @@ import java.util.Map;
 import org.apache.flink.connector.nebula.MockData;
 import org.apache.flink.connector.nebula.NebulaITTestBase;
 import org.apache.flink.connector.nebula.statement.VertexExecutionOptions;
+import org.apache.flink.connector.nebula.utils.FailureHandlerEnum;
 import org.apache.flink.connector.nebula.utils.VidTypeEnum;
 import org.apache.flink.connector.nebula.utils.WriteModeEnum;
 import org.apache.flink.types.Row;
@@ -186,12 +187,11 @@ public class NebulaVertexBatchExecutorTest extends NebulaITTestBase {
         vertexBatchExecutor.addToBatch(row2);
 
         executeNGql("USE test_int");
-
         vertexBatchExecutor.executeBatch(session);
     }
 
     /**
-     * test batch exeucte for int vid and UPDATE mode
+     * test batch execute for int vid and UPDATE mode
      */
     @Test
     public void testExecuteBatchWithUpdate() {
@@ -207,12 +207,11 @@ public class NebulaVertexBatchExecutorTest extends NebulaITTestBase {
         vertexBatchExecutor.addToBatch(row2);
 
         executeNGql("USE test_int");
-
         vertexBatchExecutor.executeBatch(session);
     }
 
     /**
-     * test batch exeucte for int vid and DELETE mode
+     * test batch execute for int vid and DELETE mode
      */
     @Test
     public void testExecuteBatchWithDelete() {
@@ -226,12 +225,50 @@ public class NebulaVertexBatchExecutorTest extends NebulaITTestBase {
         vertexBatchExecutor.addToBatch(row2);
 
         executeNGql("USE test_int");
-
         vertexBatchExecutor.executeBatch(session);
     }
 
     /**
-     * test batch exeucte for string vid and insert mode
+     * test batch execute with invalid data and fail
+     */
+    @Test(expected = RuntimeException.class)
+    public void testExecuteBatchFailInvalid() {
+        VertexExecutionOptions options = builder.setGraphSpace("test_int")
+                .setWriteMode(WriteModeEnum.INSERT)
+                .setFailureHandler(FailureHandlerEnum.FAIL)
+                .build();
+        NebulaVertexBatchExecutor vertexBatchExecutor =
+                new NebulaVertexBatchExecutor(options, VidTypeEnum.INT, schema);
+        Row row = Row.copy(row1);
+        row.setField(3, "abc");
+        vertexBatchExecutor.addToBatch(row);
+
+        executeNGql("USE test_int");
+        vertexBatchExecutor.executeBatch(session);
+    }
+
+    /**
+     * test batch execute with invalid data and ignore
+     */
+    @Test
+    public void testExecuteBatchIgnoreInvalid() {
+        VertexExecutionOptions options = builder.setGraphSpace("test_int")
+                .setWriteMode(WriteModeEnum.INSERT)
+                .setFailureHandler(FailureHandlerEnum.IGNORE)
+                .setMaxRetries(2)
+                .build();
+        NebulaVertexBatchExecutor vertexBatchExecutor =
+                new NebulaVertexBatchExecutor(options, VidTypeEnum.INT, schema);
+        Row row = Row.copy(row1);
+        row.setField(3, "abc");
+        vertexBatchExecutor.addToBatch(row);
+
+        executeNGql("USE test_int");
+        vertexBatchExecutor.executeBatch(session);
+    }
+
+    /**
+     * test batch execute for string vid and insert mode
      */
     @Test
     public void testExecuteBatchWithStringVidAndInsert() {
@@ -245,7 +282,6 @@ public class NebulaVertexBatchExecutorTest extends NebulaITTestBase {
         vertexBatchExecutor.addToBatch(row2);
 
         executeNGql("USE test_string");
-
         vertexBatchExecutor.executeBatch(session);
     }
 
@@ -265,7 +301,6 @@ public class NebulaVertexBatchExecutorTest extends NebulaITTestBase {
         vertexBatchExecutor.addToBatch(row2);
 
         executeNGql("USE test_string");
-
         vertexBatchExecutor.executeBatch(session);
     }
 
@@ -284,7 +319,6 @@ public class NebulaVertexBatchExecutorTest extends NebulaITTestBase {
         vertexBatchExecutor.addToBatch(row2);
 
         executeNGql("USE test_string");
-
         vertexBatchExecutor.executeBatch(session);
     }
 

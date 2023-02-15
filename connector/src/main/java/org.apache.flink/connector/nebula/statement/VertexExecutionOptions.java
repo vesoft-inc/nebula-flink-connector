@@ -6,6 +6,7 @@
 package org.apache.flink.connector.nebula.statement;
 
 import static org.apache.flink.connector.nebula.utils.NebulaConstant.DEFAULT_BATCH_INTERVAL_MS;
+import static org.apache.flink.connector.nebula.utils.NebulaConstant.DEFAULT_EXECUTION_RETRY;
 import static org.apache.flink.connector.nebula.utils.NebulaConstant.DEFAULT_ROW_INFO_INDEX;
 import static org.apache.flink.connector.nebula.utils.NebulaConstant.DEFAULT_SCAN_LIMIT;
 import static org.apache.flink.connector.nebula.utils.NebulaConstant.DEFAULT_WRITE_BATCH_SIZE;
@@ -14,6 +15,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import org.apache.flink.connector.nebula.utils.DataTypeEnum;
+import org.apache.flink.connector.nebula.utils.FailureHandlerEnum;
 import org.apache.flink.connector.nebula.utils.PolicyEnum;
 import org.apache.flink.connector.nebula.utils.WriteModeEnum;
 
@@ -42,9 +44,11 @@ public class VertexExecutionOptions extends ExecutionOptions {
                                   WriteModeEnum mode,
                                   String tag,
                                   int idIndex,
-                                  int batchIntervalMs) {
+                                  int batchIntervalMs,
+                                  FailureHandlerEnum failureHandler,
+                                  int maxRetries) {
         super(graphSpace, executeStatement, fields, positions, noColumn, limit, startTime,
-                endTime, batch, policy, mode, batchIntervalMs);
+                endTime, batch, policy, mode, batchIntervalMs, failureHandler, maxRetries);
         this.tag = tag;
         this.idIndex = idIndex;
     }
@@ -79,7 +83,9 @@ public class VertexExecutionOptions extends ExecutionOptions {
                         .map(Objects::toString).orElse(null))
                 .setIdIndex(this.getIdIndex())
                 .setWriteMode(this.getWriteMode())
-                .setBatchIntervalMs(this.getBatchIntervalMs());
+                .setBatchIntervalMs(this.getBatchIntervalMs())
+                .setFailureHandler(this.getFailureHandler())
+                .setMaxRetries(this.getMaxRetries());
     }
 
     public static class ExecutionOptionBuilder {
@@ -97,6 +103,8 @@ public class VertexExecutionOptions extends ExecutionOptions {
         private PolicyEnum policy = null;
         private WriteModeEnum mode = WriteModeEnum.INSERT;
         private int idIndex = DEFAULT_ROW_INFO_INDEX;
+        private FailureHandlerEnum failureHandler = FailureHandlerEnum.IGNORE;
+        private int maxRetries = DEFAULT_EXECUTION_RETRY;
 
         public ExecutionOptionBuilder setGraphSpace(String graphSpace) {
             this.graphSpace = graphSpace;
@@ -178,6 +186,16 @@ public class VertexExecutionOptions extends ExecutionOptions {
             return this;
         }
 
+        public ExecutionOptionBuilder setFailureHandler(FailureHandlerEnum failureHandler) {
+            this.failureHandler = failureHandler;
+            return this;
+        }
+
+        public ExecutionOptionBuilder setMaxRetries(int maxRetries) {
+            this.maxRetries = maxRetries;
+            return this;
+        }
+
         @Deprecated
         public VertexExecutionOptions builder() {
             return build();
@@ -192,7 +210,7 @@ public class VertexExecutionOptions extends ExecutionOptions {
             }
             return new VertexExecutionOptions(graphSpace, executeStatement, fields,
                     positions, noColumn, limit, startTime, endTime, batchSize, policy, mode, tag,
-                    idIndex, batchIntervalMs);
+                    idIndex, batchIntervalMs, failureHandler, maxRetries);
         }
     }
 }

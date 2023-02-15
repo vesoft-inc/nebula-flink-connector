@@ -12,7 +12,6 @@ import static org.apache.flink.connector.nebula.NebulaValueUtils.rowOf;
 import static org.apache.flink.connector.nebula.NebulaValueUtils.timeOf;
 import static org.apache.flink.connector.nebula.NebulaValueUtils.valueOf;
 
-import com.vesoft.nebula.client.graph.exception.IOErrorException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -40,6 +39,9 @@ public class AbstractNebulaOutputFormatITTest extends NebulaITTestBase {
             LoggerFactory.getLogger(AbstractNebulaOutputFormatITTest.class);
 
     private static TableEnvironment tableEnvironment;
+
+    class FlinkTestException extends Exception {
+    }
 
     @BeforeClass
     public static void beforeAll() {
@@ -157,6 +159,67 @@ public class AbstractNebulaOutputFormatITTest extends NebulaITTestBase {
                         + " ORDER BY key LIMIT 10"
         );
 
+    }
+
+    private void runSinkVertexInvalid(String failureHandler)
+            throws ExecutionException, InterruptedException, FlinkTestException {
+        Configuration configuration = tableEnvironment.getConfig().getConfiguration();
+        configuration.setString("table.dml-sync", "true");
+
+        tableEnvironment.executeSql(
+                "CREATE TABLE person_fail ("
+                        + "vid STRING,"
+                        + "col5 STRING"
+                        + ")"
+                        + "WITH ("
+                        + "'connector'='nebula',"
+                        + "'meta-address'='"
+                        + META_ADDRESS
+                        + "',"
+                        + "'graph-address'='"
+                        + GRAPH_ADDRESS
+                        + "',"
+                        + "'username'='"
+                        + USERNAME
+                        + "',"
+                        + "'password'='"
+                        + PASSWORD
+                        + "',"
+                        + "'graph-space'='flink_test',"
+                        + "'label-name'='person',"
+                        + "'data-type'='vertex',"
+                        + "'failure-handler'='"
+                        + failureHandler
+                        + "',"
+                        + "'max-retries'='0'"
+                        + ")"
+        );
+
+        try {
+            tableEnvironment.executeSql(
+                    "INSERT INTO person_fail VALUES ('61', 'abc')"
+            ).await();
+        } catch (RuntimeException e) {
+            throw new FlinkTestException();
+        }
+    }
+
+    /**
+     * sink Nebula Graph Vertex Data and fail with error
+     */
+    @Test(expected = FlinkTestException.class)
+    public void testSinkVertexDataFailInvalid()
+            throws ExecutionException, InterruptedException, FlinkTestException {
+        runSinkVertexInvalid("fail");
+    }
+
+    /**
+     * sink Nebula Graph Vertex Data and ignore error
+     */
+    @Test
+    public void testSinkVertexDataIgnoreInvalid()
+            throws ExecutionException, InterruptedException, FlinkTestException {
+        runSinkVertexInvalid("ignore");
     }
 
     @Test
@@ -410,6 +473,70 @@ public class AbstractNebulaOutputFormatITTest extends NebulaITTestBase {
                         + " r.col8, r.col9, r.col10, r.col11, r.col12, r.col13, r.col14"
                         + " LIMIT 10"
         );
+    }
+
+    private void runSinkEdgeInvalid(String failureHandler)
+            throws ExecutionException, InterruptedException, FlinkTestException {
+        Configuration configuration = tableEnvironment.getConfig().getConfiguration();
+        configuration.setString("table.dml-sync", "true");
+
+        tableEnvironment.executeSql(
+                "CREATE TABLE friend_fail ("
+                        + "src STRING,"
+                        + "dst STRING,"
+                        + "col5 STRING"
+                        + ")"
+                        + "WITH ("
+                        + "'connector'='nebula',"
+                        + "'meta-address'='"
+                        + META_ADDRESS
+                        + "',"
+                        + "'graph-address'='"
+                        + GRAPH_ADDRESS
+                        + "',"
+                        + "'username'='"
+                        + USERNAME
+                        + "',"
+                        + "'password'='"
+                        + PASSWORD
+                        + "',"
+                        + "'graph-space'='flink_test',"
+                        + "'label-name'='friend',"
+                        + "'src-id-index'='0',"
+                        + "'dst-id-index'='1',"
+                        + "'data-type'='edge',"
+                        + "'failure-handler'='"
+                        + failureHandler
+                        + "',"
+                        + "'max-retries'='0'"
+                        + ")"
+        );
+
+        try {
+            tableEnvironment.executeSql(
+                    "INSERT INTO friend_fail VALUES ('61', '62', 'abc')"
+            ).await();
+        } catch (RuntimeException e) {
+            throw new FlinkTestException();
+        }
+    }
+
+    /**
+     * sink Nebula Graph Edge Data and fail with error
+     */
+    @Test(expected = FlinkTestException.class)
+    public void testSinkEdgeDataFailInvalid()
+            throws ExecutionException, InterruptedException, FlinkTestException {
+        runSinkEdgeInvalid("fail");
+    }
+
+    /**
+     * sink Nebula Graph Edge Data and ignore error
+     */
+    @Test
+    public void testSinkEdgeDataIgnoreInvalid()
+            throws ExecutionException, InterruptedException, FlinkTestException {
+        runSinkEdgeInvalid("ignore");
     }
 
     @Test

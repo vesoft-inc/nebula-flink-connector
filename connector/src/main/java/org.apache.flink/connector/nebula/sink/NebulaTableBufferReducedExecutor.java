@@ -9,7 +9,7 @@ import org.apache.flink.table.connector.sink.DynamicTableSink.DataStructureConve
 import org.apache.flink.table.data.RowData;
 import org.apache.flink.types.Row;
 
-public class NebulaTableBufferReducedExecutor implements NebulaBatchExecutor<RowData> {
+public class NebulaTableBufferReducedExecutor extends NebulaBatchExecutor<RowData> {
     private final DataStructureConverter dataStructureConverter;
     private final Function<Row, Row> keyExtractor;
     private final NebulaBatchExecutor<Row> insertExecutor;

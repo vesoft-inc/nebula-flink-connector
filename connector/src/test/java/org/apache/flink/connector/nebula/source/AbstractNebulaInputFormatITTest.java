@@ -10,13 +10,18 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+import org.apache.flink.connector.nebula.MockData;
 import org.apache.flink.connector.nebula.NebulaITTestBase;
 import org.apache.flink.connector.nebula.utils.NebulaEdge;
 import org.apache.flink.connector.nebula.utils.NebulaEdges;
 import org.apache.flink.connector.nebula.utils.NebulaVertex;
 import org.apache.flink.connector.nebula.utils.NebulaVertices;
+import org.apache.flink.table.api.EnvironmentSettings;
 import org.apache.flink.table.api.Table;
+import org.apache.flink.table.api.TableEnvironment;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,8 +32,25 @@ public class AbstractNebulaInputFormatITTest extends NebulaITTestBase {
     private static final Logger LOGGER =
             LoggerFactory.getLogger(AbstractNebulaInputFormatITTest.class);
 
+    private static TableEnvironment tableEnvironment;
     private final String[] colNames = {"col1", "col2", "col3", "col4", "col5", "col6", "col7",
                                        "col8", "col9", "col10", "col11", "col12", "col13", "col14"};
+
+    @BeforeClass
+    public static void beforeAll() {
+        initializeNebulaSession();
+        initializeNebulaSchema(MockData.createFlinkTestSpace());
+    }
+
+    @AfterClass
+    public static void afterAll() {
+        closeNebulaSession();
+    }
+
+    @Before
+    public void before() {
+        tableEnvironment = TableEnvironment.create(EnvironmentSettings.inStreamingMode());
+    }
 
     /**
      * construct flink vertex data

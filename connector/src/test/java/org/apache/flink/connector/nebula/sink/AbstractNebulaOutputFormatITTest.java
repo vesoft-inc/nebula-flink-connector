@@ -12,17 +12,24 @@ import static org.apache.flink.connector.nebula.NebulaValueUtils.rowOf;
 import static org.apache.flink.connector.nebula.NebulaValueUtils.timeOf;
 import static org.apache.flink.connector.nebula.NebulaValueUtils.valueOf;
 
+import com.vesoft.nebula.client.graph.exception.IOErrorException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 import org.apache.flink.configuration.Configuration;
+import org.apache.flink.connector.nebula.MockData;
 import org.apache.flink.connector.nebula.NebulaITTestBase;
+import org.apache.flink.table.api.EnvironmentSettings;
 import org.apache.flink.table.api.StatementSet;
+import org.apache.flink.table.api.TableEnvironment;
 import org.apache.flink.table.planner.factories.TestValuesTableFactory;
 import org.apache.flink.types.Row;
 import org.apache.flink.types.RowKind;
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,6 +38,24 @@ public class AbstractNebulaOutputFormatITTest extends NebulaITTestBase {
 
     private static final Logger LOGGER =
             LoggerFactory.getLogger(AbstractNebulaOutputFormatITTest.class);
+
+    private static TableEnvironment tableEnvironment;
+
+    @BeforeClass
+    public static void beforeAll() {
+        initializeNebulaSession();
+        initializeNebulaSchema(MockData.createFlinkTestSpace());
+    }
+
+    @AfterClass
+    public static void afterAll() {
+        closeNebulaSession();
+    }
+
+    @Before
+    public void before() {
+        tableEnvironment = TableEnvironment.create(EnvironmentSettings.inStreamingMode());
+    }
 
     /**
      * sink Nebula Graph Vertex Data with default INSERT mode
@@ -67,7 +92,7 @@ public class AbstractNebulaOutputFormatITTest extends NebulaITTestBase {
                         + GRAPH_ADDRESS
                         + "',"
                         + "'username'='"
-                        + USER_NAME
+                        + USERNAME
                         + "',"
                         + "'password'='"
                         + PASSWORD
@@ -206,7 +231,7 @@ public class AbstractNebulaOutputFormatITTest extends NebulaITTestBase {
                         + GRAPH_ADDRESS
                         + "',"
                         + "'username'='"
-                        + USER_NAME
+                        + USERNAME
                         + "',"
                         + "'password'='"
                         + PASSWORD
@@ -268,7 +293,7 @@ public class AbstractNebulaOutputFormatITTest extends NebulaITTestBase {
                         + GRAPH_ADDRESS
                         + "',"
                         + "'username'='"
-                        + USER_NAME
+                        + USERNAME
                         + "',"
                         + "'password'='"
                         + PASSWORD
@@ -347,7 +372,7 @@ public class AbstractNebulaOutputFormatITTest extends NebulaITTestBase {
                         + GRAPH_ADDRESS
                         + "',"
                         + "'username'='"
-                        + USER_NAME
+                        + USERNAME
                         + "',"
                         + "'password'='"
                         + PASSWORD
@@ -462,7 +487,7 @@ public class AbstractNebulaOutputFormatITTest extends NebulaITTestBase {
                         + GRAPH_ADDRESS
                         + "',"
                         + "'username'='"
-                        + USER_NAME
+                        + USERNAME
                         + "',"
                         + "'password'='"
                         + PASSWORD

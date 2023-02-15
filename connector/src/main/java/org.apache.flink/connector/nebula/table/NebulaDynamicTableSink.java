@@ -4,9 +4,12 @@ import org.apache.flink.connector.nebula.connection.NebulaClientOptions;
 import org.apache.flink.connector.nebula.connection.NebulaGraphConnectionProvider;
 import org.apache.flink.connector.nebula.connection.NebulaMetaConnectionProvider;
 import org.apache.flink.connector.nebula.sink.NebulaBatchOutputFormat;
-import org.apache.flink.connector.nebula.sink.NebulaBatchTableOutputFormat;
+import org.apache.flink.connector.nebula.sink.NebulaEdgeBatchTableOutputFormat;
 import org.apache.flink.connector.nebula.sink.NebulaSinkFunction;
+import org.apache.flink.connector.nebula.sink.NebulaVertexBatchTableOutputFormat;
+import org.apache.flink.connector.nebula.statement.EdgeExecutionOptions;
 import org.apache.flink.connector.nebula.statement.ExecutionOptions;
+import org.apache.flink.connector.nebula.statement.VertexExecutionOptions;
 import org.apache.flink.table.connector.ChangelogMode;
 import org.apache.flink.table.connector.sink.DynamicTableSink;
 import org.apache.flink.table.connector.sink.SinkFunctionProvider;
@@ -56,13 +59,19 @@ public class NebulaDynamicTableSink implements DynamicTableSink {
 
         NebulaGraphConnectionProvider graphProvider = new NebulaGraphConnectionProvider(builder);
         NebulaMetaConnectionProvider metaProvider = new NebulaMetaConnectionProvider(builder);
-        final DataStructureConverter converter =
+        DataStructureConverter converter =
                 context.createDataStructureConverter(producedDataType);
-        final NebulaBatchOutputFormat outPutFormat =
-                new NebulaBatchTableOutputFormat(graphProvider, metaProvider, converter);
-
-        outPutFormat.setExecutionOptions(executionOptions);
-        NebulaSinkFunction<RowData> sinkFunction = new NebulaSinkFunction<>(outPutFormat);
+        NebulaBatchOutputFormat<RowData, ?> outputFormat;
+        if (executionOptions instanceof VertexExecutionOptions) {
+            outputFormat = new NebulaVertexBatchTableOutputFormat(graphProvider, metaProvider,
+                    (VertexExecutionOptions) executionOptions, converter);
+        } else if (executionOptions instanceof EdgeExecutionOptions) {
+            outputFormat = new NebulaEdgeBatchTableOutputFormat(graphProvider, metaProvider,
+                    (EdgeExecutionOptions) executionOptions, converter);
+        } else {
+            throw new IllegalArgumentException("unknown execution options type");
+        }
+        NebulaSinkFunction<RowData> sinkFunction = new NebulaSinkFunction<>(outputFormat);
         return SinkFunctionProvider.of(sinkFunction);
     }
 

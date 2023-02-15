@@ -6,34 +6,20 @@
 package org.apache.flink.connector.nebula.sink;
 
 import com.vesoft.nebula.client.graph.net.Session;
-import java.util.Map;
-import org.apache.flink.connector.nebula.statement.ExecutionOptions;
-import org.apache.flink.connector.nebula.utils.VidTypeEnum;
 
-public abstract class NebulaBatchExecutor<T> {
-
-    protected final ExecutionOptions executionOptions;
-    protected final Map<String, Integer> schema;
-    protected final VidTypeEnum vidType;
-
-    public NebulaBatchExecutor(ExecutionOptions executionOptions,
-                               VidTypeEnum vidType, Map<String, Integer> schema) {
-        this.executionOptions = executionOptions;
-        this.vidType = vidType;
-        this.schema = schema;
-    }
+public interface NebulaBatchExecutor<T> {
 
     /**
      * put record into buffer
      *
      * @param record represent vertex or edge
      */
-    abstract void addToBatch(T record);
+    void addToBatch(T record);
 
     /**
-     * execute the insert statement
+     * execute the statement
      *
      * @param session graph session
      */
-    abstract String executeBatch(Session session);
+    String executeBatch(Session session);
 }

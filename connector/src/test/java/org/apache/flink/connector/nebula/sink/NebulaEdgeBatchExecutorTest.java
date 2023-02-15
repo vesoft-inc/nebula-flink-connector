@@ -99,12 +99,12 @@ public class NebulaEdgeBatchExecutorTest {
      */
     @Test
     public void testAddToBatchWithInsert() {
-        ExecutionOptions options = builder
+        EdgeExecutionOptions options = builder
                 .setGraphSpace("test_int")
                 .setWriteMode(WriteModeEnum.INSERT)
-                .builder();
-        NebulaEdgeBatchExecutor<Row> edgeBatchExecutor =
-                new NebulaEdgeBatchExecutor<>(options, VidTypeEnum.INT, schema);
+                .build();
+        NebulaEdgeBatchExecutor edgeBatchExecutor =
+                new NebulaEdgeBatchExecutor(options, VidTypeEnum.INT, schema);
         edgeBatchExecutor.addToBatch(row1);
     }
 
@@ -113,13 +113,13 @@ public class NebulaEdgeBatchExecutorTest {
      */
     @Test
     public void testAddToBatchWithInsertPolicy() {
-        ExecutionOptions options = builder
+        EdgeExecutionOptions options = builder
                 .setGraphSpace("test_int")
                 .setPolicy("HASH")
                 .setWriteMode(WriteModeEnum.INSERT)
-                .builder();
-        NebulaEdgeBatchExecutor<Row> edgeBatchExecutor =
-                new NebulaEdgeBatchExecutor<>(options, VidTypeEnum.INT, schema);
+                .build();
+        NebulaEdgeBatchExecutor edgeBatchExecutor =
+                new NebulaEdgeBatchExecutor(options, VidTypeEnum.INT, schema);
         edgeBatchExecutor.addToBatch(row1);
     }
 
@@ -128,12 +128,12 @@ public class NebulaEdgeBatchExecutorTest {
      */
     @Test
     public void testAddToBatchWithUpdate() {
-        ExecutionOptions options = builder
+        EdgeExecutionOptions options = builder
                 .setGraphSpace("test_int")
                 .setWriteMode(WriteModeEnum.UPDATE)
-                .builder();
-        NebulaEdgeBatchExecutor<Row> edgeBatchExecutor =
-                new NebulaEdgeBatchExecutor<>(options, VidTypeEnum.INT, schema);
+                .build();
+        NebulaEdgeBatchExecutor edgeBatchExecutor =
+                new NebulaEdgeBatchExecutor(options, VidTypeEnum.INT, schema);
         edgeBatchExecutor.addToBatch(row1);
     }
 
@@ -142,13 +142,13 @@ public class NebulaEdgeBatchExecutorTest {
      */
     @Test
     public void testAddToBatchWithUpdatePolicy() {
-        ExecutionOptions options = builder
+        EdgeExecutionOptions options = builder
                 .setGraphSpace("test_int")
                 .setPolicy("HASH")
                 .setWriteMode(WriteModeEnum.UPDATE)
-                .builder();
-        NebulaEdgeBatchExecutor<Row> edgeBatchExecutor =
-                new NebulaEdgeBatchExecutor<>(options, VidTypeEnum.INT, schema);
+                .build();
+        NebulaEdgeBatchExecutor edgeBatchExecutor =
+                new NebulaEdgeBatchExecutor(options, VidTypeEnum.INT, schema);
         edgeBatchExecutor.addToBatch(row1);
     }
 
@@ -157,12 +157,12 @@ public class NebulaEdgeBatchExecutorTest {
      */
     @Test
     public void testAddToBatchWithDelete() {
-        ExecutionOptions options = builder
+        EdgeExecutionOptions options = builder
                 .setGraphSpace("test_int")
                 .setWriteMode(WriteModeEnum.DELETE)
-                .builder();
-        NebulaEdgeBatchExecutor<Row> edgeBatchExecutor =
-                new NebulaEdgeBatchExecutor<>(options, VidTypeEnum.INT, schema);
+                .build();
+        NebulaEdgeBatchExecutor edgeBatchExecutor =
+                new NebulaEdgeBatchExecutor(options, VidTypeEnum.INT, schema);
         edgeBatchExecutor.addToBatch(row1);
     }
 
@@ -171,13 +171,13 @@ public class NebulaEdgeBatchExecutorTest {
      */
     @Test
     public void testAddToBatchWithDeletePolicy() {
-        ExecutionOptions options = builder
+        EdgeExecutionOptions options = builder
                 .setGraphSpace("test_int")
                 .setPolicy("HASH")
                 .setWriteMode(WriteModeEnum.DELETE)
-                .builder();
-        NebulaEdgeBatchExecutor<Row> edgeBatchExecutor =
-                new NebulaEdgeBatchExecutor<>(options, VidTypeEnum.INT, schema);
+                .build();
+        NebulaEdgeBatchExecutor edgeBatchExecutor =
+                new NebulaEdgeBatchExecutor(options, VidTypeEnum.INT, schema);
         edgeBatchExecutor.addToBatch(row1);
     }
 
@@ -186,13 +186,13 @@ public class NebulaEdgeBatchExecutorTest {
      */
     @Test
     public void testExecuteBatch() {
-        ExecutionOptions options = builder
+        EdgeExecutionOptions options = builder
                 .setGraphSpace("test_int")
                 .setPolicy("HASH")
                 .setWriteMode(WriteModeEnum.INSERT)
-                .builder();
-        NebulaEdgeBatchExecutor<Row> edgeBatchExecutor =
-                new NebulaEdgeBatchExecutor<>(options, VidTypeEnum.INT, schema);
+                .build();
+        NebulaEdgeBatchExecutor edgeBatchExecutor =
+                new NebulaEdgeBatchExecutor(options, VidTypeEnum.INT, schema);
         edgeBatchExecutor.addToBatch(row1);
         edgeBatchExecutor.addToBatch(row2);
 
@@ -218,13 +218,13 @@ public class NebulaEdgeBatchExecutorTest {
     @Test
     public void testExecuteBatchWithUpdate() {
         testExecuteBatch();
-        ExecutionOptions options = builder
+        EdgeExecutionOptions options = builder
                 .setGraphSpace("test_int")
                 .setPolicy("HASH")
                 .setWriteMode(WriteModeEnum.UPDATE)
-                .builder();
-        NebulaEdgeBatchExecutor<Row> edgeBatchExecutor =
-                new NebulaEdgeBatchExecutor<>(options, VidTypeEnum.INT, schema);
+                .build();
+        NebulaEdgeBatchExecutor edgeBatchExecutor =
+                new NebulaEdgeBatchExecutor(options, VidTypeEnum.INT, schema);
         edgeBatchExecutor.addToBatch(row1);
         edgeBatchExecutor.addToBatch(row2);
 
@@ -249,12 +249,12 @@ public class NebulaEdgeBatchExecutorTest {
      */
     @Test
     public void testExecuteBatchWithDelete() {
-        ExecutionOptions options = builder.setGraphSpace("test_int")
+        EdgeExecutionOptions options = builder.setGraphSpace("test_int")
                 .setPolicy("HASH")
                 .setWriteMode(WriteModeEnum.DELETE)
-                .builder();
-        NebulaEdgeBatchExecutor<Row> edgeBatchExecutor =
-                new NebulaEdgeBatchExecutor<>(options, VidTypeEnum.INT, schema);
+                .build();
+        NebulaEdgeBatchExecutor edgeBatchExecutor =
+                new NebulaEdgeBatchExecutor(options, VidTypeEnum.INT, schema);
         edgeBatchExecutor.addToBatch(row1);
         edgeBatchExecutor.addToBatch(row2);
 
@@ -279,12 +279,12 @@ public class NebulaEdgeBatchExecutorTest {
      */
     @Test
     public void testExecuteBatchWithStringVidAndInsert() {
-        ExecutionOptions options = builder
+        EdgeExecutionOptions options = builder
                 .setGraphSpace("test_string")
                 .setWriteMode(WriteModeEnum.INSERT)
-                .builder();
-        NebulaEdgeBatchExecutor<Row> edgeBatchExecutor =
-                new NebulaEdgeBatchExecutor<>(options, VidTypeEnum.STRING, schema);
+                .build();
+        NebulaEdgeBatchExecutor edgeBatchExecutor =
+                new NebulaEdgeBatchExecutor(options, VidTypeEnum.STRING, schema);
         edgeBatchExecutor.addToBatch(row1);
         edgeBatchExecutor.addToBatch(row2);
 
@@ -310,12 +310,12 @@ public class NebulaEdgeBatchExecutorTest {
     @Test
     public void testExecuteBatchWithStringVidAndUpdate() {
         testExecuteBatchWithStringVidAndInsert();
-        ExecutionOptions options = builder
+        EdgeExecutionOptions options = builder
                 .setGraphSpace("test_string")
                 .setWriteMode(WriteModeEnum.UPDATE)
-                .builder();
-        NebulaEdgeBatchExecutor<Row> edgeBatchExecutor =
-                new NebulaEdgeBatchExecutor<>(options, VidTypeEnum.STRING, schema);
+                .build();
+        NebulaEdgeBatchExecutor edgeBatchExecutor =
+                new NebulaEdgeBatchExecutor(options, VidTypeEnum.STRING, schema);
         edgeBatchExecutor.addToBatch(row1);
         edgeBatchExecutor.addToBatch(row2);
 
@@ -340,12 +340,12 @@ public class NebulaEdgeBatchExecutorTest {
      */
     @Test
     public void testExecuteBatchWithStringVidAndDelete() {
-        ExecutionOptions options = builder
+        EdgeExecutionOptions options = builder
                 .setGraphSpace("test_string")
                 .setWriteMode(WriteModeEnum.DELETE)
-                .builder();
-        NebulaEdgeBatchExecutor<Row> edgeBatchExecutor =
-                new NebulaEdgeBatchExecutor<>(options, VidTypeEnum.STRING, schema);
+                .build();
+        NebulaEdgeBatchExecutor edgeBatchExecutor =
+                new NebulaEdgeBatchExecutor(options, VidTypeEnum.STRING, schema);
         edgeBatchExecutor.addToBatch(row1);
         edgeBatchExecutor.addToBatch(row2);
 

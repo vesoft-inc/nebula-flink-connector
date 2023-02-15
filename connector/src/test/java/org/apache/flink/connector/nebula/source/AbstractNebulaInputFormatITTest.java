@@ -5,56 +5,28 @@
 
 package org.apache.flink.connector.nebula.source;
 
-import com.vesoft.nebula.client.graph.NebulaPoolConfig;
-import com.vesoft.nebula.client.graph.data.HostAddress;
-import com.vesoft.nebula.client.graph.data.ResultSet;
 import com.vesoft.nebula.client.graph.exception.IOErrorException;
-import com.vesoft.nebula.client.graph.net.NebulaPool;
-import com.vesoft.nebula.client.graph.net.Session;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import org.apache.flink.connector.nebula.utils.NebulaConstant;
+import org.apache.flink.connector.nebula.NebulaITTestBase;
 import org.apache.flink.connector.nebula.utils.NebulaEdge;
 import org.apache.flink.connector.nebula.utils.NebulaEdges;
 import org.apache.flink.connector.nebula.utils.NebulaVertex;
 import org.apache.flink.connector.nebula.utils.NebulaVertices;
-import org.apache.flink.table.api.EnvironmentSettings;
 import org.apache.flink.table.api.Table;
-import org.apache.flink.table.api.TableEnvironment;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-public class AbstractNebulaInputFormatITTest {
+public class AbstractNebulaInputFormatITTest extends NebulaITTestBase {
 
     private static final Logger LOGGER =
             LoggerFactory.getLogger(AbstractNebulaInputFormatITTest.class);
-    private static final String STATIC_IP = "127.0.0.1";
-    private static final String META_ADDRESS = STATIC_IP + NebulaConstant.COLON + "9559";
-    private static final String GRAPH_ADDRESS = STATIC_IP + NebulaConstant.COLON + "9669";
-    private static final String USERNAME = "root";
-    private static final String PASSWORD = "nebula";
 
-    private static final String[] stats = new String[]{
-        "CREATE SPACE IF NOT EXISTS `flinkSinkInput` (partition_num = 100, charset = utf8,"
-                    + " replica_factor = 3, collate = utf8_bin, vid_type = INT64);"
-                    + "USE `flinkSinkInput`;",
-        "CREATE TAG IF NOT EXISTS person (col1 string, col2 fixed_string(8), col3 int8,"
-                    + " col4 int16, col5 int32,"
-                    + " col6 int64, col7 date, col8 datetime, col9 timestamp, col10 bool,"
-                    + " col11 double,"
-                    + " col12 float, col13 time, col14 geography);",
-        "CREATE EDGE IF NOT EXISTS friend (col1 string, col2 fixed_string(8), col3 int8,"
-                    + " col4 int16, col5 int32,"
-                    + " col6 int64, col7 date, col8 datetime, col9 timestamp, col10 bool,"
-                    + " col11 double,"
-                    + " col12 float, col13 time, col14 geography);"
-    };
     private final String[] colNames = {"col1", "col2", "col3", "col4", "col5", "col6", "col7",
                                        "col8", "col9", "col10", "col11", "col12", "col13", "col14"};
 
@@ -155,41 +127,14 @@ public class AbstractNebulaInputFormatITTest {
     }
 
     @Before
-    public void mockNebulaData() {
-        NebulaPoolConfig nebulaPoolConfig = new NebulaPoolConfig();
-        nebulaPoolConfig.setMaxConnSize(100);
-        String[] addrAndPort = GRAPH_ADDRESS.split(NebulaConstant.COLON);
-        List<HostAddress> addresses = Arrays.asList(
-                new HostAddress(addrAndPort[0], Integer.parseInt(addrAndPort[1])));
-        NebulaPool pool = new NebulaPool();
-        Session session = null;
-        try {
-            boolean initResult = pool.init(addresses, nebulaPoolConfig);
-            if (!initResult) {
-                LOGGER.error("pool init failed.");
-                assert (false);
-            }
-            session = pool.getSession(USERNAME, PASSWORD, true);
-            createSchema(session);
-            insertData(session);
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            if (session != null) {
-                session.release();
-            }
-            pool.close();
-        }
+    public void insertData() throws IOErrorException {
+        executeNGql(getVertexInsertStatement());
+        executeNGql(getEdgeInsertStatement());
     }
 
     @Test
     public void testVertexSource() throws ExecutionException, InterruptedException {
-        EnvironmentSettings settings = EnvironmentSettings.newInstance()
-                .inStreamingMode()
-                .build();
-        TableEnvironment tableEnv = TableEnvironment.create(settings);
-
-        String creatSourceDDL = "CREATE TABLE `personTable` ("
+        tableEnvironment.executeSql("CREATE TABLE `person` ("
                 + " vid BIGINT,"
                 + " col1 STRING,"
                 + " col2 STRING,"
@@ -212,12 +157,12 @@ public class AbstractNebulaInputFormatITTest {
                 + " 'username' = 'root',"
                 + " 'password' = 'nebula',"
                 + " 'data-type' = 'vertex',"
-                + " 'graph-space' = 'flinkSinkInput',"
+                + " 'graph-space' = 'flink_test',"
                 + " 'label-name' = 'person'"
-                + ")";
-        tableEnv.executeSql(creatSourceDDL);
+                + ")"
+        );
 
-        String creatSinkDDL = "CREATE TABLE `personSinkTable` ("
+        tableEnvironment.executeSql("CREATE TABLE `person_sink` ("
                 + " vid BIGINT,"
                 + " col1 STRING,"
                 + " col2 STRING,"
@@ -235,21 +180,16 @@ public class AbstractNebulaInputFormatITTest {
                 + " col14 STRING"
                 + ") WITH ("
                 + " 'connector' = 'print'"
-                + ")";
-        tableEnv.executeSql(creatSinkDDL);
+                + ")"
+        );
 
-        Table table = tableEnv.sqlQuery("SELECT * FROM `personTable`");
-        table.executeInsert("`personSinkTable`").await();
+        Table table = tableEnvironment.sqlQuery("SELECT * FROM `person`");
+        table.executeInsert("`person_sink`").await();
     }
 
     @Test
     public void testEdgeSource() throws ExecutionException, InterruptedException {
-        EnvironmentSettings settings = EnvironmentSettings.newInstance()
-                .inStreamingMode()
-                .build();
-        TableEnvironment tableEnv = TableEnvironment.create(settings);
-
-        String creatSourceDDL = "CREATE TABLE `friendTable` ("
+        tableEnvironment.executeSql("CREATE TABLE `friend` ("
                 + " sid BIGINT,"
                 + " did BIGINT,"
                 + " rid BIGINT,"
@@ -273,16 +213,16 @@ public class AbstractNebulaInputFormatITTest {
                 + " 'graph-address' = '" + GRAPH_ADDRESS + "',"
                 + " 'username' = 'root',"
                 + " 'password' = 'nebula',"
-                + " 'graph-space' = 'flinkSinkInput',"
+                + " 'graph-space' = 'flink_test',"
                 + " 'label-name' = 'friend',"
                 + " 'data-type'='edge',"
                 + " 'src-id-index'='0',"
                 + " 'dst-id-index'='1',"
                 + " 'rank-id-index'='2'"
-                + ")";
-        tableEnv.executeSql(creatSourceDDL);
+                + ")"
+        );
 
-        String creatSinkDDL = "CREATE TABLE `friendSinkTable` ("
+        tableEnvironment.executeSql("CREATE TABLE `friend_sink` ("
                 + " sid BIGINT,"
                 + " did BIGINT,"
                 + " rid BIGINT,"
@@ -302,19 +242,14 @@ public class AbstractNebulaInputFormatITTest {
                 + " col14 STRING"
                 + ") WITH ("
                 + " 'connector' = 'print'"
-                + ")";
-        tableEnv.executeSql(creatSinkDDL);
+                + ")"
+        );
 
-        Table table = tableEnv.sqlQuery("SELECT * FROM `friendTable`");
-        table.executeInsert("`friendSinkTable`").await();
+        Table table = tableEnvironment.sqlQuery("SELECT * FROM `friend`");
+        table.executeInsert("`friend_sink`").await();
     }
 
-    private void insertData(Session session) throws IOErrorException {
-        executeSql(getVertexInsertStat(), session);
-        executeSql(getEdgeInsertStat(), session);
-    }
-
-    private String getVertexInsertStat() {
+    private String getVertexInsertStatement() {
         List<List<String>> persons = constructVertexSourceData();
         List<NebulaVertex> vertices = new ArrayList<>();
         for (List<String> person : persons) {
@@ -330,7 +265,7 @@ public class AbstractNebulaInputFormatITTest {
         return nebulaVertices.getInsertStatement();
     }
 
-    private String getEdgeInsertStat() {
+    private String getEdgeInsertStatement() {
         List<List<String>> friends = constructEdgeSourceData();
         List<NebulaEdge> edges = new ArrayList<>();
         for (List<String> friend : friends) {
@@ -345,24 +280,5 @@ public class AbstractNebulaInputFormatITTest {
                 null
         );
         return nebulaEdges.getInsertStatement();
-    }
-
-    private void createSchema(Session session) throws IOErrorException {
-        for (String stat : stats) {
-            executeSql(stat, session);
-        }
-    }
-
-    private void executeSql(String stat, Session session) throws IOErrorException {
-        ResultSet resp = session.execute(stat);
-        try {
-            TimeUnit.SECONDS.sleep(2);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        if (!resp.isSucceeded()) {
-            LOGGER.error("Execute {}, but failed {}", stat, resp.getErrorMessage());
-            assert (false);
-        }
     }
 }

@@ -25,9 +25,9 @@ import org.apache.flink.types.Row;
  *                 .setIdIndex(0)
  *                 .setFields(Arrays.asList("name", "age"))
  *                 .setPositions(Arrays.asList(1, 2))
- *                 .setBatch(100)
+ *                 .setBatchSize(100)
  *                 .setPolicy("hash")
- *                 .builder();
+ *                 .build();
  *
  * </code></pre>
  *
@@ -42,8 +42,8 @@ import org.apache.flink.types.Row;
  *                 .setRankIndex(2)
  *                 .setFields(Arrays.asList("src", "dst", "degree", "start"))
  *                 .setPositions(Arrays.asList(0, 1, 3, 4))
- *                 .setBatch(2)
- *                 .builder();
+ *                 .setBatchSize(2)
+ *                 .build();
  *
  * </code></pre>
  *
@@ -54,7 +54,7 @@ import org.apache.flink.types.Row;
  *                 .setTag("player")
  *                 .setFields(Arrays.asList("name", "age"))
  *                 .setLimit(100)
- *                 .builder();
+ *                 .build();
  * </code></pre>
  *
  * <p>for NebulaGraph Edge Source
@@ -66,7 +66,7 @@ import org.apache.flink.types.Row;
  *                 //.setLimit(100)
  *                 //.setStartTime(0)
  *                 //.setEndTime(Long.MAX_VALUE)
- *                 .builder();
+ *                 .build();
  * </code></pre>
  *
  * @see Row
@@ -119,7 +119,7 @@ public abstract class ExecutionOptions implements Serializable {
     /**
      * data amount one batch for insert
      */
-    private long batch;
+    private int batchSize;
 
     /**
      * policy for vertexId or edge src、 dst, see {@link PolicyEnum}
@@ -134,7 +134,7 @@ public abstract class ExecutionOptions implements Serializable {
     /**
      * interval between write submit
      */
-    private long batchIntervalMs;
+    private int batchIntervalMs;
 
 
     protected ExecutionOptions(String graphSpace,
@@ -145,12 +145,11 @@ public abstract class ExecutionOptions implements Serializable {
                                int limit,
                                long startTime,
                                long endTime,
-                               long batch,
+                               int batchSize,
                                PolicyEnum policy,
                                WriteModeEnum writeMode,
-                               long batchIntervalMs) {
+                               int batchIntervalMs) {
         this.graphSpace = graphSpace;
-
         this.executeStatement = executeStatement;
         this.fields = fields;
         this.positions = positions;
@@ -158,7 +157,7 @@ public abstract class ExecutionOptions implements Serializable {
         this.limit = limit;
         this.startTime = startTime;
         this.endTime = endTime;
-        this.batch = batch;
+        this.batchSize = batchSize;
         this.policy = policy;
         this.writeMode = writeMode;
         this.batchIntervalMs = batchIntervalMs;
@@ -196,8 +195,13 @@ public abstract class ExecutionOptions implements Serializable {
         return endTime;
     }
 
-    public long getBatch() {
-        return batch;
+    @Deprecated
+    public int getBatch() {
+        return batchSize;
+    }
+
+    public int getBatchSize() {
+        return batchSize;
     }
 
     public PolicyEnum getPolicy() {
@@ -212,7 +216,7 @@ public abstract class ExecutionOptions implements Serializable {
         return writeMode;
     }
 
-    public long getBatchIntervalMs() {
+    public int getBatchIntervalMs() {
         return batchIntervalMs;
     }
 
@@ -227,7 +231,7 @@ public abstract class ExecutionOptions implements Serializable {
                 + ", limit=" + limit
                 + ", startTime=" + startTime
                 + ", endTime=" + endTime
-                + ", batch=" + batch
+                + ", batchSize=" + batchSize
                 + ", policy=" + policy
                 + ", mode=" + writeMode
                 + ", batchIntervalMs=" + batchIntervalMs

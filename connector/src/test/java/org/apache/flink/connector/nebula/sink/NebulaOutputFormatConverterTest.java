@@ -50,20 +50,18 @@ public class NebulaOutputFormatConverterTest {
 
     @Test
     public void testCreateVertexValue() {
-        ExecutionOptions rowInfoConfig = new VertexExecutionOptions.ExecutionOptionBuilder()
+        VertexExecutionOptions options = new VertexExecutionOptions.ExecutionOptionBuilder()
                 .setGraphSpace("test")
                 .setTag("tag")
                 .setIdIndex(0)
                 .setFields(Arrays.asList("name", "age"))
                 .setPositions(Arrays.asList(1, 7))
-                .builder();
+                .build();
 
-        NebulaRowVertexOutputFormatConverter helper =
-                new NebulaRowVertexOutputFormatConverter((VertexExecutionOptions) rowInfoConfig,
-                        VidTypeEnum.STRING,
-                        schema);
+        NebulaRowVertexOutputFormatConverter converter =
+                new NebulaRowVertexOutputFormatConverter(options, VidTypeEnum.STRING, schema);
 
-        NebulaVertex vertex = helper.createVertex(row, null);
+        NebulaVertex vertex = converter.createVertex(row, null);
         assert (vertex.getVid().equals("\"2\""));
         assert (vertex.getPropValues().size() == 2);
         assert (vertex.getPropValuesString().equals("\"Tom\",11"));
@@ -71,19 +69,17 @@ public class NebulaOutputFormatConverterTest {
 
     @Test
     public void testVertexDateValue() {
-        ExecutionOptions rowInfoConfig = new VertexExecutionOptions.ExecutionOptionBuilder()
+        VertexExecutionOptions options = new VertexExecutionOptions.ExecutionOptionBuilder()
                 .setGraphSpace("test")
                 .setTag("tag")
                 .setIdIndex(0)
                 .setFields(Arrays.asList("name", "date", "datetime", "time", "age"))
                 .setPositions(Arrays.asList(1, 3, 4, 5, 7))
-                .builder();
-        NebulaRowVertexOutputFormatConverter helper =
-                new NebulaRowVertexOutputFormatConverter((VertexExecutionOptions) rowInfoConfig,
-                        VidTypeEnum.STRING,
-                        schema);
+                .build();
+        NebulaRowVertexOutputFormatConverter converter =
+                new NebulaRowVertexOutputFormatConverter(options, VidTypeEnum.STRING, schema);
 
-        NebulaVertex vertex = helper.createVertex(row, null);
+        NebulaVertex vertex = converter.createVertex(row, null);
         assert (vertex.getVid().equals("\"2\""));
         assert (vertex.getPropValuesString().equals("\"Tom\",date(\"2020-01-01\"),datetime"
                 + "(\"2020-01-01 12:12:12:0000\"),time(\"12:12:12:0000\"),11"));
@@ -91,19 +87,17 @@ public class NebulaOutputFormatConverterTest {
 
     @Test
     public void testIntVidVertex() {
-        ExecutionOptions rowInfoConfig = new VertexExecutionOptions.ExecutionOptionBuilder()
+        VertexExecutionOptions options = new VertexExecutionOptions.ExecutionOptionBuilder()
                 .setGraphSpace("test")
                 .setTag("tag")
                 .setIdIndex(1)
                 .setFields(Arrays.asList("name", "age"))
                 .setPositions(Arrays.asList(1, 7))
-                .builder();
-        NebulaRowVertexOutputFormatConverter helper =
-                new NebulaRowVertexOutputFormatConverter((VertexExecutionOptions) rowInfoConfig,
-                        VidTypeEnum.INT,
-                        schema);
+                .build();
+        NebulaRowVertexOutputFormatConverter converter =
+                new NebulaRowVertexOutputFormatConverter(options, VidTypeEnum.INT, schema);
 
-        NebulaVertex vertex = helper.createVertex(row, PolicyEnum.HASH);
+        NebulaVertex vertex = converter.createVertex(row, PolicyEnum.HASH);
         assert (vertex.getVid().equals("Tom"));
         assert (vertex.getPropValues().size() == 2);
         assert (vertex.getPropValuesString().equals("\"Tom\",11"));
@@ -112,7 +106,7 @@ public class NebulaOutputFormatConverterTest {
 
     @Test
     public void testCreateEdgeValue() {
-        ExecutionOptions rowInfoConfig = new EdgeExecutionOptions.ExecutionOptionBuilder()
+        EdgeExecutionOptions options = new EdgeExecutionOptions.ExecutionOptionBuilder()
                 .setGraphSpace("test")
                 .setEdge("edge")
                 .setSrcIndex(1)
@@ -120,13 +114,11 @@ public class NebulaOutputFormatConverterTest {
                 .setRankIndex(0)
                 .setFields(Arrays.asList("src", "dst", "degree"))
                 .setPositions(Arrays.asList(1, 2, 8))
-                .builder();
+                .build();
 
-        NebulaRowEdgeOutputFormatConverter helper =
-                new NebulaRowEdgeOutputFormatConverter((EdgeExecutionOptions) rowInfoConfig,
-                        VidTypeEnum.STRING,
-                        schema);
-        NebulaEdge edge = helper.createEdge(row, null);
+        NebulaRowEdgeOutputFormatConverter converter =
+                new NebulaRowEdgeOutputFormatConverter(options, VidTypeEnum.STRING, schema);
+        NebulaEdge edge = converter.createEdge(row, null);
         assert (edge.getSource().equals("\"Tom\""));
         assert (edge.getTarget().equals("\"Jena\""));
         assert (edge.getRank() == 2);
@@ -137,21 +129,19 @@ public class NebulaOutputFormatConverterTest {
 
     @Test
     public void testEdgeDateValue() {
-        ExecutionOptions rowInfoConfig = new EdgeExecutionOptions.ExecutionOptionBuilder()
+        EdgeExecutionOptions options = new EdgeExecutionOptions.ExecutionOptionBuilder()
                 .setGraphSpace("test")
                 .setEdge("edge")
                 .setSrcIndex(1)
                 .setDstIndex(2)
                 .setFields(Arrays.asList("degree", "date", "datetime", "time"))
                 .setPositions(Arrays.asList(8, 3, 4, 5))
-                .builder();
+                .build();
 
-        NebulaRowEdgeOutputFormatConverter helper =
-                new NebulaRowEdgeOutputFormatConverter((EdgeExecutionOptions) rowInfoConfig,
-                        VidTypeEnum.STRING,
-                        schema);
+        NebulaRowEdgeOutputFormatConverter converter =
+                new NebulaRowEdgeOutputFormatConverter(options, VidTypeEnum.STRING, schema);
 
-        NebulaEdge edge = helper.createEdge(row, null);
+        NebulaEdge edge = converter.createEdge(row, null);
         assert (edge.getSource().equals("\"Tom\""));
         assert (edge.getTarget().equals("\"Jena\""));
         assert (edge.getRank() == null);
@@ -162,21 +152,19 @@ public class NebulaOutputFormatConverterTest {
 
     @Test
     public void testIntVidEdge() {
-        ExecutionOptions rowInfoConfig = new EdgeExecutionOptions.ExecutionOptionBuilder()
+        EdgeExecutionOptions options = new EdgeExecutionOptions.ExecutionOptionBuilder()
                 .setGraphSpace("test")
                 .setEdge("edge")
                 .setSrcIndex(1)
                 .setDstIndex(2)
                 .setFields(Arrays.asList("degree"))
                 .setPositions(Arrays.asList(8))
-                .builder();
+                .build();
 
-        NebulaRowEdgeOutputFormatConverter helper =
-                new NebulaRowEdgeOutputFormatConverter((EdgeExecutionOptions) rowInfoConfig,
-                        VidTypeEnum.INT,
-                        schema);
+        NebulaRowEdgeOutputFormatConverter converter =
+                new NebulaRowEdgeOutputFormatConverter(options, VidTypeEnum.INT, schema);
 
-        NebulaEdge edge = helper.createEdge(row, PolicyEnum.HASH);
+        NebulaEdge edge = converter.createEdge(row, PolicyEnum.HASH);
         assert (edge.getSource().equals("Tom"));
         assert (edge.getTarget().equals("Jena"));
         assert (edge.getRank() == null);

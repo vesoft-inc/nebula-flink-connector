@@ -10,7 +10,6 @@ import java.util.List;
 
 /**
  * @author Pan BinBin
- * @date 2022/3/25
  */
 public class PartitionUtils {
     public static List<Integer> getScanParts(Integer index,

@@ -8,9 +8,11 @@ package org.apache.flink.connector.nebula.statement;
 import static org.apache.flink.connector.nebula.utils.NebulaConstant.DEFAULT_BATCH_INTERVAL_MS;
 import static org.apache.flink.connector.nebula.utils.NebulaConstant.DEFAULT_ROW_INFO_INDEX;
 import static org.apache.flink.connector.nebula.utils.NebulaConstant.DEFAULT_SCAN_LIMIT;
-import static org.apache.flink.connector.nebula.utils.NebulaConstant.DEFAULT_WRITE_BATCH;
+import static org.apache.flink.connector.nebula.utils.NebulaConstant.DEFAULT_WRITE_BATCH_SIZE;
 
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import org.apache.flink.connector.nebula.utils.DataTypeEnum;
 import org.apache.flink.connector.nebula.utils.PolicyEnum;
 import org.apache.flink.connector.nebula.utils.WriteModeEnum;
@@ -35,12 +37,12 @@ public class VertexExecutionOptions extends ExecutionOptions {
                                   int limit,
                                   long startTime,
                                   long endTime,
-                                  long batch,
+                                  int batch,
                                   PolicyEnum policy,
                                   WriteModeEnum mode,
                                   String tag,
                                   int idIndex,
-                                  long batchIntervalMs) {
+                                  int batchIntervalMs) {
         super(graphSpace, executeStatement, fields, positions, noColumn, limit, startTime,
                 endTime, batch, policy, mode, batchIntervalMs);
         this.tag = tag;
@@ -61,6 +63,25 @@ public class VertexExecutionOptions extends ExecutionOptions {
         return DataTypeEnum.VERTEX;
     }
 
+    public ExecutionOptionBuilder toBuilder() {
+        return new ExecutionOptionBuilder()
+                .setGraphSpace(this.getGraphSpace())
+                .setExecuteStatement(this.getExecuteStatement())
+                .setTag(this.getLabel())
+                .setFields(this.getFields())
+                .setPositions(this.getPositions())
+                .setNoColumn(this.isNoColumn())
+                .setLimit(this.getLimit())
+                .setStartTime(this.getStartTime())
+                .setEndTime(this.getEndTime())
+                .setBatchSize(this.getBatchSize())
+                .setPolicy(Optional.ofNullable(this.getPolicy())
+                        .map(Objects::toString).orElse(null))
+                .setIdIndex(this.getIdIndex())
+                .setWriteMode(this.getWriteMode())
+                .setBatchIntervalMs(this.getBatchIntervalMs());
+    }
+
     public static class ExecutionOptionBuilder {
         private String graphSpace;
         private String executeStatement;
@@ -71,8 +92,8 @@ public class VertexExecutionOptions extends ExecutionOptions {
         private int limit = DEFAULT_SCAN_LIMIT;
         private long startTime = 0;
         private long endTime = Long.MAX_VALUE;
-        private int batch = DEFAULT_WRITE_BATCH;
-        private long batchIntervalMs = DEFAULT_BATCH_INTERVAL_MS;
+        private int batchSize = DEFAULT_WRITE_BATCH_SIZE;
+        private int batchIntervalMs = DEFAULT_BATCH_INTERVAL_MS;
         private PolicyEnum policy = null;
         private WriteModeEnum mode = WriteModeEnum.INSERT;
         private int idIndex = DEFAULT_ROW_INFO_INDEX;
@@ -91,7 +112,6 @@ public class VertexExecutionOptions extends ExecutionOptions {
             this.tag = tag;
             return this;
         }
-
 
         public ExecutionOptionBuilder setFields(List<String> fields) {
             this.fields = fields;
@@ -126,13 +146,18 @@ public class VertexExecutionOptions extends ExecutionOptions {
             return this;
         }
 
-        public ExecutionOptionBuilder setBatch(int batch) {
-            this.batch = batch;
+        public ExecutionOptionBuilder setBatchSize(int batchSize) {
+            this.batchSize = batchSize;
             return this;
         }
 
+        @Deprecated
+        public ExecutionOptionBuilder setBatch(int batch) {
+            return setBatchSize(batch);
+        }
+
         public ExecutionOptionBuilder setPolicy(String policy) {
-            if (policy != null || !policy.trim().isEmpty()) {
+            if (policy != null && !policy.trim().isEmpty()) {
                 this.policy = PolicyEnum.valueOf(policy);
             }
             return this;
@@ -148,12 +173,17 @@ public class VertexExecutionOptions extends ExecutionOptions {
             return this;
         }
 
-        public ExecutionOptionBuilder setBathIntervalMs(long batchIntervalMs) {
+        public ExecutionOptionBuilder setBatchIntervalMs(int batchIntervalMs) {
             this.batchIntervalMs = batchIntervalMs;
             return this;
         }
 
-        public ExecutionOptions builder() {
+        @Deprecated
+        public VertexExecutionOptions builder() {
+            return build();
+        }
+
+        public VertexExecutionOptions build() {
             if (graphSpace == null || graphSpace.trim().isEmpty()) {
                 throw new IllegalArgumentException("graph space can not be empty.");
             }
@@ -161,7 +191,7 @@ public class VertexExecutionOptions extends ExecutionOptions {
                 throw new IllegalArgumentException("tag can not be empty.");
             }
             return new VertexExecutionOptions(graphSpace, executeStatement, fields,
-                    positions, noColumn, limit, startTime, endTime, batch, policy, mode, tag,
+                    positions, noColumn, limit, startTime, endTime, batchSize, policy, mode, tag,
                     idIndex, batchIntervalMs);
         }
     }

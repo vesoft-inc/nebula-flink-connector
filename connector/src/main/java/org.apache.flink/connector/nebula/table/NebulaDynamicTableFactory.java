@@ -81,6 +81,12 @@ public class NebulaDynamicTableFactory implements DynamicTableSourceFactory,
             .defaultValue(NebulaConstant.DEFAULT_TIMEOUT_MS)
             .withDescription("the nebula execute timeout duration.");
 
+    public static final ConfigOption<Integer> ID_INDEX = ConfigOptions
+            .key("id-index")
+            .intType()
+            .defaultValue(NebulaConstant.DEFAULT_VERTEX_ID_INDEX)
+            .withDescription("the nebula execute vertex index.");
+
     public static final ConfigOption<Integer> SRC_ID_INDEX = ConfigOptions
             .key("src-id-index")
             .intType()
@@ -98,6 +104,18 @@ public class NebulaDynamicTableFactory implements DynamicTableSourceFactory,
             .intType()
             .defaultValue(NebulaConstant.DEFAULT_ROW_INFO_INDEX)
             .withDescription("the nebula execute rank index.");
+
+    public static final ConfigOption<Integer> BATCH_SIZE = ConfigOptions
+            .key("batch-size")
+            .intType()
+            .noDefaultValue()
+            .withDescription("batch size.");
+
+    public static final ConfigOption<Integer> BATCH_INTERVAL_MS = ConfigOptions
+            .key("batch-interval-ms")
+            .intType()
+            .noDefaultValue()
+            .withDescription("batch commit interval in milliseconds.");
 
     @Override
     public DynamicTableSink createDynamicTableSink(Context context) {
@@ -157,13 +175,16 @@ public class NebulaDynamicTableFactory implements DynamicTableSourceFactory,
                 fields.add(columns.get(i).getName());
             }
 
-            return new VertexExecutionOptions.ExecutionOptionBuilder()
-                    .setFields(fields)
-                    .setIdIndex(0)
-                    .setPositions(positions)
-                    .setGraphSpace(config.get(GRAPH_SPACE))
-                    .setTag(labelName)
-                    .builder();
+            VertexExecutionOptions.ExecutionOptionBuilder builder =
+                    new VertexExecutionOptions.ExecutionOptionBuilder()
+                            .setFields(fields)
+                            .setIdIndex(config.get(ID_INDEX))
+                            .setPositions(positions)
+                            .setGraphSpace(config.get(GRAPH_SPACE))
+                            .setTag(labelName);
+            config.getOptional(BATCH_SIZE).ifPresent(builder::setBatchSize);
+            config.getOptional(BATCH_INTERVAL_MS).ifPresent(builder::setBatchIntervalMs);
+            return builder.build();
         } else {
             for (int i = 2; i < columns.size(); i++) {
                 if (config.get(RANK_ID_INDEX) != i) {
@@ -172,15 +193,18 @@ public class NebulaDynamicTableFactory implements DynamicTableSourceFactory,
                 }
             }
 
-            return new EdgeExecutionOptions.ExecutionOptionBuilder()
-                    .setFields(fields)
-                    .setSrcIndex(config.get(SRC_ID_INDEX))
-                    .setDstIndex(config.get(DST_ID_INDEX))
-                    .setRankIndex(config.get(RANK_ID_INDEX))
-                    .setPositions(positions)
-                    .setGraphSpace(config.get(GRAPH_SPACE))
-                    .setEdge(labelName)
-                    .builder();
+            EdgeExecutionOptions.ExecutionOptionBuilder builder =
+                    new EdgeExecutionOptions.ExecutionOptionBuilder()
+                            .setFields(fields)
+                            .setSrcIndex(config.get(SRC_ID_INDEX))
+                            .setDstIndex(config.get(DST_ID_INDEX))
+                            .setRankIndex(config.get(RANK_ID_INDEX))
+                            .setPositions(positions)
+                            .setGraphSpace(config.get(GRAPH_SPACE))
+                            .setEdge(labelName);
+            config.getOptional(BATCH_SIZE).ifPresent(builder::setBatchSize);
+            config.getOptional(BATCH_INTERVAL_MS).ifPresent(builder::setBatchIntervalMs);
+            return builder.build();
         }
     }
 
@@ -206,9 +230,12 @@ public class NebulaDynamicTableFactory implements DynamicTableSourceFactory,
         set.add(LABEL_NAME);
         set.add(DATA_TYPE);
         set.add(TIMEOUT);
+        set.add(ID_INDEX);
         set.add(SRC_ID_INDEX);
         set.add(DST_ID_INDEX);
         set.add(RANK_ID_INDEX);
+        set.add(BATCH_SIZE);
+        set.add(BATCH_INTERVAL_MS);
         return set;
     }
 }

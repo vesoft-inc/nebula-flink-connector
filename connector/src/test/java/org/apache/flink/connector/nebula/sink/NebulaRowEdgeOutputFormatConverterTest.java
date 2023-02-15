@@ -64,10 +64,9 @@ public class NebulaRowEdgeOutputFormatConverterTest {
      */
     @Test
     public void testCreateEdgeIntId() {
-        ExecutionOptions options = builder.builder();
+        EdgeExecutionOptions options = builder.build();
         NebulaRowEdgeOutputFormatConverter converter =
-                new NebulaRowEdgeOutputFormatConverter((EdgeExecutionOptions) options,
-                        VidTypeEnum.INT, schema);
+                new NebulaRowEdgeOutputFormatConverter(options, VidTypeEnum.INT, schema);
         NebulaEdge edge = converter.createEdge(row, null);
         assert (edge.getSource().equals("1"));
         assert (edge.getTarget().equals("2"));
@@ -82,10 +81,9 @@ public class NebulaRowEdgeOutputFormatConverterTest {
      */
     @Test
     public void testCreateEdgeIntIdWithRank() {
-        ExecutionOptions options = builder.setRankIndex(4).builder();
+        EdgeExecutionOptions options = builder.setRankIndex(4).build();
         NebulaRowEdgeOutputFormatConverter converter =
-                new NebulaRowEdgeOutputFormatConverter((EdgeExecutionOptions) options,
-                        VidTypeEnum.INT, schema);
+                new NebulaRowEdgeOutputFormatConverter(options, VidTypeEnum.INT, schema);
         NebulaEdge edge = converter.createEdge(row, null);
         assert (edge.getSource().equals("1"));
         assert (edge.getTarget().equals("2"));
@@ -97,10 +95,9 @@ public class NebulaRowEdgeOutputFormatConverterTest {
      */
     @Test
     public void testCreateEdgeIntIdWithPolicy() {
-        ExecutionOptions options = builder.builder();
+        EdgeExecutionOptions options = builder.build();
         NebulaRowEdgeOutputFormatConverter converter =
-                new NebulaRowEdgeOutputFormatConverter((EdgeExecutionOptions) options,
-                        VidTypeEnum.INT, schema);
+                new NebulaRowEdgeOutputFormatConverter(options, VidTypeEnum.INT, schema);
         NebulaEdge edge = converter.createEdge(row, PolicyEnum.HASH);
         assert (edge.getSource().equals("1"));
         assert (edge.getTarget().equals("2"));
@@ -112,10 +109,9 @@ public class NebulaRowEdgeOutputFormatConverterTest {
      */
     @Test
     public void testCreateEdgeStringId() {
-        ExecutionOptions options = builder.builder();
+        EdgeExecutionOptions options = builder.build();
         NebulaRowEdgeOutputFormatConverter converter =
-                new NebulaRowEdgeOutputFormatConverter((EdgeExecutionOptions) options,
-                        VidTypeEnum.STRING, schema);
+                new NebulaRowEdgeOutputFormatConverter(options, VidTypeEnum.STRING, schema);
         NebulaEdge edge = converter.createEdge(row, null);
         assert (edge.getSource().equals("\"1\""));
         assert (edge.getTarget().equals("\"2\""));
@@ -127,10 +123,9 @@ public class NebulaRowEdgeOutputFormatConverterTest {
      */
     @Test
     public void testCreateEdgeStringIdWithRank() {
-        ExecutionOptions options = builder.setRankIndex(4).builder();
+        EdgeExecutionOptions options = builder.setRankIndex(4).build();
         NebulaRowEdgeOutputFormatConverter converter =
-                new NebulaRowEdgeOutputFormatConverter((EdgeExecutionOptions) options,
-                        VidTypeEnum.STRING, schema);
+                new NebulaRowEdgeOutputFormatConverter(options, VidTypeEnum.STRING, schema);
         NebulaEdge edge = converter.createEdge(row, null);
         assert (edge.getSource().equals("\"1\""));
         assert (edge.getTarget().equals("\"2\""));

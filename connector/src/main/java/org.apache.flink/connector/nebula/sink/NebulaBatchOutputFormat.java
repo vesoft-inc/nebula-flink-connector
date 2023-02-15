@@ -19,7 +19,6 @@ import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -30,23 +29,23 @@ import org.apache.flink.configuration.Configuration;
 import org.apache.flink.connector.nebula.connection.NebulaGraphConnectionProvider;
 import org.apache.flink.connector.nebula.connection.NebulaMetaConnectionProvider;
 import org.apache.flink.connector.nebula.statement.ExecutionOptions;
-import org.apache.flink.connector.nebula.utils.VidTypeEnum;
 import org.apache.flink.util.concurrent.ExecutorThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class NebulaBatchOutputFormat<T> extends RichOutputFormat<T> implements Flushable {
+public abstract class NebulaBatchOutputFormat<T, OptionsT extends ExecutionOptions>
+        extends RichOutputFormat<T> implements Flushable {
     private static final Logger LOG = LoggerFactory.getLogger(NebulaBatchOutputFormat.class);
     private static final long serialVersionUID = 8846672119763512586L;
     protected MetaClient metaClient;
-    protected NebulaBatchExecutor nebulaBatchExecutor;
-    protected NebulaMetaConnectionProvider metaProvider;
-    protected ExecutionOptions executionOptions;
+    protected final NebulaMetaConnectionProvider metaProvider;
+    protected final NebulaGraphConnectionProvider graphProvider;
+    protected final OptionsT executionOptions;
+    protected NebulaBatchExecutor<T> nebulaBatchExecutor;
     private volatile AtomicLong numPendingRow;
     private NebulaPool nebulaPool;
     private Session session;
-    private NebulaGraphConnectionProvider graphProvider;
-    private List<String> errorBuffer = new ArrayList<>();
+    private final List<String> errorBuffer = new ArrayList<>();
 
     private transient ScheduledExecutorService scheduler;
     private transient ScheduledFuture<?> scheduledFuture;
@@ -54,9 +53,11 @@ public class NebulaBatchOutputFormat<T> extends RichOutputFormat<T> implements F
 
     public NebulaBatchOutputFormat(
             NebulaGraphConnectionProvider graphProvider,
-            NebulaMetaConnectionProvider metaProvider) {
+            NebulaMetaConnectionProvider metaProvider,
+            OptionsT executionOptions) {
         this.graphProvider = graphProvider;
         this.metaProvider = metaProvider;
+        this.executionOptions = executionOptions;
     }
 
     @Override
@@ -97,10 +98,10 @@ public class NebulaBatchOutputFormat<T> extends RichOutputFormat<T> implements F
         }
 
         numPendingRow = new AtomicLong(0);
-        setNebulaBatchExecutor();
+        nebulaBatchExecutor = createNebulaBatchExecutor();
         // start the schedule task: submit the buffer records every batchInterval.
         // If batchIntervalMs is 0, do not start the scheduler task.
-        if (executionOptions.getBatchIntervalMs() != 0 && executionOptions.getBatch() != 1) {
+        if (executionOptions.getBatchIntervalMs() != 0 && executionOptions.getBatchSize() != 1) {
             this.scheduler = Executors.newScheduledThreadPool(1, new ExecutorThreadFactory(
                     "nebula-write-output-format"));
             this.scheduledFuture = this.scheduler.scheduleWithFixedDelay(() -> {
@@ -115,27 +116,7 @@ public class NebulaBatchOutputFormat<T> extends RichOutputFormat<T> implements F
         }
     }
 
-    protected void setNebulaBatchExecutor() {
-        VidTypeEnum vidType = metaProvider.getVidType(metaClient, executionOptions.getGraphSpace());
-        boolean isVertex = executionOptions.getDataType().isVertex();
-        Map<String, Integer> schema;
-        if (isVertex) {
-            schema =
-                    metaProvider.getTagSchema(
-                            metaClient,
-                            executionOptions.getGraphSpace(),
-                            executionOptions.getLabel());
-            nebulaBatchExecutor =
-                    new NebulaVertexBatchExecutor<T>(executionOptions, vidType, schema);
-        } else {
-            schema =
-                    metaProvider.getEdgeSchema(
-                            metaClient,
-                            executionOptions.getGraphSpace(),
-                            executionOptions.getLabel());
-            nebulaBatchExecutor = new NebulaEdgeBatchExecutor<T>(executionOptions, vidType, schema);
-        }
-    }
+    protected abstract NebulaBatchExecutor<T> createNebulaBatchExecutor();
 
     /**
      * write one record to buffer
@@ -144,7 +125,7 @@ public class NebulaBatchOutputFormat<T> extends RichOutputFormat<T> implements F
     public final synchronized void writeRecord(T row) {
         nebulaBatchExecutor.addToBatch(row);
 
-        if (numPendingRow.incrementAndGet() >= executionOptions.getBatch()) {
+        if (numPendingRow.incrementAndGet() >= executionOptions.getBatchSize()) {
             commit();
         }
     }
@@ -198,10 +179,5 @@ public class NebulaBatchOutputFormat<T> extends RichOutputFormat<T> implements F
         while (numPendingRow.get() != 0) {
             commit();
         }
-    }
-
-    public NebulaBatchOutputFormat<T> setExecutionOptions(ExecutionOptions executionOptions) {
-        this.executionOptions = executionOptions;
-        return this;
     }
 }

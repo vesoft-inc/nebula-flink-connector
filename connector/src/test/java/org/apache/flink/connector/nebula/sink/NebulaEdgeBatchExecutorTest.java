@@ -35,7 +35,8 @@ public class NebulaEdgeBatchExecutorTest extends NebulaITTestBase {
     @BeforeClass
     public static void beforeAll() {
         initializeNebulaSession();
-        initializeNebulaSchema(MockData.createIntSpace(), MockData.createStringSpace());
+        initializeNebulaSchema(MockData.createIntSpace());
+        initializeNebulaSchema(MockData.createStringSpace());
     }
 
     @AfterClass

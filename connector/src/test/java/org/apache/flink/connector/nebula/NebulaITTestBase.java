@@ -58,15 +58,13 @@ public class NebulaITTestBase {
         }
     }
 
-    protected static void initializeNebulaSchema(String... statements) {
-        for (String stmt : statements) {
-            executeNGql(stmt);
-            // wait for at least two heartbeat cycles
-            try {
-                Thread.sleep(5000);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
+    protected static void initializeNebulaSchema(String statement) {
+        executeNGql(statement);
+        // wait for at least two heartbeat cycles
+        try {
+            Thread.sleep(5000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         }
     }
 

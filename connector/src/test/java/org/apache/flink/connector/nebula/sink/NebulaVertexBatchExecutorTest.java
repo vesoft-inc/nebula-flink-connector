@@ -187,8 +187,7 @@ public class NebulaVertexBatchExecutorTest extends NebulaITTestBase {
 
         executeNGql("USE test_int");
 
-        String statement = vertexBatchExecutor.executeBatch(session);
-        assert (statement == null);
+        vertexBatchExecutor.executeBatch(session);
     }
 
     /**
@@ -209,8 +208,7 @@ public class NebulaVertexBatchExecutorTest extends NebulaITTestBase {
 
         executeNGql("USE test_int");
 
-        String statement = vertexBatchExecutor.executeBatch(session);
-        assert (statement == null);
+        vertexBatchExecutor.executeBatch(session);
     }
 
     /**
@@ -229,8 +227,7 @@ public class NebulaVertexBatchExecutorTest extends NebulaITTestBase {
 
         executeNGql("USE test_int");
 
-        String statement = vertexBatchExecutor.executeBatch(session);
-        assert (statement == null);
+        vertexBatchExecutor.executeBatch(session);
     }
 
     /**
@@ -249,8 +246,7 @@ public class NebulaVertexBatchExecutorTest extends NebulaITTestBase {
 
         executeNGql("USE test_string");
 
-        String statement = vertexBatchExecutor.executeBatch(session);
-        assert (statement == null);
+        vertexBatchExecutor.executeBatch(session);
     }
 
     /**
@@ -270,8 +266,7 @@ public class NebulaVertexBatchExecutorTest extends NebulaITTestBase {
 
         executeNGql("USE test_string");
 
-        String statement = vertexBatchExecutor.executeBatch(session);
-        assert (statement == null);
+        vertexBatchExecutor.executeBatch(session);
     }
 
     /**
@@ -290,8 +285,7 @@ public class NebulaVertexBatchExecutorTest extends NebulaITTestBase {
 
         executeNGql("USE test_string");
 
-        String statement = vertexBatchExecutor.executeBatch(session);
-        assert (statement == null);
+        vertexBatchExecutor.executeBatch(session);
     }
 
 }

@@ -10,7 +10,6 @@ import com.vesoft.nebula.client.graph.net.Session;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import org.apache.flink.connector.nebula.statement.ExecutionOptions;
 import org.apache.flink.connector.nebula.statement.VertexExecutionOptions;
 import org.apache.flink.connector.nebula.utils.NebulaVertex;
 import org.apache.flink.connector.nebula.utils.NebulaVertices;
@@ -48,9 +47,9 @@ public class NebulaVertexBatchExecutor implements NebulaBatchExecutor<Row> {
     }
 
     @Override
-    public String executeBatch(Session session) {
+    public void executeBatch(Session session) {
         if (nebulaVertexList.size() == 0) {
-            return null;
+            return;
         }
         NebulaVertices nebulaVertices = new NebulaVertices(executionOptions.getLabel(),
                 executionOptions.getFields(), nebulaVertexList, executionOptions.getPolicy());
@@ -78,7 +77,7 @@ public class NebulaVertexBatchExecutor implements NebulaBatchExecutor<Row> {
         } catch (Exception e) {
             LOG.error("write data error, ", e);
             nebulaVertexList.clear();
-            return statement;
+            return;
         }
 
         if (execResult.isSucceeded()) {
@@ -86,9 +85,8 @@ public class NebulaVertexBatchExecutor implements NebulaBatchExecutor<Row> {
         } else {
             LOG.error("write data failed: {}", execResult.getErrorMessage());
             nebulaVertexList.clear();
-            return statement;
+            return;
         }
         nebulaVertexList.clear();
-        return null;
     }
 }

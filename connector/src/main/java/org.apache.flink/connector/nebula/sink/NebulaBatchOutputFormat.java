@@ -45,7 +45,6 @@ public abstract class NebulaBatchOutputFormat<T, OptionsT extends ExecutionOptio
     private volatile AtomicLong numPendingRow;
     private NebulaPool nebulaPool;
     private Session session;
-    private final List<String> errorBuffer = new ArrayList<>();
 
     private transient ScheduledExecutorService scheduler;
     private transient ScheduledFuture<?> scheduledFuture;
@@ -134,10 +133,7 @@ public abstract class NebulaBatchOutputFormat<T, OptionsT extends ExecutionOptio
      * commit batch insert statements
      */
     private synchronized void commit() {
-        String errorExec = nebulaBatchExecutor.executeBatch(session);
-        if (errorExec != null) {
-            errorBuffer.add(errorExec);
-        }
+        nebulaBatchExecutor.executeBatch(session);
         long pendingRow = numPendingRow.get();
         numPendingRow.compareAndSet(pendingRow, 0);
     }
@@ -155,9 +151,6 @@ public abstract class NebulaBatchOutputFormat<T, OptionsT extends ExecutionOptio
             }
             if (numPendingRow != null && numPendingRow.get() > 0) {
                 commit();
-            }
-            if (!errorBuffer.isEmpty()) {
-                LOG.error("insert error statements: {}", errorBuffer);
             }
             if (session != null) {
                 session.release();

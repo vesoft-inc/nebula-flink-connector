@@ -3,10 +3,7 @@ package org.apache.flink.connector.nebula.sink;
 import com.vesoft.nebula.client.graph.net.Session;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.table.connector.sink.DynamicTableSink.DataStructureConverter;
 import org.apache.flink.table.data.RowData;
@@ -50,7 +47,7 @@ public class NebulaTableBufferReducedExecutor implements NebulaBatchExecutor<Row
     }
 
     @Override
-    public String executeBatch(Session session) {
+    public void executeBatch(Session session) {
         for (Tuple2<Boolean, Row> value : reduceBuffer.values()) {
             boolean isUpsert = value.f0;
             Row row = value.f1;
@@ -60,11 +57,8 @@ public class NebulaTableBufferReducedExecutor implements NebulaBatchExecutor<Row
                 deleteExecutor.addToBatch(row);
             }
         }
-        String insertErrorStatement = insertExecutor.executeBatch(session);
-        String deleteErrorStatement = deleteExecutor.executeBatch(session);
+        insertExecutor.executeBatch(session);
+        deleteExecutor.executeBatch(session);
         reduceBuffer.clear();
-        String errorStatements = Stream.of(insertErrorStatement, deleteErrorStatement)
-                .filter(Objects::nonNull).collect(Collectors.joining("; "));
-        return errorStatements.isEmpty() ? null : errorStatements;
     }
 }

@@ -44,9 +44,9 @@ public class NebulaEdgeBatchExecutor implements NebulaBatchExecutor<Row> {
     }
 
     @Override
-    public String executeBatch(Session session) {
+    public void executeBatch(Session session) {
         if (nebulaEdgeList.size() == 0) {
-            return null;
+            return;
         }
         NebulaEdges nebulaEdges = new NebulaEdges(executionOptions.getLabel(),
                 executionOptions.getFields(), nebulaEdgeList, executionOptions.getPolicy(),
@@ -75,7 +75,7 @@ public class NebulaEdgeBatchExecutor implements NebulaBatchExecutor<Row> {
         } catch (Exception e) {
             LOG.error("write data error, ", e);
             nebulaEdgeList.clear();
-            return statement;
+            return;
         }
 
         if (execResult.isSucceeded()) {
@@ -83,9 +83,8 @@ public class NebulaEdgeBatchExecutor implements NebulaBatchExecutor<Row> {
         } else {
             LOG.error("write data failed: {}", execResult.getErrorMessage());
             nebulaEdgeList.clear();
-            return statement;
+            return;
         }
         nebulaEdgeList.clear();
-        return null;
     }
 }

@@ -21,5 +21,5 @@ public interface NebulaBatchExecutor<T> {
      *
      * @param session graph session
      */
-    String executeBatch(Session session);
+    void executeBatch(Session session);
 }

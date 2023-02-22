@@ -22,49 +22,18 @@ import java.net.UnknownHostException;
 import java.util.Collections;
 import java.util.List;
 import org.apache.flink.connector.nebula.utils.NebulaConstant;
-import org.apache.flink.table.api.EnvironmentSettings;
-import org.apache.flink.table.api.TableEnvironment;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
 
 public class NebulaITTestBase {
 
     protected static final String META_ADDRESS = "127.0.0.1:9559";
     protected static final String GRAPH_ADDRESS = "127.0.0.1:9669";
-    protected static final String USER_NAME = "root";
+    protected static final String USERNAME = "root";
     protected static final String PASSWORD = "nebula";
 
-    private static final String[] NEBULA_SCHEMA_STATEMENTS = new String[]{
-        "CLEAR SPACE IF EXISTS `flink_test`;"
-                + " CREATE SPACE IF NOT EXISTS `flink_test` (partition_num = 100,"
-                + " charset = utf8, replica_factor = 3, collate = utf8_bin, vid_type = INT64);"
-                + " USE `flink_test`;",
-        "CREATE TAG IF NOT EXISTS person (col1 string, col2 fixed_string(8),"
-                + " col3 int8, col4 int16, col5 int32, col6 int64,"
-                + " col7 date, col8 datetime, col9 timestamp, col10 bool,"
-                + " col11 double, col12 float, col13 time, col14 geography);"
-                + " CREATE EDGE IF NOT EXISTS friend (col1 string, col2 fixed_string(8),"
-                + " col3 int8, col4 int16, col5 int32, col6 int64,"
-                + " col7 date, col8 datetime, col9 timestamp, col10 bool,"
-                + " col11 double, col12 float, col13 time, col14 geography);"
-    };
     protected static Session session;
     protected static NebulaPool pool;
-    protected static TableEnvironment tableEnvironment;
 
-    @BeforeClass
-    public static void beforeAll() throws IOErrorException {
-        initializeNebulaSession();
-        initializeNebulaSchema();
-    }
-
-    @AfterClass
-    public static void afterAll() {
-        closeNebulaSession();
-    }
-
-    private static void initializeNebulaSession() throws IOErrorException {
+    protected static void initializeNebulaSession() {
         NebulaPoolConfig nebulaPoolConfig = new NebulaPoolConfig();
         String[] addressAndPort = GRAPH_ADDRESS.split(NebulaConstant.COLON);
         List<HostAddress> addresses = Collections.singletonList(
@@ -77,30 +46,29 @@ public class NebulaITTestBase {
                 throw new RuntimeException("failed to initialize connection pool");
             }
         } catch (UnknownHostException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("init nebula pool error", e);
         }
         try {
-            session = pool.getSession(USER_NAME, PASSWORD, true);
+            session = pool.getSession(USERNAME, PASSWORD, true);
         } catch (NotValidConnectionException
                  | AuthFailedException
+                 | IOErrorException
                  | ClientServerIncompatibleException e) {
+            throw new RuntimeException("init nebula session error", e);
+        }
+    }
+
+    protected static void initializeNebulaSchema(String statement) {
+        executeNGql(statement);
+        // wait for at least two heartbeat cycles
+        try {
+            Thread.sleep(5000);
+        } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private static void initializeNebulaSchema() throws IOErrorException {
-        for (String stmt : NEBULA_SCHEMA_STATEMENTS) {
-            executeNGql(stmt);
-            // wait for at least two heartbeat cycles
-            try {
-                Thread.sleep(5000);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-        }
-    }
-
-    private static void closeNebulaSession() {
+    protected static void closeNebulaSession() {
         if (session != null) {
             session.release();
         }
@@ -109,13 +77,13 @@ public class NebulaITTestBase {
         }
     }
 
-    @Before
-    public void before() {
-        tableEnvironment = TableEnvironment.create(EnvironmentSettings.inStreamingMode());
-    }
-
-    protected static ResultSet executeNGql(String stmt) throws IOErrorException {
-        ResultSet response = session.execute(stmt);
+    protected static ResultSet executeNGql(String stmt) {
+        ResultSet response;
+        try {
+            response = session.execute(stmt);
+        } catch (IOErrorException e) {
+            throw new RuntimeException(String.format("failed to execute statement %s", stmt), e);
+        }
         if (!response.isSucceeded()) {
             throw new RuntimeException(String.format(
                     "failed to execute statement %s with error: %s",
@@ -125,12 +93,7 @@ public class NebulaITTestBase {
     }
 
     protected static void check(List<Row> expected, String stmt) {
-        ResultSet response;
-        try {
-            response = executeNGql(stmt);
-        } catch (IOErrorException e) {
-            throw new RuntimeException(String.format("failed to check result of %s", stmt), e);
-        }
+        ResultSet response = executeNGql(stmt);
         if (expected == null || expected.isEmpty()) {
             assertTrue(response.isEmpty());
         } else {

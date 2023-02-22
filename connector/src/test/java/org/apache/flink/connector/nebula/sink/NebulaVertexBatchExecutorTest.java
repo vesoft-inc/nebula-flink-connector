@@ -6,41 +6,46 @@
 package org.apache.flink.connector.nebula.sink;
 
 import com.vesoft.nebula.PropertyType;
-import com.vesoft.nebula.client.graph.NebulaPoolConfig;
-import com.vesoft.nebula.client.graph.data.HostAddress;
-import com.vesoft.nebula.client.graph.data.ResultSet;
-import com.vesoft.nebula.client.graph.exception.IOErrorException;
-import com.vesoft.nebula.client.graph.net.NebulaPool;
-import com.vesoft.nebula.client.graph.net.Session;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.flink.connector.nebula.MockData;
-import org.apache.flink.connector.nebula.statement.ExecutionOptions;
+import org.apache.flink.connector.nebula.NebulaITTestBase;
 import org.apache.flink.connector.nebula.statement.VertexExecutionOptions;
 import org.apache.flink.connector.nebula.utils.VidTypeEnum;
 import org.apache.flink.connector.nebula.utils.WriteModeEnum;
 import org.apache.flink.types.Row;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class NebulaVertexBatchExecutorTest {
+public class NebulaVertexBatchExecutorTest extends NebulaITTestBase {
+
     private static final Logger LOGGER =
             LoggerFactory.getLogger(NebulaVertexBatchExecutorTest.class);
 
-    String ip = "127.0.0.1";
     VertexExecutionOptions.ExecutionOptionBuilder builder = null;
     Map<String, Integer> schema = new HashMap<>();
     Row row1 = new Row(9);
     Row row2 = new Row(9);
 
-    Session session = null;
+    @BeforeClass
+    public static void beforeAll() {
+        initializeNebulaSession();
+        initializeNebulaSchema(MockData.createIntSpace());
+        initializeNebulaSchema(MockData.createStringSpace());
+    }
+
+    @AfterClass
+    public static void afterAll() {
+        closeNebulaSession();
+    }
 
     @Before
     public void before() {
-        MockData.mockSchema();
         builder = new VertexExecutionOptions.ExecutionOptionBuilder()
                 .setTag("person")
                 .setIdIndex(0)
@@ -76,18 +81,6 @@ public class NebulaVertexBatchExecutorTest {
         row2.setField(6, "2021-02-01T12:00:00");
         row2.setField(7, "15:00:00");
         row2.setField(8, 392435234);
-
-        // get Session
-        NebulaPoolConfig poolConfig = new NebulaPoolConfig();
-        NebulaPool pool = new NebulaPool();
-
-        try {
-            pool.init(Arrays.asList(new HostAddress(ip, 9669)), poolConfig);
-            session = pool.getSession("root", "nebula", true);
-        } catch (Exception e) {
-            LOGGER.error("init nebula pool error, ", e);
-            assert (false);
-        }
     }
 
     /**
@@ -192,17 +185,7 @@ public class NebulaVertexBatchExecutorTest {
         vertexBatchExecutor.addToBatch(row1);
         vertexBatchExecutor.addToBatch(row2);
 
-        ResultSet resultSet = null;
-        try {
-            resultSet = session.execute("USE test_int");
-        } catch (IOErrorException e) {
-            LOGGER.error("switch space error,", e);
-            assert (false);
-        }
-        if (!resultSet.isSucceeded()) {
-            LOGGER.error("switch space failed,{}", resultSet.getErrorMessage());
-            assert (false);
-        }
+        executeNGql("USE test_int");
 
         String statement = vertexBatchExecutor.executeBatch(session);
         assert (statement == null);
@@ -224,17 +207,7 @@ public class NebulaVertexBatchExecutorTest {
         vertexBatchExecutor.addToBatch(row1);
         vertexBatchExecutor.addToBatch(row2);
 
-        ResultSet resultSet = null;
-        try {
-            resultSet = session.execute("USE test_int");
-        } catch (IOErrorException e) {
-            LOGGER.error("switch space error,", e);
-            assert (false);
-        }
-        if (!resultSet.isSucceeded()) {
-            LOGGER.error("switch space failed,{}", resultSet.getErrorMessage());
-            assert (false);
-        }
+        executeNGql("USE test_int");
 
         String statement = vertexBatchExecutor.executeBatch(session);
         assert (statement == null);
@@ -254,17 +227,7 @@ public class NebulaVertexBatchExecutorTest {
         vertexBatchExecutor.addToBatch(row1);
         vertexBatchExecutor.addToBatch(row2);
 
-        ResultSet resultSet = null;
-        try {
-            resultSet = session.execute("USE test_int");
-        } catch (IOErrorException e) {
-            LOGGER.error("switch space error,", e);
-            assert (false);
-        }
-        if (!resultSet.isSucceeded()) {
-            LOGGER.error("switch space failed,{}", resultSet.getErrorMessage());
-            assert (false);
-        }
+        executeNGql("USE test_int");
 
         String statement = vertexBatchExecutor.executeBatch(session);
         assert (statement == null);
@@ -284,17 +247,7 @@ public class NebulaVertexBatchExecutorTest {
         vertexBatchExecutor.addToBatch(row1);
         vertexBatchExecutor.addToBatch(row2);
 
-        ResultSet resultSet = null;
-        try {
-            resultSet = session.execute("USE test_string");
-        } catch (IOErrorException e) {
-            LOGGER.error("switch space error,", e);
-            assert (false);
-        }
-        if (!resultSet.isSucceeded()) {
-            LOGGER.error("switch space failed,{}", resultSet.getErrorMessage());
-            assert (false);
-        }
+        executeNGql("USE test_string");
 
         String statement = vertexBatchExecutor.executeBatch(session);
         assert (statement == null);
@@ -315,17 +268,7 @@ public class NebulaVertexBatchExecutorTest {
         vertexBatchExecutor.addToBatch(row1);
         vertexBatchExecutor.addToBatch(row2);
 
-        ResultSet resultSet = null;
-        try {
-            resultSet = session.execute("USE test_string");
-        } catch (IOErrorException e) {
-            LOGGER.error("switch space error,", e);
-            assert (false);
-        }
-        if (!resultSet.isSucceeded()) {
-            LOGGER.error("switch space failed,{}", resultSet.getErrorMessage());
-            assert (false);
-        }
+        executeNGql("USE test_string");
 
         String statement = vertexBatchExecutor.executeBatch(session);
         assert (statement == null);
@@ -345,17 +288,7 @@ public class NebulaVertexBatchExecutorTest {
         vertexBatchExecutor.addToBatch(row1);
         vertexBatchExecutor.addToBatch(row2);
 
-        ResultSet resultSet = null;
-        try {
-            resultSet = session.execute("USE test_string");
-        } catch (IOErrorException e) {
-            LOGGER.error("switch space error,", e);
-            assert (false);
-        }
-        if (!resultSet.isSucceeded()) {
-            LOGGER.error("switch space failed,{}", resultSet.getErrorMessage());
-            assert (false);
-        }
+        executeNGql("USE test_string");
 
         String statement = vertexBatchExecutor.executeBatch(session);
         assert (statement == null);

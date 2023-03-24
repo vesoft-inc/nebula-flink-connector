@@ -18,20 +18,13 @@ import org.apache.flink.table.types.DataType;
 import org.apache.flink.types.RowKind;
 
 public class NebulaDynamicTableSink implements DynamicTableSink {
-    private final String metaAddress;
-    private final String graphAddress;
-
-    private final String username;
-    private final String password;
+    private final NebulaClientOptions nebulaClientOptions;
     private final ExecutionOptions executionOptions;
     final DataType producedDataType;
 
     public NebulaDynamicTableSink(NebulaClientOptions clientOptions,
                                   ExecutionOptions executionOptions, DataType producedDataType) {
-        this.metaAddress = clientOptions.getRawMetaAddress();
-        this.graphAddress = clientOptions.getGraphAddress();
-        this.username = clientOptions.getUsername();
-        this.password = clientOptions.getPassword();
+        this.nebulaClientOptions = clientOptions;
         this.executionOptions = executionOptions;
         this.producedDataType = producedDataType;
     }
@@ -50,15 +43,10 @@ public class NebulaDynamicTableSink implements DynamicTableSink {
     @Override
     public SinkRuntimeProvider getSinkRuntimeProvider(Context context) {
 
-        NebulaClientOptions builder = new NebulaClientOptions.NebulaClientOptionsBuilder()
-                .setMetaAddress(metaAddress)
-                .setGraphAddress(graphAddress)
-                .setUsername(username)
-                .setPassword(password)
-                .build();
-
-        NebulaGraphConnectionProvider graphProvider = new NebulaGraphConnectionProvider(builder);
-        NebulaMetaConnectionProvider metaProvider = new NebulaMetaConnectionProvider(builder);
+        NebulaGraphConnectionProvider graphProvider =
+                new NebulaGraphConnectionProvider(nebulaClientOptions);
+        NebulaMetaConnectionProvider metaProvider =
+                new NebulaMetaConnectionProvider(nebulaClientOptions);
         DataStructureConverter converter =
                 context.createDataStructureConverter(producedDataType);
         NebulaBatchOutputFormat<RowData, ?> outputFormat;

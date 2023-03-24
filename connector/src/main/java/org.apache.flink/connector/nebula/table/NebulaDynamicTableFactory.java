@@ -173,6 +173,7 @@ public class NebulaDynamicTableFactory implements DynamicTableSourceFactory,
                 .setGraphAddress(config.get(GRAPHADDRESS))
                 .setUsername(config.get(USERNAME))
                 .setPassword(config.get(PASSWORD))
+                .setTimeout(config.get(TIMEOUT))
                 .build();
     }
 

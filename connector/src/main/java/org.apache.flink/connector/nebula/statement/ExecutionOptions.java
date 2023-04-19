@@ -147,6 +147,11 @@ public abstract class ExecutionOptions implements Serializable {
      */
     private int maxRetries;
 
+    /**
+     * retry delay
+     */
+    private int retryDelayMs;
+
     protected ExecutionOptions(String graphSpace,
                                String executeStatement,
                                List<String> fields,
@@ -160,7 +165,8 @@ public abstract class ExecutionOptions implements Serializable {
                                WriteModeEnum writeMode,
                                int batchIntervalMs,
                                FailureHandlerEnum failureHandler,
-                               int maxRetries) {
+                               int maxRetries,
+                               int retryDelayMs) {
         this.graphSpace = graphSpace;
         this.executeStatement = executeStatement;
         this.fields = fields;
@@ -175,6 +181,7 @@ public abstract class ExecutionOptions implements Serializable {
         this.batchIntervalMs = batchIntervalMs;
         this.failureHandler = failureHandler;
         this.maxRetries = maxRetries;
+        this.retryDelayMs = retryDelayMs;
     }
 
     public String getGraphSpace() {
@@ -242,6 +249,10 @@ public abstract class ExecutionOptions implements Serializable {
         return maxRetries;
     }
 
+    public int getRetryDelayMs() {
+        return retryDelayMs;
+    }
+
     @Override
     public String toString() {
         return "ExecutionOptions{"
@@ -259,6 +270,7 @@ public abstract class ExecutionOptions implements Serializable {
                 + ", batchIntervalMs=" + batchIntervalMs
                 + ", failureHandler=" + failureHandler
                 + ", maxRetries=" + maxRetries
+                + ", retryDelayMs=" + retryDelayMs
                 + '}';
     }
 }

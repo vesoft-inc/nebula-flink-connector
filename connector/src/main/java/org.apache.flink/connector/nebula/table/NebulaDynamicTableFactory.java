@@ -130,6 +130,12 @@ public class NebulaDynamicTableFactory implements DynamicTableSourceFactory,
             .defaultValue(NebulaConstant.DEFAULT_EXECUTION_RETRY)
             .withDescription("maximum number of retries.");
 
+    public static final ConfigOption<Integer> RETRY_DELAY_MS = ConfigOptions
+            .key("retry-delay-ms")
+            .intType()
+            .defaultValue(NebulaConstant.DEFAULT_RETRY_DELAY_MS)
+            .withDescription("retry delay in milliseconds.");
+
     @Override
     public DynamicTableSink createDynamicTableSink(Context context) {
         final FactoryUtil.TableFactoryHelper helper =
@@ -197,7 +203,8 @@ public class NebulaDynamicTableFactory implements DynamicTableSourceFactory,
                             .setGraphSpace(config.get(GRAPH_SPACE))
                             .setTag(labelName)
                             .setFailureHandler(config.get(FAILURE_HANDLER))
-                            .setMaxRetries(config.get(MAX_RETRIES));
+                            .setMaxRetries(config.get(MAX_RETRIES))
+                            .setRetryDelayMs(config.get(RETRY_DELAY_MS));
             config.getOptional(BATCH_SIZE).ifPresent(builder::setBatchSize);
             config.getOptional(BATCH_INTERVAL_MS).ifPresent(builder::setBatchIntervalMs);
             return builder.build();
@@ -219,7 +226,8 @@ public class NebulaDynamicTableFactory implements DynamicTableSourceFactory,
                             .setGraphSpace(config.get(GRAPH_SPACE))
                             .setEdge(labelName)
                             .setFailureHandler(config.get(FAILURE_HANDLER))
-                            .setMaxRetries(config.get(MAX_RETRIES));
+                            .setMaxRetries(config.get(MAX_RETRIES))
+                            .setRetryDelayMs(config.get(RETRY_DELAY_MS));
             config.getOptional(BATCH_SIZE).ifPresent(builder::setBatchSize);
             config.getOptional(BATCH_INTERVAL_MS).ifPresent(builder::setBatchIntervalMs);
             return builder.build();
@@ -256,6 +264,7 @@ public class NebulaDynamicTableFactory implements DynamicTableSourceFactory,
         set.add(BATCH_INTERVAL_MS);
         set.add(FAILURE_HANDLER);
         set.add(MAX_RETRIES);
+        set.add(RETRY_DELAY_MS);
         return set;
     }
 }

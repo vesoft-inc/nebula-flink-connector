@@ -70,7 +70,8 @@ public class NebulaEdgeBatchExecutor extends NebulaBatchExecutor<Row> {
         LOG.debug("write statement: {}", statement);
 
         try {
-            executeStatement(session, statement, executionOptions.getMaxRetries());
+            executeStatement(session, statement,
+                    executionOptions.getMaxRetries(), executionOptions.getRetryDelayMs());
         } catch (IOException e) {
             if (executionOptions.getFailureHandler().equals(FailureHandlerEnum.FAIL)) {
                 throw new RuntimeException(e);

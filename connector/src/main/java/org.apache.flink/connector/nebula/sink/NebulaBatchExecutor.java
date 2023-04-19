@@ -30,8 +30,8 @@ public abstract class NebulaBatchExecutor<T> {
      */
     public abstract void executeBatch(Session session);
 
-    protected static void executeStatement(Session session, String statement, int maxRetries)
-            throws IOException {
+    protected static void executeStatement(Session session, String statement,
+                                           int maxRetries, int retryDelayMs) throws IOException {
         if (maxRetries < 0) {
             throw new IllegalArgumentException(
                     String.format("invalid max retries: %s", maxRetries));
@@ -56,8 +56,7 @@ public abstract class NebulaBatchExecutor<T> {
                     throw new IOException(e);
                 } else if (i + 1 <= maxRetries) {
                     try {
-                        int wait = NebulaConstant.EXECUTION_RETRY_WAIT_INCREMENT_MS * (i + 1);
-                        Thread.sleep(wait);
+                        Thread.sleep(retryDelayMs);
                     } catch (InterruptedException ex) {
                         Thread.currentThread().interrupt();
                         throw new IOException("interrupted", ex);

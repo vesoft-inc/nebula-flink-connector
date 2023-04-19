@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import org.apache.flink.connector.nebula.statement.EdgeExecutionOptions;
-import org.apache.flink.connector.nebula.utils.FailureHandlerEnum;
 import org.apache.flink.connector.nebula.utils.NebulaEdge;
 import org.apache.flink.connector.nebula.utils.NebulaEdges;
 import org.apache.flink.connector.nebula.utils.VidTypeEnum;
@@ -45,8 +44,18 @@ public class NebulaEdgeBatchExecutor extends NebulaBatchExecutor<Row> {
     }
 
     @Override
-    public void executeBatch(Session session) {
-        if (nebulaEdgeList.size() == 0) {
+    public void clearBatch() {
+        nebulaEdgeList.clear();
+    }
+
+    @Override
+    public boolean isBatchEmpty() {
+        return nebulaEdgeList.isEmpty();
+    }
+
+    @Override
+    public void executeBatch(Session session) throws IOException {
+        if (isBatchEmpty()) {
             return;
         }
         NebulaEdges nebulaEdges = new NebulaEdges(executionOptions.getLabel(),
@@ -67,16 +76,7 @@ public class NebulaEdgeBatchExecutor extends NebulaBatchExecutor<Row> {
             default:
                 throw new IllegalArgumentException("write mode is not supported");
         }
-        LOG.debug("write statement: {}", statement);
-
-        try {
-            executeStatement(session, statement,
-                    executionOptions.getMaxRetries(), executionOptions.getRetryDelayMs());
-        } catch (IOException e) {
-            if (executionOptions.getFailureHandler().equals(FailureHandlerEnum.FAIL)) {
-                throw new RuntimeException(e);
-            }
-        }
-        nebulaEdgeList.clear();
+        executeStatement(session, statement);
+        clearBatch();
     }
 }

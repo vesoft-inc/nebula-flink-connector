@@ -40,7 +40,10 @@ public class AbstractNebulaOutputFormatITTest extends NebulaITTestBase {
 
     private static TableEnvironment tableEnvironment;
 
-    class FlinkTestException extends Exception {
+    static class FlinkJobException extends RuntimeException {
+        public FlinkJobException(Throwable cause) {
+            super(cause);
+        }
     }
 
     @BeforeClass
@@ -162,7 +165,7 @@ public class AbstractNebulaOutputFormatITTest extends NebulaITTestBase {
     }
 
     private void runSinkVertexInvalid(String failureHandler)
-            throws ExecutionException, InterruptedException, FlinkTestException {
+            throws ExecutionException, InterruptedException {
         Configuration configuration = tableEnvironment.getConfig().getConfiguration();
         configuration.setString("table.dml-sync", "true");
 
@@ -191,7 +194,8 @@ public class AbstractNebulaOutputFormatITTest extends NebulaITTestBase {
                         + "'failure-handler'='"
                         + failureHandler
                         + "',"
-                        + "'max-retries'='0'"
+                        + "'max-retries'='0',"
+                        + "'retry-delay-ms'='100'"
                         + ")"
         );
 
@@ -199,17 +203,17 @@ public class AbstractNebulaOutputFormatITTest extends NebulaITTestBase {
             tableEnvironment.executeSql(
                     "INSERT INTO person_fail VALUES ('61', 'abc')"
             ).await();
-        } catch (RuntimeException e) {
-            throw new FlinkTestException();
+        } catch (Exception e) {
+            throw new FlinkJobException(e);
         }
     }
 
     /**
      * sink Nebula Graph Vertex Data and fail with error
      */
-    @Test(expected = FlinkTestException.class)
+    @Test(expected = FlinkJobException.class)
     public void testSinkVertexDataFailInvalid()
-            throws ExecutionException, InterruptedException, FlinkTestException {
+            throws ExecutionException, InterruptedException {
         runSinkVertexInvalid("fail");
     }
 
@@ -218,7 +222,7 @@ public class AbstractNebulaOutputFormatITTest extends NebulaITTestBase {
      */
     @Test
     public void testSinkVertexDataIgnoreInvalid()
-            throws ExecutionException, InterruptedException, FlinkTestException {
+            throws ExecutionException, InterruptedException {
         runSinkVertexInvalid("ignore");
     }
 
@@ -476,7 +480,7 @@ public class AbstractNebulaOutputFormatITTest extends NebulaITTestBase {
     }
 
     private void runSinkEdgeInvalid(String failureHandler)
-            throws ExecutionException, InterruptedException, FlinkTestException {
+            throws ExecutionException, InterruptedException {
         Configuration configuration = tableEnvironment.getConfig().getConfiguration();
         configuration.setString("table.dml-sync", "true");
 
@@ -508,7 +512,8 @@ public class AbstractNebulaOutputFormatITTest extends NebulaITTestBase {
                         + "'failure-handler'='"
                         + failureHandler
                         + "',"
-                        + "'max-retries'='0'"
+                        + "'max-retries'='0',"
+                        + "'retry-delay-ms'='100'"
                         + ")"
         );
 
@@ -516,17 +521,17 @@ public class AbstractNebulaOutputFormatITTest extends NebulaITTestBase {
             tableEnvironment.executeSql(
                     "INSERT INTO friend_fail VALUES ('61', '62', 'abc')"
             ).await();
-        } catch (RuntimeException e) {
-            throw new FlinkTestException();
+        } catch (Exception e) {
+            throw new FlinkJobException(e);
         }
     }
 
     /**
      * sink Nebula Graph Edge Data and fail with error
      */
-    @Test(expected = FlinkTestException.class)
+    @Test(expected = FlinkJobException.class)
     public void testSinkEdgeDataFailInvalid()
-            throws ExecutionException, InterruptedException, FlinkTestException {
+            throws ExecutionException, InterruptedException {
         runSinkEdgeInvalid("fail");
     }
 
@@ -535,7 +540,7 @@ public class AbstractNebulaOutputFormatITTest extends NebulaITTestBase {
      */
     @Test
     public void testSinkEdgeDataIgnoreInvalid()
-            throws ExecutionException, InterruptedException, FlinkTestException {
+            throws ExecutionException, InterruptedException {
         runSinkEdgeInvalid("ignore");
     }
 

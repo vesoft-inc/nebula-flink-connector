@@ -6,13 +6,13 @@
 package org.apache.flink.connector.nebula.sink;
 
 import com.vesoft.nebula.PropertyType;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.flink.connector.nebula.MockData;
 import org.apache.flink.connector.nebula.NebulaITTestBase;
 import org.apache.flink.connector.nebula.statement.VertexExecutionOptions;
-import org.apache.flink.connector.nebula.utils.FailureHandlerEnum;
 import org.apache.flink.connector.nebula.utils.VidTypeEnum;
 import org.apache.flink.connector.nebula.utils.WriteModeEnum;
 import org.apache.flink.types.Row;
@@ -175,7 +175,7 @@ public class NebulaVertexBatchExecutorTest extends NebulaITTestBase {
      * test batch execute for int vid and insert mode
      */
     @Test
-    public void testExecuteBatch() {
+    public void testExecuteBatch() throws IOException {
         VertexExecutionOptions options = builder
                 .setGraphSpace("test_int")
                 .setPolicy("HASH")
@@ -194,7 +194,7 @@ public class NebulaVertexBatchExecutorTest extends NebulaITTestBase {
      * test batch execute for int vid and UPDATE mode
      */
     @Test
-    public void testExecuteBatchWithUpdate() {
+    public void testExecuteBatchWithUpdate() throws IOException {
         testExecuteBatch();
         VertexExecutionOptions options = builder
                 .setGraphSpace("test_int")
@@ -214,7 +214,7 @@ public class NebulaVertexBatchExecutorTest extends NebulaITTestBase {
      * test batch execute for int vid and DELETE mode
      */
     @Test
-    public void testExecuteBatchWithDelete() {
+    public void testExecuteBatchWithDelete() throws IOException {
         VertexExecutionOptions options = builder.setGraphSpace("test_int")
                 .setPolicy("HASH")
                 .setWriteMode(WriteModeEnum.DELETE)
@@ -229,49 +229,10 @@ public class NebulaVertexBatchExecutorTest extends NebulaITTestBase {
     }
 
     /**
-     * test batch execute with invalid data and fail
-     */
-    @Test(expected = RuntimeException.class)
-    public void testExecuteBatchFailInvalid() {
-        VertexExecutionOptions options = builder.setGraphSpace("test_int")
-                .setWriteMode(WriteModeEnum.INSERT)
-                .setFailureHandler(FailureHandlerEnum.FAIL)
-                .build();
-        NebulaVertexBatchExecutor vertexBatchExecutor =
-                new NebulaVertexBatchExecutor(options, VidTypeEnum.INT, schema);
-        Row row = Row.copy(row1);
-        row.setField(3, "abc");
-        vertexBatchExecutor.addToBatch(row);
-
-        executeNGql("USE test_int");
-        vertexBatchExecutor.executeBatch(session);
-    }
-
-    /**
-     * test batch execute with invalid data and ignore
-     */
-    @Test
-    public void testExecuteBatchIgnoreInvalid() {
-        VertexExecutionOptions options = builder.setGraphSpace("test_int")
-                .setWriteMode(WriteModeEnum.INSERT)
-                .setFailureHandler(FailureHandlerEnum.IGNORE)
-                .setMaxRetries(2)
-                .build();
-        NebulaVertexBatchExecutor vertexBatchExecutor =
-                new NebulaVertexBatchExecutor(options, VidTypeEnum.INT, schema);
-        Row row = Row.copy(row1);
-        row.setField(3, "abc");
-        vertexBatchExecutor.addToBatch(row);
-
-        executeNGql("USE test_int");
-        vertexBatchExecutor.executeBatch(session);
-    }
-
-    /**
      * test batch execute for string vid and insert mode
      */
     @Test
-    public void testExecuteBatchWithStringVidAndInsert() {
+    public void testExecuteBatchWithStringVidAndInsert() throws IOException {
         VertexExecutionOptions options = builder
                 .setGraphSpace("test_string")
                 .setWriteMode(WriteModeEnum.INSERT)
@@ -289,7 +250,7 @@ public class NebulaVertexBatchExecutorTest extends NebulaITTestBase {
      * test batch execute for string vid and update mode
      */
     @Test
-    public void testExecuteBatchWithStringVidAndUpdate() {
+    public void testExecuteBatchWithStringVidAndUpdate() throws IOException {
         testExecuteBatchWithStringVidAndInsert();
         VertexExecutionOptions options = builder
                 .setGraphSpace("test_string")
@@ -308,7 +269,7 @@ public class NebulaVertexBatchExecutorTest extends NebulaITTestBase {
      * test batch execute for string vid and DELETE mode
      */
     @Test
-    public void testExecuteBatchWithStringVidAndDelete() {
+    public void testExecuteBatchWithStringVidAndDelete() throws IOException {
         VertexExecutionOptions options = builder
                 .setGraphSpace("test_string")
                 .setWriteMode(WriteModeEnum.DELETE)

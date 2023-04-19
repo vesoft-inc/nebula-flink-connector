@@ -81,8 +81,8 @@ public abstract class NebulaInputFormat<T> extends RichInputFormat<T, InputSplit
             metaClient = metaConnectionProvider.getMetaClient();
             numPart = metaClient.getPartsAlloc(executionOptions.getGraphSpace()).size();
         } catch (Exception e) {
-            LOG.error("connect storage client error, ", e);
-            throw new IOException("connect storage client error, ", e);
+            LOG.error("connect storage client error", e);
+            throw new IOException("connect storage client error", e);
         }
         rows = new ArrayList<>();
     }
@@ -97,8 +97,8 @@ public abstract class NebulaInputFormat<T> extends RichInputFormat<T, InputSplit
                 metaClient.close();
             }
         } catch (Exception e) {
-            LOG.error("close client error,", e);
-            throw new IOException("close client error,", e);
+            LOG.error("close client error", e);
+            throw new IOException("close client error", e);
         }
     }
 
@@ -135,8 +135,8 @@ public abstract class NebulaInputFormat<T> extends RichInputFormat<T, InputSplit
             try {
                 hasNext = nebulaSource.hasNext();
             } catch (Exception e) {
-                LOG.error("scan NebulaGraph error, ", e);
-                throw new IOException("scan error, ", e);
+                LOG.error("scan NebulaGraph error", e);
+                throw new IOException("scan error", e);
             }
         }
     }
@@ -157,8 +157,8 @@ public abstract class NebulaInputFormat<T> extends RichInputFormat<T, InputSplit
         try {
             hasNext = nebulaSource.hasNext();
         } catch (Exception e) {
-            LOG.error("scan NebulaGraph error, ", e);
-            throw new IOException("scan NebulaGraph error, ", e);
+            LOG.error("scan NebulaGraph error", e);
+            throw new IOException("scan NebulaGraph error", e);
         }
         scannedRows++;
         return nebulaConverter.convert(row);

@@ -1,6 +1,7 @@
 package org.apache.flink.connector.nebula.sink;
 
 import com.vesoft.nebula.client.graph.net.Session;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
@@ -47,7 +48,20 @@ public class NebulaTableBufferReducedExecutor extends NebulaBatchExecutor<RowDat
     }
 
     @Override
-    public void executeBatch(Session session) {
+    public void clearBatch() {
+        reduceBuffer.clear();
+    }
+
+    @Override
+    public boolean isBatchEmpty() {
+        return reduceBuffer.isEmpty();
+    }
+
+    @Override
+    public void executeBatch(Session session) throws IOException {
+        if (isBatchEmpty()) {
+            return;
+        }
         for (Tuple2<Boolean, Row> value : reduceBuffer.values()) {
             boolean isUpsert = value.f0;
             Row row = value.f1;
@@ -57,8 +71,13 @@ public class NebulaTableBufferReducedExecutor extends NebulaBatchExecutor<RowDat
                 deleteExecutor.addToBatch(row);
             }
         }
-        insertExecutor.executeBatch(session);
-        deleteExecutor.executeBatch(session);
-        reduceBuffer.clear();
+        try {
+            insertExecutor.executeBatch(session);
+            deleteExecutor.executeBatch(session);
+        } finally {
+            insertExecutor.clearBatch();
+            deleteExecutor.clearBatch();
+        }
+        clearBatch();
     }
 }

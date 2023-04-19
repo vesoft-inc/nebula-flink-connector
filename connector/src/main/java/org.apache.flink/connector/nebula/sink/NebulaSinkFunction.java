@@ -41,12 +41,12 @@ public class NebulaSinkFunction<T> extends RichSinkFunction<T> implements Checkp
     }
 
     @Override
-    public void close() {
+    public void close() throws Exception {
         outputFormat.close();
     }
 
     @Override
-    public void invoke(T value, Context context) {
+    public void invoke(T value, Context context) throws Exception {
         checkErrorAndRethrow();
         outputFormat.writeRecord(value);
     }

@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import org.apache.flink.connector.nebula.statement.VertexExecutionOptions;
-import org.apache.flink.connector.nebula.utils.FailureHandlerEnum;
 import org.apache.flink.connector.nebula.utils.NebulaVertex;
 import org.apache.flink.connector.nebula.utils.NebulaVertices;
 import org.apache.flink.connector.nebula.utils.VidTypeEnum;
@@ -48,8 +47,18 @@ public class NebulaVertexBatchExecutor extends NebulaBatchExecutor<Row> {
     }
 
     @Override
-    public void executeBatch(Session session) {
-        if (nebulaVertexList.size() == 0) {
+    public void clearBatch() {
+        nebulaVertexList.clear();
+    }
+
+    @Override
+    public boolean isBatchEmpty() {
+        return nebulaVertexList.isEmpty();
+    }
+
+    @Override
+    public void executeBatch(Session session) throws IOException {
+        if (isBatchEmpty()) {
             return;
         }
         NebulaVertices nebulaVertices = new NebulaVertices(executionOptions.getLabel(),
@@ -69,16 +78,7 @@ public class NebulaVertexBatchExecutor extends NebulaBatchExecutor<Row> {
             default:
                 throw new IllegalArgumentException("write mode is not supported");
         }
-        LOG.debug("write statement: {}", statement);
-
-        try {
-            executeStatement(session, statement,
-                    executionOptions.getMaxRetries(), executionOptions.getRetryDelayMs());
-        } catch (IOException e) {
-            if (executionOptions.getFailureHandler().equals(FailureHandlerEnum.FAIL)) {
-                throw new RuntimeException(e);
-            }
-        }
-        nebulaVertexList.clear();
+        executeStatement(session, statement);
+        clearBatch();
     }
 }

@@ -8,7 +8,8 @@ package org.apache.flink.connector.nebula;
 public class MockData {
 
     public static String createStringSpace() {
-        return "CREATE SPACE IF NOT EXISTS test_string(partition_num=10,"
+        return "CLEAR SPACE IF EXISTS `test_string`;"
+                + "CREATE SPACE IF NOT EXISTS test_string(partition_num=10,"
                 + "vid_type=fixed_string(8));"
                 + "USE test_string;"
                 + "CREATE TAG IF NOT EXISTS person(col1 fixed_string(8), col2 string, col3 int32,"
@@ -18,7 +19,8 @@ public class MockData {
     }
 
     public static String createIntSpace() {
-        return "CREATE SPACE IF NOT EXISTS test_int(partition_num=10,vid_type=int64);"
+        return "CLEAR SPACE IF EXISTS `test_int`;"
+                + "CREATE SPACE IF NOT EXISTS test_int(partition_num=10,vid_type=int64);"
                 + "USE test_int;"
                 + "CREATE TAG IF NOT EXISTS person(col1 fixed_string(8), col2 string, col3 int32,"
                 + " col4 double, col5 date, col6 datetime, col7 time, col8 timestamp);"
@@ -27,10 +29,12 @@ public class MockData {
     }
 
     public static String createFlinkSinkSpace() {
-        return "CREATE SPACE IF NOT EXISTS flink_sink(partition_num=10,"
+        return "CLEAR SPACE IF EXISTS `flink_sink`;"
+                + "CREATE SPACE IF NOT EXISTS flink_sink(partition_num=10,"
                 + "vid_type=fixed_string(8));"
                 + "USE flink_sink;"
-                + "CREATE TAG IF NOT EXISTS player(name string, age int);";
+                + "CREATE TAG IF NOT EXISTS player(name string, age int);"
+                + "CREATE EDGE IF NOT EXISTS follow(degree int);";
     }
 
     public static String createFlinkTestSpace() {

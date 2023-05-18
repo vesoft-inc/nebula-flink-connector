@@ -32,7 +32,7 @@ public class NebulaStorageConnectionProvider implements Serializable {
         int retry = nebulaClientOptions.getConnectRetry();
         StorageClient storageClient;
         if (nebulaClientOptions.isEnableStorageSSL()) {
-            switch (nebulaClientOptions.getSSLSighType()) {
+            switch (nebulaClientOptions.getSSLSignType()) {
                 case CA: {
                     CASignParams caSignParams = nebulaClientOptions.getCaSignParam();
                     SSLParam sslParam = new CASignedSSLParam(caSignParams.getCaCrtFilePath(),

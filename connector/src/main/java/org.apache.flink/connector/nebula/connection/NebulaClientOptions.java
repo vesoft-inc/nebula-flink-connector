@@ -10,7 +10,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.flink.connector.nebula.utils.NebulaConstant;
-import org.apache.flink.connector.nebula.utils.SSLSighType;
+import org.apache.flink.connector.nebula.utils.SSLSignType;
 
 public class NebulaClientOptions implements Serializable {
 
@@ -34,7 +34,7 @@ public class NebulaClientOptions implements Serializable {
 
     private final boolean enableStorageSSL;
 
-    private final SSLSighType sslSighType;
+    private final SSLSignType sslSignType;
 
     private final CASignParams caSignParams;
 
@@ -45,7 +45,7 @@ public class NebulaClientOptions implements Serializable {
                                 String password, int timeout, int connectRetry,
                                 boolean enableGraphSSL, boolean enableMetaSSL,
                                 boolean enableStorageSSL,
-                                SSLSighType sslSighType, CASignParams caSignParams,
+                                SSLSignType sslSignType, CASignParams caSignParams,
                                 SelfSignParams selfSignParams) {
         this.metaAddress = metaAddress;
         this.graphAddress = graphAddress;
@@ -56,7 +56,7 @@ public class NebulaClientOptions implements Serializable {
         this.enableGraphSSL = enableGraphSSL;
         this.enableMetaSSL = enableMetaSSL;
         this.enableStorageSSL = enableStorageSSL;
-        this.sslSighType = sslSighType;
+        this.sslSignType = sslSignType;
         this.caSignParams = caSignParams;
         this.selfSignParams = selfSignParams;
     }
@@ -106,8 +106,8 @@ public class NebulaClientOptions implements Serializable {
         return enableStorageSSL;
     }
 
-    public SSLSighType getSSLSighType() {
-        return sslSighType;
+    public SSLSignType getSSLSignType() {
+        return sslSignType;
     }
 
     public CASignParams getCaSignParam() {
@@ -133,7 +133,7 @@ public class NebulaClientOptions implements Serializable {
         private boolean enableGraphSSL = false;
         private boolean enableMetaSSL = false;
         private boolean enableStorageSSL = false;
-        private SSLSighType sslSighType = null;
+        private SSLSignType sslSignType = null;
         private CASignParams caSignParams = null;
         private SelfSignParams selfSignParams = null;
 
@@ -183,8 +183,8 @@ public class NebulaClientOptions implements Serializable {
         }
 
 
-        public NebulaClientOptionsBuilder setSSLSignType(SSLSighType sslSighType) {
-            this.sslSighType = sslSighType;
+        public NebulaClientOptionsBuilder setSSLSignType(SSLSignType sslSignType) {
+            this.sslSignType = sslSignType;
             return this;
         }
 
@@ -211,11 +211,11 @@ public class NebulaClientOptions implements Serializable {
                             "storage ssl is enabled, meta ssl must be enabled.");
                 }
 
-                if (sslSighType == null) {
+                if (sslSignType == null) {
                     throw new IllegalArgumentException("ssl is enabled, ssl sign type must not be "
                             + "null");
                 }
-                switch (sslSighType) {
+                switch (sslSignType) {
                     case CA:
                         if (caSignParams == null) {
                             throw new IllegalArgumentException("ssl is enabled and sign type is "
@@ -244,7 +244,7 @@ public class NebulaClientOptions implements Serializable {
                     enableGraphSSL,
                     enableMetaSSL,
                     enableStorageSSL,
-                    sslSighType,
+                    sslSignType,
                     caSignParams,
                     selfSignParams);
         }

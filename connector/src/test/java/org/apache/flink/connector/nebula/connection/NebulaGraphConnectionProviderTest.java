@@ -11,7 +11,7 @@ import com.vesoft.nebula.client.graph.exception.IOErrorException;
 import com.vesoft.nebula.client.graph.exception.NotValidConnectionException;
 import com.vesoft.nebula.client.graph.net.NebulaPool;
 import java.net.UnknownHostException;
-import org.apache.flink.connector.nebula.utils.SSLSighType;
+import org.apache.flink.connector.nebula.utils.SSLSignType;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -67,7 +67,7 @@ public class NebulaGraphConnectionProviderTest {
                         .setTimeout(1000)
                         .setEnableGraphSSL(true)
                         .setEnableMetaSSL(true)
-                        .setSSLSignType(SSLSighType.CA)
+                        .setSSLSignType(SSLSignType.CA)
                         .setCaSignParam("src/test/resources/ssl/casigned.pem",
                                 "src/test/resources/ssl/casigned.crt",
                                 "src/test/resources/ssl/casigned.key")

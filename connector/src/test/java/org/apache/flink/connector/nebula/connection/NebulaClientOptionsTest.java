@@ -6,7 +6,7 @@
 
 package org.apache.flink.connector.nebula.connection;
 
-import org.apache.flink.connector.nebula.utils.SSLSighType;
+import org.apache.flink.connector.nebula.utils.SSLSignType;
 import org.junit.Test;
 
 public class NebulaClientOptionsTest {
@@ -22,7 +22,7 @@ public class NebulaClientOptionsTest {
                         .setTimeout(1000)
                         .setEnableGraphSSL(true)
                         .setEnableMetaSSL(true)
-                        .setSSLSignType(SSLSighType.CA)
+                        .setSSLSignType(SSLSignType.CA)
                         .setCaSignParam("caCrtFile", "crtFile", "keyFile")
                         .setSelfSignParam("crtFile", "keyFile", "password")
                         .build();
@@ -53,14 +53,14 @@ public class NebulaClientOptionsTest {
                 .setMetaAddress("127.0.0.1:9559")
                 .setEnableMetaSSL(false)
                 .setEnableStorageSSL(true)
-                .setSSLSignType(SSLSighType.CA)
+                .setSSLSignType(SSLSignType.CA)
                 .setCaSignParam("caCrtFile", "crtFile", "keyFile")
                 .build();
     }
 
 
     @Test(expected = IllegalArgumentException.class)
-    public void testNullSslSighType() {
+    public void testNullSslSignType() {
         NebulaClientOptions nebulaClientOptions = new NebulaClientOptions
                 .NebulaClientOptionsBuilder()
                 .setGraphAddress(null)
@@ -73,7 +73,7 @@ public class NebulaClientOptionsTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testNoSslSighType() {
+    public void testNoSslSignType() {
         NebulaClientOptions nebulaClientOptions = new NebulaClientOptions
                 .NebulaClientOptionsBuilder()
                 .setGraphAddress(null)
@@ -92,7 +92,7 @@ public class NebulaClientOptionsTest {
                 .setMetaAddress("127.0.0.1:9559")
                 .setEnableGraphSSL(false)
                 .setEnableMetaSSL(true)
-                .setSSLSignType(SSLSighType.CA)
+                .setSSLSignType(SSLSignType.CA)
                 .setSelfSignParam("crtFile", "keyFile", "password")
                 .build();
 
@@ -106,7 +106,7 @@ public class NebulaClientOptionsTest {
                 .setMetaAddress("127.0.0.1:9559")
                 .setEnableGraphSSL(false)
                 .setEnableMetaSSL(true)
-                .setSSLSignType(SSLSighType.SELF)
+                .setSSLSignType(SSLSignType.SELF)
                 .setCaSignParam("caCrtFile", "crtFile", "keyFile")
                 .build();
     }

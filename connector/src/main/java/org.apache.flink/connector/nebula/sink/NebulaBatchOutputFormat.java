@@ -21,7 +21,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
 import org.apache.flink.api.common.io.RichOutputFormat;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.connector.nebula.connection.NebulaGraphConnectionProvider;
@@ -170,25 +169,27 @@ public abstract class NebulaBatchOutputFormat<T, OptionsT extends ExecutionOptio
                 numPendingRow = 0;
                 break;
             } catch (Exception e) {
-                LOG.error(String.format("write data error (attempt %s)", i), e);
-                if (i >= maxRetries) {
-                    // clear the batch on failure after all retries
+                LOG.warn(String.format("write data error (attempt %d)", i), e);
+                boolean nonRecoverable = (e instanceof NebulaBatchExecutor.ExecutionException)
+                        && ((NebulaBatchExecutor.ExecutionException) e).isNonRecoverableError();
+                if (i >= maxRetries || nonRecoverable) {
+                    // clear the batch on failure when we do not want more retries
                     nebulaBatchExecutor.clearBatch();
                     numPendingRow = 0;
                     if (failOnError) {
                         throw e;
                     }
-                } else if (i + 1 <= maxRetries) {
+                    renewSession();
+                    break; // break the retry loop when we do not want more retries
+                } else {
                     try {
                         Thread.sleep(retryDelayMs);
                     } catch (InterruptedException ex) {
                         Thread.currentThread().interrupt();
                         throw new IOException("interrupted", ex);
                     }
+                    renewSession();
                 }
-                // We do not know whether the failure was due to an expired session or
-                // an issue with the query, so we renew the session anyway to be more robust.
-                renewSession();
             }
         }
     }

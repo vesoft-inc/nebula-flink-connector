@@ -19,7 +19,7 @@ import org.apache.flink.connector.nebula.source.NebulaSourceFunction;
 import org.apache.flink.connector.nebula.statement.EdgeExecutionOptions;
 import org.apache.flink.connector.nebula.statement.ExecutionOptions;
 import org.apache.flink.connector.nebula.statement.VertexExecutionOptions;
-import org.apache.flink.connector.nebula.utils.SSLSighType;
+import org.apache.flink.connector.nebula.utils.SSLSignType;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.types.Row;
@@ -82,7 +82,7 @@ public class FlinkConnectorSourceExample {
                         .setMetaAddress("127.0.0.1:9559")
                         .setEnableMetaSSL(true)
                         .setEnableStorageSSL(true)
-                        .setSSLSignType(SSLSighType.CA)
+                        .setSSLSignType(SSLSignType.CA)
                         .setCaSignParam("example/src/main/resources/ssl/casigned.pem",
                                 "example/src/main/resources/ssl/casigned.crt",
                                 "example/src/main/resources/ssl/casigned.key")
@@ -95,7 +95,7 @@ public class FlinkConnectorSourceExample {
                         .setMetaAddress("127.0.0.1:9559")
                         .setEnableMetaSSL(true)
                         .setEnableStorageSSL(true)
-                        .setSSLSignType(SSLSighType.SELF)
+                        .setSSLSignType(SSLSignType.SELF)
                         .setSelfSignParam("example/src/main/resources/ssl/selfsigned.pem",
                                 "example/src/main/resources/ssl/selfsigned.key",
                                 "vesoft")

@@ -43,7 +43,7 @@ public class NebulaMetaConnectionProvider implements Serializable {
         int retry = nebulaClientOptions.getConnectRetry();
         MetaClient metaClient;
         if (nebulaClientOptions.isEnableMetaSSL()) {
-            switch (nebulaClientOptions.getSSLSighType()) {
+            switch (nebulaClientOptions.getSSLSignType()) {
                 case CA: {
                     CASignParams caSignParams = nebulaClientOptions.getCaSignParam();
                     SSLParam sslParam = new CASignedSSLParam(caSignParams.getCaCrtFilePath(),

@@ -48,7 +48,7 @@ public class NebulaGraphConnectionProvider implements Serializable {
         poolConfig.setTimeout(nebulaClientOptions.getTimeout());
         if (nebulaClientOptions.isEnableGraphSSL()) {
             poolConfig.setEnableSsl(true);
-            switch (nebulaClientOptions.getSSLSighType()) {
+            switch (nebulaClientOptions.getSSLSignType()) {
                 case CA: {
                     CASignParams caSignParams = nebulaClientOptions.getCaSignParam();
                     SSLParam sslParam = new CASignedSSLParam(caSignParams.getCaCrtFilePath(),

@@ -5,8 +5,8 @@
 
 package org.apache.flink.connector.nebula.sink;
 
-import com.vesoft.nebula.client.graph.data.ResultSet;
 import com.vesoft.nebula.client.graph.net.Session;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -18,7 +18,7 @@ import org.apache.flink.types.Row;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class NebulaEdgeBatchExecutor implements NebulaBatchExecutor<Row> {
+public class NebulaEdgeBatchExecutor extends NebulaBatchExecutor<Row> {
     private static final Logger LOG = LoggerFactory.getLogger(NebulaEdgeBatchExecutor.class);
     private final EdgeExecutionOptions executionOptions;
     private final List<NebulaEdge> nebulaEdgeList;
@@ -44,9 +44,19 @@ public class NebulaEdgeBatchExecutor implements NebulaBatchExecutor<Row> {
     }
 
     @Override
-    public String executeBatch(Session session) {
-        if (nebulaEdgeList.size() == 0) {
-            return null;
+    public void clearBatch() {
+        nebulaEdgeList.clear();
+    }
+
+    @Override
+    public boolean isBatchEmpty() {
+        return nebulaEdgeList.isEmpty();
+    }
+
+    @Override
+    public void executeBatch(Session session) throws IOException {
+        if (isBatchEmpty()) {
+            return;
         }
         NebulaEdges nebulaEdges = new NebulaEdges(executionOptions.getLabel(),
                 executionOptions.getFields(), nebulaEdgeList, executionOptions.getPolicy(),
@@ -66,26 +76,7 @@ public class NebulaEdgeBatchExecutor implements NebulaBatchExecutor<Row> {
             default:
                 throw new IllegalArgumentException("write mode is not supported");
         }
-        LOG.debug("write statement={}", statement);
-
-        // execute ngql statement
-        ResultSet execResult = null;
-        try {
-            execResult = session.execute(statement);
-        } catch (Exception e) {
-            LOG.error("write data error, ", e);
-            nebulaEdgeList.clear();
-            return statement;
-        }
-
-        if (execResult.isSucceeded()) {
-            LOG.debug("write success");
-        } else {
-            LOG.error("write data failed: {}", execResult.getErrorMessage());
-            nebulaEdgeList.clear();
-            return statement;
-        }
-        nebulaEdgeList.clear();
-        return null;
+        executeStatement(session, statement);
+        clearBatch();
     }
 }

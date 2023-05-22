@@ -6,6 +6,7 @@
 package org.apache.flink.connector.nebula.sink;
 
 import com.vesoft.nebula.PropertyType;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -177,7 +178,7 @@ public class NebulaEdgeBatchExecutorTest extends NebulaITTestBase {
      * test batch execute for int vid and insert mode
      */
     @Test
-    public void testExecuteBatch() {
+    public void testExecuteBatch() throws IOException {
         EdgeExecutionOptions options = builder
                 .setGraphSpace("test_int")
                 .setPolicy("HASH")
@@ -189,16 +190,14 @@ public class NebulaEdgeBatchExecutorTest extends NebulaITTestBase {
         edgeBatchExecutor.addToBatch(row2);
 
         executeNGql("USE test_int");
-
-        String statement = edgeBatchExecutor.executeBatch(session);
-        assert (statement == null);
+        edgeBatchExecutor.executeBatch(session);
     }
 
     /**
-     * test batch exeucte for int vid and UPDATE mode
+     * test batch execute for int vid and UPDATE mode
      */
     @Test
-    public void testExecuteBatchWithUpdate() {
+    public void testExecuteBatchWithUpdate() throws IOException {
         testExecuteBatch();
         EdgeExecutionOptions options = builder
                 .setGraphSpace("test_int")
@@ -211,16 +210,14 @@ public class NebulaEdgeBatchExecutorTest extends NebulaITTestBase {
         edgeBatchExecutor.addToBatch(row2);
 
         executeNGql("USE test_int");
-
-        String statement = edgeBatchExecutor.executeBatch(session);
-        assert (statement == null);
+        edgeBatchExecutor.executeBatch(session);
     }
 
     /**
-     * test batch exeucte for int vid and DELETE mode
+     * test batch execute for int vid and DELETE mode
      */
     @Test
-    public void testExecuteBatchWithDelete() {
+    public void testExecuteBatchWithDelete() throws IOException {
         EdgeExecutionOptions options = builder.setGraphSpace("test_int")
                 .setPolicy("HASH")
                 .setWriteMode(WriteModeEnum.DELETE)
@@ -231,16 +228,15 @@ public class NebulaEdgeBatchExecutorTest extends NebulaITTestBase {
         edgeBatchExecutor.addToBatch(row2);
 
         executeNGql("USE test_int");
-
-        String statement = edgeBatchExecutor.executeBatch(session);
-        assert (statement == null);
+        edgeBatchExecutor.executeBatch(session);
     }
 
+
     /**
-     * test batch exeucte for string vid and insert mode
+     * test batch execute for string vid and insert mode
      */
     @Test
-    public void testExecuteBatchWithStringVidAndInsert() {
+    public void testExecuteBatchWithStringVidAndInsert() throws IOException {
         EdgeExecutionOptions options = builder
                 .setGraphSpace("test_string")
                 .setWriteMode(WriteModeEnum.INSERT)
@@ -251,16 +247,14 @@ public class NebulaEdgeBatchExecutorTest extends NebulaITTestBase {
         edgeBatchExecutor.addToBatch(row2);
 
         executeNGql("USE test_string");
-
-        String statement = edgeBatchExecutor.executeBatch(session);
-        assert (statement == null);
+        edgeBatchExecutor.executeBatch(session);
     }
 
     /**
      * test batch execute for string vid and update mode
      */
     @Test
-    public void testExecuteBatchWithStringVidAndUpdate() {
+    public void testExecuteBatchWithStringVidAndUpdate() throws IOException {
         testExecuteBatchWithStringVidAndInsert();
         EdgeExecutionOptions options = builder
                 .setGraphSpace("test_string")
@@ -272,16 +266,14 @@ public class NebulaEdgeBatchExecutorTest extends NebulaITTestBase {
         edgeBatchExecutor.addToBatch(row2);
 
         executeNGql("USE test_string");
-
-        String statement = edgeBatchExecutor.executeBatch(session);
-        assert (statement == null);
+        edgeBatchExecutor.executeBatch(session);
     }
 
     /**
      * test batch execute for string vid and DELETE mode
      */
     @Test
-    public void testExecuteBatchWithStringVidAndDelete() {
+    public void testExecuteBatchWithStringVidAndDelete() throws IOException {
         EdgeExecutionOptions options = builder
                 .setGraphSpace("test_string")
                 .setWriteMode(WriteModeEnum.DELETE)
@@ -292,9 +284,7 @@ public class NebulaEdgeBatchExecutorTest extends NebulaITTestBase {
         edgeBatchExecutor.addToBatch(row2);
 
         executeNGql("USE test_string");
-
-        String statement = edgeBatchExecutor.executeBatch(session);
-        assert (statement == null);
+        edgeBatchExecutor.executeBatch(session);
     }
 
 }

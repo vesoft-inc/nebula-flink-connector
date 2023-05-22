@@ -8,6 +8,7 @@ package org.apache.flink.connector.nebula.statement;
 import java.io.Serializable;
 import java.util.List;
 import org.apache.flink.connector.nebula.utils.DataTypeEnum;
+import org.apache.flink.connector.nebula.utils.FailureHandlerEnum;
 import org.apache.flink.connector.nebula.utils.PolicyEnum;
 import org.apache.flink.connector.nebula.utils.WriteModeEnum;
 import org.apache.flink.types.Row;
@@ -136,6 +137,20 @@ public abstract class ExecutionOptions implements Serializable {
      */
     private int batchIntervalMs;
 
+    /**
+     * failure handler
+     */
+    private FailureHandlerEnum failureHandler;
+
+    /**
+     * maximum number of retries
+     */
+    private int maxRetries;
+
+    /**
+     * retry delay
+     */
+    private int retryDelayMs;
 
     protected ExecutionOptions(String graphSpace,
                                String executeStatement,
@@ -148,7 +163,10 @@ public abstract class ExecutionOptions implements Serializable {
                                int batchSize,
                                PolicyEnum policy,
                                WriteModeEnum writeMode,
-                               int batchIntervalMs) {
+                               int batchIntervalMs,
+                               FailureHandlerEnum failureHandler,
+                               int maxRetries,
+                               int retryDelayMs) {
         this.graphSpace = graphSpace;
         this.executeStatement = executeStatement;
         this.fields = fields;
@@ -161,6 +179,9 @@ public abstract class ExecutionOptions implements Serializable {
         this.policy = policy;
         this.writeMode = writeMode;
         this.batchIntervalMs = batchIntervalMs;
+        this.failureHandler = failureHandler;
+        this.maxRetries = maxRetries;
+        this.retryDelayMs = retryDelayMs;
     }
 
     public String getGraphSpace() {
@@ -220,6 +241,18 @@ public abstract class ExecutionOptions implements Serializable {
         return batchIntervalMs;
     }
 
+    public FailureHandlerEnum getFailureHandler() {
+        return failureHandler;
+    }
+
+    public int getMaxRetries() {
+        return maxRetries;
+    }
+
+    public int getRetryDelayMs() {
+        return retryDelayMs;
+    }
+
     @Override
     public String toString() {
         return "ExecutionOptions{"
@@ -235,6 +268,9 @@ public abstract class ExecutionOptions implements Serializable {
                 + ", policy=" + policy
                 + ", mode=" + writeMode
                 + ", batchIntervalMs=" + batchIntervalMs
+                + ", failureHandler=" + failureHandler
+                + ", maxRetries=" + maxRetries
+                + ", retryDelayMs=" + retryDelayMs
                 + '}';
     }
 }

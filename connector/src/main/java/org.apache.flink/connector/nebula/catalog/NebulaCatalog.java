@@ -98,7 +98,7 @@ public class NebulaCatalog extends AbstractNebulaCatalog {
         try {
             this.metaClient = metaConnectionProvider.getMetaClient();
         } catch (UnknownHostException | ClientServerIncompatibleException e) {
-            LOG.error("nebula get meta client error, ", e);
+            LOG.error("nebula get meta client error", e);
             throw new CatalogException("nebula get meta client error.", e);
         }
 
@@ -108,8 +108,8 @@ public class NebulaCatalog extends AbstractNebulaCatalog {
                     graphConnectionProvider.getPassword(), true);
         } catch (NotValidConnectionException | IOErrorException | AuthFailedException
                 | ClientServerIncompatibleException | UnknownHostException e) {
-            LOG.error("failed to get graph session, ", e);
-            throw new CatalogException("get graph session error, ", e);
+            LOG.error("failed to get graph session", e);
+            throw new CatalogException("get graph session error.", e);
         }
     }
 
@@ -137,7 +137,7 @@ public class NebulaCatalog extends AbstractNebulaCatalog {
                 spaceNames.add(new String(space.getName()));
             }
         } catch (TException | ExecuteFailedException | ClientServerIncompatibleException e) {
-            LOG.error("failed to connect meta service vis {} ", address, e);
+            LOG.error("failed to connect meta service via " + address, e);
             throw new CatalogException("nebula meta service connect failed.", e);
         }
         return spaceNames;
@@ -152,7 +152,7 @@ public class NebulaCatalog extends AbstractNebulaCatalog {
                 props.put("spaceId",
                         String.valueOf(metaClient.getSpace(databaseName).getSpace_id()));
             } catch (TException | ExecuteFailedException e) {
-                LOG.error("get spaceId error, ", e);
+                LOG.error("get spaceId error", e);
             }
             return new CatalogDatabaseImpl(props, databaseName);
         } else {
@@ -186,13 +186,13 @@ public class NebulaCatalog extends AbstractNebulaCatalog {
             )
         );
         if (!newProperties.containsKey(NebulaConstant.CREATE_VID_TYPE)) {
-            LOG.error("failed to create graph space {}, missing VID type param", properties);
+            LOG.error("failed to create graph space {}, missing VID type", properties);
             throw new CatalogException("nebula create graph space failed, missing VID type.");
         }
         String vidType = newProperties.get(NebulaConstant.CREATE_VID_TYPE);
         if (!NebulaUtils.checkValidVidType(vidType)) {
-            LOG.error("VID type not satisfy {}", vidType);
-            throw new CatalogException("nebula graph dont support VID type.");
+            LOG.error("invalid VID type: {}", vidType);
+            throw new CatalogException("nebula does not support the specified VID type.");
         }
         NebulaSpace space = new NebulaSpace(
                 dataBaseName,catalogDatabase.getComment(), newProperties);
@@ -210,7 +210,7 @@ public class NebulaCatalog extends AbstractNebulaCatalog {
             LOG.debug("create space success.");
         } else {
             LOG.error("create space failed: {}", execResult.getErrorMessage());
-            throw new CatalogException("create space failed, " + execResult.getErrorMessage());
+            throw new CatalogException("create space failed: " + execResult.getErrorMessage());
         }
     }
 
@@ -227,7 +227,7 @@ public class NebulaCatalog extends AbstractNebulaCatalog {
         try {
             return (listTables(graphSpace).contains(table));
         } catch (DatabaseNotExistException e) {
-            throw new CatalogException("failed to call tableExists function, ", e);
+            throw new CatalogException("failed to call tableExists function.", e);
         }
     }
 
@@ -248,7 +248,7 @@ public class NebulaCatalog extends AbstractNebulaCatalog {
         try {
             metaClient.connect();
         } catch (TException | ClientServerIncompatibleException e) {
-            LOG.error("failed to connect meta service vis {} ", address, e);
+            LOG.error("failed to connect meta service via " + address, e);
             throw new CatalogException("nebula meta service connect failed.", e);
         }
         List<String> tables = new ArrayList<>();
@@ -260,7 +260,7 @@ public class NebulaCatalog extends AbstractNebulaCatalog {
                 tables.add("EDGE" + NebulaConstant.POINT + new String(edge.edge_name));
             }
         } catch (TException | ExecuteFailedException e) {
-            LOG.error("get tags or edges error,", e);
+            LOG.error("get tags or edges error", e);
         }
         return tables;
     }
@@ -284,7 +284,7 @@ public class NebulaCatalog extends AbstractNebulaCatalog {
         try {
             metaClient.connect();
         } catch (TException | ClientServerIncompatibleException e) {
-            LOG.error("failed to connect meta service vis {} ", address, e);
+            LOG.error("failed to connect meta service via " + address, e);
             throw new CatalogException("nebula meta service connect failed.", e);
         }
 
@@ -296,7 +296,7 @@ public class NebulaCatalog extends AbstractNebulaCatalog {
                 schema = metaClient.getEdge(graphSpace, label);
             }
         } catch (TException | ExecuteFailedException e) {
-            LOG.error("get tag or edge schema error, ", e);
+            LOG.error("get tag or edge schema error", e);
             return null;
         }
 

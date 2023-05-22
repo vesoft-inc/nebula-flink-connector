@@ -1,18 +1,16 @@
 package org.apache.flink.connector.nebula.sink;
 
 import com.vesoft.nebula.client.graph.net.Session;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.table.connector.sink.DynamicTableSink.DataStructureConverter;
 import org.apache.flink.table.data.RowData;
 import org.apache.flink.types.Row;
 
-public class NebulaTableBufferReducedExecutor implements NebulaBatchExecutor<RowData> {
+public class NebulaTableBufferReducedExecutor extends NebulaBatchExecutor<RowData> {
     private final DataStructureConverter dataStructureConverter;
     private final Function<Row, Row> keyExtractor;
     private final NebulaBatchExecutor<Row> insertExecutor;
@@ -50,7 +48,20 @@ public class NebulaTableBufferReducedExecutor implements NebulaBatchExecutor<Row
     }
 
     @Override
-    public String executeBatch(Session session) {
+    public void clearBatch() {
+        reduceBuffer.clear();
+    }
+
+    @Override
+    public boolean isBatchEmpty() {
+        return reduceBuffer.isEmpty();
+    }
+
+    @Override
+    public void executeBatch(Session session) throws IOException {
+        if (isBatchEmpty()) {
+            return;
+        }
         for (Tuple2<Boolean, Row> value : reduceBuffer.values()) {
             boolean isUpsert = value.f0;
             Row row = value.f1;
@@ -60,11 +71,13 @@ public class NebulaTableBufferReducedExecutor implements NebulaBatchExecutor<Row
                 deleteExecutor.addToBatch(row);
             }
         }
-        String insertErrorStatement = insertExecutor.executeBatch(session);
-        String deleteErrorStatement = deleteExecutor.executeBatch(session);
-        reduceBuffer.clear();
-        String errorStatements = Stream.of(insertErrorStatement, deleteErrorStatement)
-                .filter(Objects::nonNull).collect(Collectors.joining("; "));
-        return errorStatements.isEmpty() ? null : errorStatements;
+        try {
+            insertExecutor.executeBatch(session);
+            deleteExecutor.executeBatch(session);
+        } finally {
+            insertExecutor.clearBatch();
+            deleteExecutor.clearBatch();
+        }
+        clearBatch();
     }
 }

@@ -65,6 +65,7 @@ public class NebulaMetaConnectionProvider implements Serializable {
             metaClient = new MetaClient(addresses, timeout, retry, retry);
         }
 
+        metaClient.setVersion(nebulaClientOptions.getVersion());
         metaClient.connect();
         return metaClient;
     }

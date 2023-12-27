@@ -10,7 +10,9 @@ import com.vesoft.nebula.client.graph.exception.ClientServerIncompatibleExceptio
 import com.vesoft.nebula.client.graph.exception.IOErrorException;
 import com.vesoft.nebula.client.graph.exception.NotValidConnectionException;
 import com.vesoft.nebula.client.graph.net.NebulaPool;
+
 import java.net.UnknownHostException;
+
 import org.apache.flink.connector.nebula.utils.SSLSignType;
 import org.junit.After;
 import org.junit.Before;
@@ -40,6 +42,7 @@ public class NebulaGraphConnectionProviderTest {
                         .setPassword("nebula")
                         .setConnectRetry(1)
                         .setTimeout(1000)
+                        .setVersion("test")
                         .build();
         NebulaGraphConnectionProvider graphConnectionProvider =
                 new NebulaGraphConnectionProvider(nebulaClientOptions);
@@ -49,6 +52,33 @@ public class NebulaGraphConnectionProviderTest {
         } catch (Exception e) {
             LOG.info("get session failed", e);
             assert (false);
+        }
+    }
+
+    @Test
+    public void getNebulaPoolWithWrongVersion() {
+        NebulaClientOptions nebulaClientOptions =
+                new NebulaClientOptions.NebulaClientOptionsBuilder()
+                        .setGraphAddress("127.0.0.1:9669")
+                        .setMetaAddress("127.0.0.1:9559")
+                        .setUsername("root")
+                        .setPassword("nebula")
+                        .setConnectRetry(1)
+                        .setTimeout(1000)
+                        .setVersion("INVALID_VERSION")
+                        .build();
+        NebulaGraphConnectionProvider graphConnectionProvider =
+                new NebulaGraphConnectionProvider(nebulaClientOptions);
+        try {
+            NebulaPool nebulaPool = graphConnectionProvider.getNebulaPool();
+            nebulaPool.getSession("root", "nebula", true);
+        } catch (Exception e) {
+            LOG.info("get session failed", e);
+            if (e.getMessage().contains("Current client is not compatible with the remote server")) {
+                assert true;
+            } else {
+                assert false;
+            }
         }
     }
 
@@ -81,7 +111,7 @@ public class NebulaGraphConnectionProviderTest {
             NebulaPool pool = graphConnectionProvider.getNebulaPool();
             pool.getSession("root", "nebula", true);
         } catch (UnknownHostException | IOErrorException | AuthFailedException
-                | ClientServerIncompatibleException e) {
+                 | ClientServerIncompatibleException e) {
             LOG.error("get session failed", e);
             assert (false);
         }

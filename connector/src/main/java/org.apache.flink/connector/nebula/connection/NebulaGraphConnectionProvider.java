@@ -12,11 +12,13 @@ import com.vesoft.nebula.client.graph.data.HostAddress;
 import com.vesoft.nebula.client.graph.data.SSLParam;
 import com.vesoft.nebula.client.graph.data.SelfSignedSSLParam;
 import com.vesoft.nebula.client.graph.net.NebulaPool;
+
 import java.io.Serializable;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
 import org.apache.flink.connector.nebula.utils.NebulaConstant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,6 +48,7 @@ public class NebulaGraphConnectionProvider implements Serializable {
         NebulaPool nebulaPool = new NebulaPool();
         NebulaPoolConfig poolConfig = new NebulaPoolConfig();
         poolConfig.setTimeout(nebulaClientOptions.getTimeout());
+        poolConfig.setVersion(nebulaClientOptions.getVersion());
         if (nebulaClientOptions.isEnableGraphSSL()) {
             poolConfig.setEnableSsl(true);
             switch (nebulaClientOptions.getSSLSignType()) {
@@ -67,8 +70,11 @@ public class NebulaGraphConnectionProvider implements Serializable {
                     throw new IllegalArgumentException("ssl sign type is not supported.");
             }
         }
-        nebulaPool.init(addresses, poolConfig);
-        return nebulaPool;
+        if (nebulaPool.init(addresses, poolConfig)) {
+            return nebulaPool;
+        } else {
+            throw new RuntimeException("NebulaPool init failed.");
+        }
     }
 
     /**

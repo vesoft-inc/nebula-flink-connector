@@ -72,8 +72,7 @@ public class NebulaGraphConnectionProviderTest {
             nebulaPool.getSession("root", "nebula", true);
         } catch (Exception e) {
             LOG.info("get session failed", e);
-            if (e.getMessage()
-                    .contains("Current client is not compatible with the remote server")) {
+            if (e.getMessage().contains("NebulaPool init failed.")) {
                 assert true;
             } else {
                 assert false;

@@ -10,9 +10,7 @@ import com.vesoft.nebula.client.graph.exception.ClientServerIncompatibleExceptio
 import com.vesoft.nebula.client.graph.exception.IOErrorException;
 import com.vesoft.nebula.client.graph.exception.NotValidConnectionException;
 import com.vesoft.nebula.client.graph.net.NebulaPool;
-
 import java.net.UnknownHostException;
-
 import org.apache.flink.connector.nebula.utils.SSLSignType;
 import org.junit.After;
 import org.junit.Before;
@@ -74,7 +72,8 @@ public class NebulaGraphConnectionProviderTest {
             nebulaPool.getSession("root", "nebula", true);
         } catch (Exception e) {
             LOG.info("get session failed", e);
-            if (e.getMessage().contains("Current client is not compatible with the remote server")) {
+            if (e.getMessage()
+                    .contains("Current client is not compatible with the remote server")) {
                 assert true;
             } else {
                 assert false;

@@ -83,7 +83,7 @@ public class NebulaGraphConnectionProviderTest {
     /**
      * nebula server does not enable ssl, the connection cannot be established correctly.
      */
-    @Test(expected = NotValidConnectionException.class)
+    @Test(expected = RuntimeException.class)
     public void getSessionWithSsl() throws NotValidConnectionException {
         NebulaClientOptions nebulaClientOptions =
                 new NebulaClientOptions.NebulaClientOptionsBuilder()

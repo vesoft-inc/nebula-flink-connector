@@ -5,7 +5,6 @@
 
 package org.apache.flink.connector.nebula.connection;
 
-
 import com.vesoft.nebula.client.graph.NebulaPoolConfig;
 import com.vesoft.nebula.client.graph.data.CASignedSSLParam;
 import com.vesoft.nebula.client.graph.data.HostAddress;
@@ -43,9 +42,9 @@ public class NebulaGraphConnectionProvider implements Serializable {
         }
 
         Collections.shuffle(addresses);
-        NebulaPool nebulaPool = new NebulaPool();
         NebulaPoolConfig poolConfig = new NebulaPoolConfig();
         poolConfig.setTimeout(nebulaClientOptions.getTimeout());
+        poolConfig.setVersion(nebulaClientOptions.getVersion());
         if (nebulaClientOptions.isEnableGraphSSL()) {
             poolConfig.setEnableSsl(true);
             switch (nebulaClientOptions.getSSLSignType()) {
@@ -67,8 +66,12 @@ public class NebulaGraphConnectionProvider implements Serializable {
                     throw new IllegalArgumentException("ssl sign type is not supported.");
             }
         }
-        nebulaPool.init(addresses, poolConfig);
-        return nebulaPool;
+        NebulaPool nebulaPool = new NebulaPool();
+        if (nebulaPool.init(addresses, poolConfig)) {
+            return nebulaPool;
+        } else {
+            throw new RuntimeException("NebulaPool init failed.");
+        }
     }
 
     /**

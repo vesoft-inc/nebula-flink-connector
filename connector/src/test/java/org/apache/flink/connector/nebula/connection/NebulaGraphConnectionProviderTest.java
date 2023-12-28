@@ -40,6 +40,7 @@ public class NebulaGraphConnectionProviderTest {
                         .setPassword("nebula")
                         .setConnectRetry(1)
                         .setTimeout(1000)
+                        .setVersion("test")
                         .build();
         NebulaGraphConnectionProvider graphConnectionProvider =
                 new NebulaGraphConnectionProvider(nebulaClientOptions);
@@ -52,10 +53,37 @@ public class NebulaGraphConnectionProviderTest {
         }
     }
 
+    @Test
+    public void getNebulaPoolWithWrongVersion() {
+        NebulaClientOptions nebulaClientOptions =
+                new NebulaClientOptions.NebulaClientOptionsBuilder()
+                        .setGraphAddress("127.0.0.1:9669")
+                        .setMetaAddress("127.0.0.1:9559")
+                        .setUsername("root")
+                        .setPassword("nebula")
+                        .setConnectRetry(1)
+                        .setTimeout(1000)
+                        .setVersion("INVALID_VERSION")
+                        .build();
+        NebulaGraphConnectionProvider graphConnectionProvider =
+                new NebulaGraphConnectionProvider(nebulaClientOptions);
+        try {
+            NebulaPool nebulaPool = graphConnectionProvider.getNebulaPool();
+            nebulaPool.getSession("root", "nebula", true);
+        } catch (Exception e) {
+            LOG.info("get session failed", e);
+            if (e.getMessage().contains("NebulaPool init failed.")) {
+                assert true;
+            } else {
+                assert false;
+            }
+        }
+    }
+
     /**
      * nebula server does not enable ssl, the connection cannot be established correctly.
      */
-    @Test(expected = NotValidConnectionException.class)
+    @Test(expected = RuntimeException.class)
     public void getSessionWithSsl() throws NotValidConnectionException {
         NebulaClientOptions nebulaClientOptions =
                 new NebulaClientOptions.NebulaClientOptionsBuilder()
@@ -81,7 +109,7 @@ public class NebulaGraphConnectionProviderTest {
             NebulaPool pool = graphConnectionProvider.getNebulaPool();
             pool.getSession("root", "nebula", true);
         } catch (UnknownHostException | IOErrorException | AuthFailedException
-                | ClientServerIncompatibleException e) {
+                 | ClientServerIncompatibleException e) {
             LOG.error("get session failed", e);
             assert (false);
         }

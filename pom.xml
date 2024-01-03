@@ -7,7 +7,7 @@
     <groupId>com.vesoft</groupId>
     <artifactId>nebula-flink</artifactId>
     <packaging>pom</packaging>
-    <version>3.7.0-zszq</version>
+    <version>3.7.0-auth</version>
 
     <modules>
         <module>connector</module>

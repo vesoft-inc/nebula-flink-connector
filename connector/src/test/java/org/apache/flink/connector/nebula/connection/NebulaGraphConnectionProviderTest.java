@@ -40,7 +40,7 @@ public class NebulaGraphConnectionProviderTest {
                         .setPassword("nebula")
                         .setConnectRetry(1)
                         .setTimeout(1000)
-                        .setVersion("test")
+                        .setHandshakeKey("test")
                         .build();
         NebulaGraphConnectionProvider graphConnectionProvider =
                 new NebulaGraphConnectionProvider(nebulaClientOptions);
@@ -63,7 +63,7 @@ public class NebulaGraphConnectionProviderTest {
                         .setPassword("nebula")
                         .setConnectRetry(1)
                         .setTimeout(1000)
-                        .setVersion("INVALID_VERSION")
+                        .setHandshakeKey("INVALID_VERSION")
                         .build();
         NebulaGraphConnectionProvider graphConnectionProvider =
                 new NebulaGraphConnectionProvider(nebulaClientOptions);

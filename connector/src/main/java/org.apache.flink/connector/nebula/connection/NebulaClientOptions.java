@@ -40,14 +40,14 @@ public class NebulaClientOptions implements Serializable {
 
     private final SelfSignParams selfSignParams;
 
-    private final String version;
+    private final String handshakeKey;
 
     private NebulaClientOptions(String metaAddress, String graphAddress, String username,
                                 String password, int timeout, int connectRetry,
                                 boolean enableGraphSSL, boolean enableMetaSSL,
                                 boolean enableStorageSSL,
                                 SSLSignType sslSignType, CASignParams caSignParams,
-                                SelfSignParams selfSignParams, String version) {
+                                SelfSignParams selfSignParams, String handshakeKey) {
         this.metaAddress = metaAddress;
         this.graphAddress = graphAddress;
         this.username = username;
@@ -60,7 +60,7 @@ public class NebulaClientOptions implements Serializable {
         this.sslSignType = sslSignType;
         this.caSignParams = caSignParams;
         this.selfSignParams = selfSignParams;
-        this.version = version;
+        this.handshakeKey = handshakeKey;
     }
 
     public List<HostAddress> getMetaAddress() {
@@ -120,8 +120,8 @@ public class NebulaClientOptions implements Serializable {
         return selfSignParams;
     }
 
-    public String getVersion() {
-        return version;
+    public String getHandshakeKey() {
+        return handshakeKey;
     }
 
     /**
@@ -142,7 +142,7 @@ public class NebulaClientOptions implements Serializable {
         private SSLSignType sslSignType = null;
         private CASignParams caSignParams = null;
         private SelfSignParams selfSignParams = null;
-        private String version = null;
+        private String handshakeKey = null;
 
         public NebulaClientOptionsBuilder setMetaAddress(String metaAddress) {
             this.metaAddress = metaAddress;
@@ -207,8 +207,8 @@ public class NebulaClientOptions implements Serializable {
             return this;
         }
 
-        public NebulaClientOptionsBuilder setVersion(String version) {
-            this.version = version;
+        public NebulaClientOptionsBuilder setHandshakeKey(String handshakeKey) {
+            this.handshakeKey = handshakeKey;
             return this;
         }
 
@@ -259,7 +259,7 @@ public class NebulaClientOptions implements Serializable {
                     sslSignType,
                     caSignParams,
                     selfSignParams,
-                    version);
+                    handshakeKey);
         }
     }
 }

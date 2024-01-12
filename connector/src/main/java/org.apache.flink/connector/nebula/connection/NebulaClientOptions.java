@@ -40,14 +40,12 @@ public class NebulaClientOptions implements Serializable {
 
     private final SelfSignParams selfSignParams;
 
-    private final String handshakeKey;
-
     private NebulaClientOptions(String metaAddress, String graphAddress, String username,
                                 String password, int timeout, int connectRetry,
                                 boolean enableGraphSSL, boolean enableMetaSSL,
                                 boolean enableStorageSSL,
                                 SSLSignType sslSignType, CASignParams caSignParams,
-                                SelfSignParams selfSignParams, String handshakeKey) {
+                                SelfSignParams selfSignParams) {
         this.metaAddress = metaAddress;
         this.graphAddress = graphAddress;
         this.username = username;
@@ -60,7 +58,6 @@ public class NebulaClientOptions implements Serializable {
         this.sslSignType = sslSignType;
         this.caSignParams = caSignParams;
         this.selfSignParams = selfSignParams;
-        this.handshakeKey = handshakeKey;
     }
 
     public List<HostAddress> getMetaAddress() {
@@ -120,10 +117,6 @@ public class NebulaClientOptions implements Serializable {
         return selfSignParams;
     }
 
-    public String getHandshakeKey() {
-        return handshakeKey;
-    }
-
     /**
      * Builder for {@link NebulaClientOptions}
      */
@@ -142,7 +135,6 @@ public class NebulaClientOptions implements Serializable {
         private SSLSignType sslSignType = null;
         private CASignParams caSignParams = null;
         private SelfSignParams selfSignParams = null;
-        private String handshakeKey = null;
 
         public NebulaClientOptionsBuilder setMetaAddress(String metaAddress) {
             this.metaAddress = metaAddress;
@@ -207,11 +199,6 @@ public class NebulaClientOptions implements Serializable {
             return this;
         }
 
-        public NebulaClientOptionsBuilder setHandshakeKey(String handshakeKey) {
-            this.handshakeKey = handshakeKey;
-            return this;
-        }
-
         public NebulaClientOptions build() {
             if (metaAddress == null || metaAddress.trim().isEmpty()) {
                 throw new IllegalArgumentException("meta address can not be empty.");
@@ -258,8 +245,7 @@ public class NebulaClientOptions implements Serializable {
                     enableStorageSSL,
                     sslSignType,
                     caSignParams,
-                    selfSignParams,
-                    handshakeKey);
+                    selfSignParams);
         }
     }
 }

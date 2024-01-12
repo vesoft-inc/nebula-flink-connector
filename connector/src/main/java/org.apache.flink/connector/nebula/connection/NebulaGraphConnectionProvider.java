@@ -44,7 +44,6 @@ public class NebulaGraphConnectionProvider implements Serializable {
         Collections.shuffle(addresses);
         NebulaPoolConfig poolConfig = new NebulaPoolConfig();
         poolConfig.setTimeout(nebulaClientOptions.getTimeout());
-        poolConfig.setHandshakeKey(nebulaClientOptions.getHandshakeKey());
         if (nebulaClientOptions.isEnableGraphSSL()) {
             poolConfig.setEnableSsl(true);
             switch (nebulaClientOptions.getSSLSignType()) {

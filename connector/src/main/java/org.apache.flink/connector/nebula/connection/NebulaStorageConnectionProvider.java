@@ -56,6 +56,8 @@ public class NebulaStorageConnectionProvider implements Serializable {
             storageClient = new StorageClient(addresses, timeout);
         }
 
+        storageClient.setUser(nebulaClientOptions.getUsername());
+        storageClient.setPassword(nebulaClientOptions.getPassword());
         if (!storageClient.connect()) {
             throw new Exception("failed to connect storaged.");
         }

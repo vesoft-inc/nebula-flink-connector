@@ -73,6 +73,13 @@ To read data from NebulaGraph using Flink.
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         env.setParallelism(1);
 
+        VertexExecutionOptions vertexExecutionOptions = new VertexExecutionOptions.ExecutionOptionBuilder()
+                .setGraphSpace("flinkSource")
+                .setTag("person")
+                .setNoColumn(false)
+                .setFields(Arrays.asList())
+                .setLimit(100)
+                .build();
         NebulaSourceFunction sourceFunction = new NebulaSourceFunction(storageConnectionProvider)
                 .setExecutionOptions(vertexExecutionOptions);
         DataStreamSource<BaseTableRow> dataStreamSource = env.addSource(sourceFunction);
@@ -204,13 +211,15 @@ To operate Schema and data using Flink SQL.
 There are the version correspondence between Nebula Flink Connector and Nebula:
 
 | Nebula Flink Connector Version | Nebula Version |
-|:-----------------------:|:--------------:|
-|       2.0.0             |  2.0.0, 2.0.1  |
-|       2.5.0             |  2.5.0, 2.5.1  |
-|       2.6.0             |  2.6.0, 2.6.1  |
-|       2.6.1             |  2.6.0, 2.6.1  |
-|       3.0.0             |  3.0.x, 3.1.x  | 
-|     3.0-SNAPSHOT        |     nightly    |
+|:------------------------------:|:--------------:|
+|             2.0.0              |  2.0.0, 2.0.1  |
+|             2.5.0              |  2.5.0, 2.5.1  |
+|             2.6.0              |  2.6.0, 2.6.1  |
+|             2.6.1              |  2.6.0, 2.6.1  |
+|             3.0.0              |     3.x.x      | 
+|             3.3.0              |     3.x.x      | 
+|             3.5.0              |     3.x.x      | 
+|          3.0-SNAPSHOT          |    nightly     |
 
 ## Note
 Flink version requirements: 1.11.x

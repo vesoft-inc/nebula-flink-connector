@@ -62,7 +62,7 @@ public class NebulaVertexBatchExecutor extends NebulaBatchExecutor<Row> {
             return;
         }
         NebulaVertices nebulaVertices = new NebulaVertices(executionOptions.getLabel(),
-                executionOptions.getFields(), nebulaVertexList, executionOptions.getPolicy());
+                executionOptions.getFields(), nebulaVertexList, executionOptions.getPolicy(), executionOptions.isDeleteExecutedWithEdges());
         // generate the write ngql statement
         String statement = null;
         switch (executionOptions.getWriteMode()) {

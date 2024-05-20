@@ -21,6 +21,7 @@ public class NebulaConstant {
 
     // template for delete statement
     public static String DELETE_VERTEX_TEMPLATE = "DELETE VERTEX %s";
+    public static String DELETE_VERTEX_TEMPLATE_WITH_EDGE = "DELETE VERTEX `%s` WITH EDGE";
     public static String DELETE_EDGE_TEMPLATE = "DELETE EDGE `%s` %s";
     public static String EDGE_ENDPOINT_TEMPLATE = "%s->%s@%d";
 

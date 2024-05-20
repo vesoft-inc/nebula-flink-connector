@@ -32,6 +32,8 @@ public class VertexExecutionOptions extends ExecutionOptions {
      */
     private int idIndex;
 
+    private boolean isDeleteExecutedWithEdges = false;
+
     public VertexExecutionOptions(String graphSpace,
                                   String executeStatement,
                                   List<String> fields,
@@ -44,6 +46,7 @@ public class VertexExecutionOptions extends ExecutionOptions {
                                   PolicyEnum policy,
                                   WriteModeEnum mode,
                                   String tag,
+                                  boolean isDeleteExecutedWithEdges,
                                   int idIndex,
                                   int batchIntervalMs,
                                   FailureHandlerEnum failureHandler,
@@ -54,6 +57,7 @@ public class VertexExecutionOptions extends ExecutionOptions {
                 failureHandler, maxRetries, retryDelayMs);
         this.tag = tag;
         this.idIndex = idIndex;
+        this.isDeleteExecutedWithEdges = isDeleteExecutedWithEdges;
     }
 
     public int getIdIndex() {
@@ -63,6 +67,10 @@ public class VertexExecutionOptions extends ExecutionOptions {
     @Override
     public String getLabel() {
         return tag;
+    }
+
+    public boolean isDeleteExecutedWithEdges() {
+        return isDeleteExecutedWithEdges;
     }
 
     @Override
@@ -78,6 +86,7 @@ public class VertexExecutionOptions extends ExecutionOptions {
                 .setFields(this.getFields())
                 .setPositions(this.getPositions())
                 .setNoColumn(this.isNoColumn())
+                .setDeleteExecutedWithEdges(this.isDeleteExecutedWithEdges())
                 .setLimit(this.getLimit())
                 .setStartTime(this.getStartTime())
                 .setEndTime(this.getEndTime())
@@ -99,6 +108,7 @@ public class VertexExecutionOptions extends ExecutionOptions {
         private List<String> fields;
         private List<Integer> positions;
         private boolean noColumn = false;
+        private boolean isDeleteExecutedWithEdges = false;
         private int limit = DEFAULT_SCAN_LIMIT;
         private long startTime = 0;
         private long endTime = Long.MAX_VALUE;
@@ -141,6 +151,11 @@ public class VertexExecutionOptions extends ExecutionOptions {
 
         public ExecutionOptionBuilder setNoColumn(boolean noColumn) {
             this.noColumn = noColumn;
+            return this;
+        }
+
+        public ExecutionOptionBuilder setDeleteExecutedWithEdges(boolean isDeleteExecutedWithEdges) {
+            this.isDeleteExecutedWithEdges = isDeleteExecutedWithEdges;
             return this;
         }
 
@@ -219,7 +234,7 @@ public class VertexExecutionOptions extends ExecutionOptions {
                 throw new IllegalArgumentException("tag can not be empty.");
             }
             return new VertexExecutionOptions(graphSpace, executeStatement, fields,
-                    positions, noColumn, limit, startTime, endTime, batchSize, policy, mode, tag,
+                    positions, noColumn, limit, startTime, endTime, batchSize, policy, mode, tag, isDeleteExecutedWithEdges,
                     idIndex, batchIntervalMs, failureHandler, maxRetries, retryDelayMs);
         }
     }

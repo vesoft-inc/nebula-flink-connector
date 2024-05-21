@@ -112,4 +112,25 @@ public class NebulaVerticesTest extends TestCase {
         assert (vertexStatement.equals(expectStatement));
     }
 
+    public void testGetDeleteStatementWithEdges() {
+        vertices.add(new NebulaVertex("\"vid1\"", props1));
+        vertices.add(new NebulaVertex("\"vid2\"", props2));
+
+        NebulaVertices nebulaVertices = new NebulaVertices(tagName, propNames, vertices, null, true);
+        String vertexStatement = nebulaVertices.getDeleteStatement();
+        String expectStatement = "DELETE VERTEX \"vid1\",\"vid2\" WITH EDGE";
+        assert (vertexStatement.equals(expectStatement));
+    }
+
+    public void testGetDeleteStatementWithPolicyAndEdges() {
+        vertices.add(new NebulaVertex("vid1", props1));
+        vertices.add(new NebulaVertex("vid2", props2));
+
+        NebulaVertices nebulaVertices = new NebulaVertices(tagName, propNames, vertices,
+                PolicyEnum.HASH, true);
+        String vertexStatement = nebulaVertices.getDeleteStatement();
+        String expectStatement = "DELETE VERTEX HASH(\"vid1\"),HASH(\"vid2\") WITH EDGE";
+        assert (vertexStatement.equals(expectStatement));
+    }
+
 }

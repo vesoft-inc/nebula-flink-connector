@@ -7,11 +7,11 @@ package org.apache.flink.connector.nebula.utils;
 
 import static org.apache.flink.connector.nebula.utils.NebulaConstant.BATCH_INSERT_TEMPLATE;
 import static org.apache.flink.connector.nebula.utils.NebulaConstant.DELETE_VERTEX_TEMPLATE;
+import static org.apache.flink.connector.nebula.utils.NebulaConstant.DELETE_VERTEX_TEMPLATE_WITH_EDGE;
 import static org.apache.flink.connector.nebula.utils.NebulaConstant.ENDPOINT_TEMPLATE;
 import static org.apache.flink.connector.nebula.utils.NebulaConstant.UPDATE_VALUE_TEMPLATE;
 import static org.apache.flink.connector.nebula.utils.NebulaConstant.UPDATE_VERTEX_TEMPLATE;
 import static org.apache.flink.connector.nebula.utils.NebulaConstant.VERTEX_VALUE_TEMPLATE;
-import static org.apache.flink.connector.nebula.utils.NebulaConstant.VERTEX_VALUE_TEMPLATE_WITH_POLICY;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -122,7 +122,7 @@ public class NebulaVertices implements Serializable {
             String vertexId = getVertexId(vertex);
             vertexIds.add(vertexId);
         }
-        String template = isDeleteExecutedWithEdges ? VERTEX_VALUE_TEMPLATE_WITH_POLICY : DELETE_VERTEX_TEMPLATE;
+        String template = isDeleteExecutedWithEdges ? DELETE_VERTEX_TEMPLATE_WITH_EDGE : DELETE_VERTEX_TEMPLATE;
         return String.format(template, String.join(",", vertexIds));
     }
 

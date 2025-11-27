@@ -1,49 +1,59 @@
-# This workflow will build a Java project with Maven
-# For more information see: https://help.github.com/actions/language-and-framework-guides/building-and-testing-java-with-maven
+# Copyright (c) 2024 vesoft inc. All rights reserved.
 
 name: snapshot
 
 on:
   push:
-    branches: [ master ]
-  schedule:
-    - cron: '0 6 * * *'
+    branches: [ dev ]
+
 
 jobs:
-  build:
-
-    runs-on: ubuntu-latest
-
+  deploy-java-driver-snapshot:
+    runs-on: [ self-hosted, linux ]
     steps:
-    - uses: actions/checkout@v2
-    - name: Set up JDK 1.8
-      uses: actions/setup-java@v1
-      with:
-        java-version: 1.8
+      - name: Clean runner
+        uses: webiny/action-post-run@3.1.0
+        with:
+          run: find . -mindepth 1 -delete
 
-    - name: Cache the Maven packages to speed up build
-      uses: actions/cache@v2
-      with:
-        path: ~/.m2/repository
-        key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-        restore-keys: ${{ runner.os }}-maven-
+      - name: Check out Git repository
+        uses: actions/checkout@v4
 
-    - name: Install nebula-graph
-      run: |
-        mkdir tmp
-        pushd tmp
-        git clone https://github.com/vesoft-inc/nebula-docker-compose.git
-        pushd nebula-docker-compose/
-        cp ../../connector/src/test/resources/docker-compose.yaml .
-        docker-compose up -d
-        sleep 10
-        popd
-        popd
+      - name: Set up JDK 1.8
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "8"
 
-    - name: Deploy SNAPSHOT to Sonatype
-      uses: samuelmeuli/action-maven-publish@v1
-      with:
-        gpg_private_key: ${{ secrets.JAVA_GPG_PRIVATE_KEY }}
-        gpg_passphrase: ""
-        nexus_username: ${{ secrets.OSSRH_USERNAME }}
-        nexus_password: ${{ secrets.OSSRH_TOKEN }}
+      - name: Set up Maven
+        uses: stCarolas/setup-maven@v5
+        with:
+          maven-version: 3.8.2
+
+      - name: install nebula
+        run: |
+          docker compose pull && docker compose up -d
+          sleep 60
+        working-directory: docker-compose
+
+      - name: package flink connector
+        run: |
+          mvn clean package
+
+      - name: setup minio
+        uses: vesoft-inc/.github/actions/setup-minio@master
+        with:
+          minio_url: ${{ secrets.MINIO_ENDPOINT }}
+          access_key: ${{ secrets.MINIO_KEY }}
+          secret_key: ${{ secrets.MINIO_SECRET }}
+
+      - name: Copy java sdk to release on MinIO
+        run: |      
+          mc cp target/nebula-flink-connector-5.0-SNAPSHOT.jar minio/nightly-build/nebula-ng-flinkconnector/
+        working-directory: connector
+
+      - name: stop nebula
+        if: always()
+        run: |
+          docker compose down
+        working-directory: docker-compose

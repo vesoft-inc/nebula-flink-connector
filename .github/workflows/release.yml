@@ -10,7 +10,7 @@ on:
 jobs:
   build:
 
-    runs-on: ubuntu-latest
+    runs-on: [ self-hosted, linux ]
 
     steps:
     - uses: actions/checkout@v2
@@ -26,22 +26,43 @@ jobs:
         key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
         restore-keys: ${{ runner.os }}-maven-
 
-    - name: Install nebula-graph
+    - name: install nebula
       run: |
-        mkdir tmp
-        pushd tmp
-        git clone https://github.com/vesoft-inc/nebula-docker-compose.git
-        pushd nebula-docker-compose/
-        cp ../../connector/src/test/resources/docker-compose.yaml .
-        docker-compose up -d
-        sleep 10
-        popd
-        popd
+        docker compose pull && docker compose up -d
+        sleep 60
+      working-directory: docker-compose
 
-    - name: Deploy release to Maven
-      uses: samuelmeuli/action-maven-publish@v1
+    - name: package flink connector
+      run: |
+        mvn clean package
+
+    - name: setup minio
+      uses: vesoft-inc/.github/actions/setup-minio@master
       with:
-        gpg_private_key: ${{ secrets.JAVA_GPG_PRIVATE_KEY }}
-        gpg_passphrase: ""
-        nexus_username: ${{ secrets.OSSRH_USERNAME }}
-        nexus_password: ${{ secrets.OSSRH_TOKEN }}
+          minio_url: ${{ secrets.MINIO_ENDPOINT }}
+          access_key: ${{ secrets.MINIO_KEY }}
+          secret_key: ${{ secrets.MINIO_SECRET }}
+
+    - name: Get the version
+      id: get_version
+      run: |
+        tag=$(echo ${{ github.ref }} | rev | cut -d/ -f1 | rev)
+        tagnum=$(echo $tag | sed 's/^v//')
+        echo "tag=$tag" >> $GITHUB_OUTPUT
+        echo "tagnum=$tagnum" >> $GITHUB_OUTPUT
+      shell: bash
+
+    - name: Copy flink-connector to release on MinIO
+      run: |
+        mv target/ nebula-graph-flinkconnector/
+        tar czf ./nebula-graph-flinkconnector-${{ steps.get_version.outputs.tagnum }}.tgz nebula-graph-flinkconnector/nebula-flink-connector-${{ steps.get_version.outputs.tagnum }}.jar
+        sha256sum nebula-graph-flinkconnector-${{ steps.get_version.outputs.tagnum }}.tgz > nebula-graph-flinkconnector-${{ steps.get_version.outputs.tagnum }}.tgz.sha256sum.txt
+        mc cp nebula-graph-flinkconnector-${{ steps.get_version.outputs.tagnum }}.tgz minio/release-build/nebula-ng-flink-connector/${{ steps.get_version.outputs.tagnum }}/
+        mc cp nebula-graph-flinkconnector-${{ steps.get_version.outputs.tagnum }}.tgz.sha256sum.txt minio/release-build/nebula-ng-flink-connector/${{ steps.get_version.outputs.tagnum }}/
+      working-directory: connector
+
+    - name: stop nebula
+      if: always()
+      run: |
+        docker compose down
+      working-directory: docker-compose

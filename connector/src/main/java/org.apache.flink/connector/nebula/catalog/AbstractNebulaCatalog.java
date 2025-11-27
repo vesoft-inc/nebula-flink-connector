@@ -1,23 +1,17 @@
-/* Copyright (c) 2020 vesoft inc. All rights reserved.
+/*
+ * Copyright (c) 2025 vesoft inc. All rights reserved.
  *
  * This source code is licensed under Apache 2.0 License.
  */
 
 package org.apache.flink.connector.nebula.catalog;
 
-import static org.apache.flink.util.Preconditions.checkArgument;
-
-import com.facebook.thrift.TException;
-import com.vesoft.nebula.client.graph.data.HostAddress;
-import com.vesoft.nebula.client.graph.exception.ClientServerIncompatibleException;
-import com.vesoft.nebula.client.meta.MetaClient;
-import java.net.UnknownHostException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import org.apache.flink.connector.nebula.connection.GraphProvider;
+import org.apache.flink.connector.nebula.options.ConnectionOptions;
 import org.apache.flink.connector.nebula.table.NebulaDynamicTableFactory;
-import org.apache.flink.connector.nebula.utils.NebulaUtils;
-import org.apache.flink.table.api.ValidationException;
 import org.apache.flink.table.catalog.AbstractCatalog;
 import org.apache.flink.table.catalog.CatalogBaseTable;
 import org.apache.flink.table.catalog.CatalogDatabase;
@@ -31,7 +25,6 @@ import org.apache.flink.table.catalog.stats.CatalogColumnStatistics;
 import org.apache.flink.table.catalog.stats.CatalogTableStatistics;
 import org.apache.flink.table.expressions.Expression;
 import org.apache.flink.table.factories.Factory;
-import org.apache.flink.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,47 +37,27 @@ public abstract class AbstractNebulaCatalog extends AbstractCatalog {
 
     private static final Logger LOG = LoggerFactory.getLogger(AbstractNebulaCatalog.class);
 
-    protected final String username;
-    protected final String password;
-    protected final String address;
+    protected ConnectionOptions connectionOptions;
+    protected GraphProvider graphProvider;
     private static final String DEFAULT_DATABASE = "default";
 
-    public AbstractNebulaCatalog(String catalogName, String defaultDatabase, String username,
-                                 String password, String address) {
+    public AbstractNebulaCatalog(String catalogName, String defaultDatabase,
+                                 ConnectionOptions connectionOptions) {
         super(catalogName, defaultDatabase == null ? DEFAULT_DATABASE : defaultDatabase);
-        checkArgument(
-                !StringUtils.isNullOrWhitespaceOnly(username),
-                "username cannot be null or empty.");
-        checkArgument(
-                !StringUtils.isNullOrWhitespaceOnly(password),
-                "password cannot be null or empty.");
-        checkArgument(
-                !StringUtils.isNullOrWhitespaceOnly(address),
-                "address cannot be null or empty."
-        );
-        this.username = username;
-        this.password = password;
-        this.address = address;
+        this.connectionOptions = connectionOptions;
     }
 
     @Override
     public void open() throws CatalogException {
-        // test metaClient connection
-        List<HostAddress> hostAndPorts = NebulaUtils.getHostAndPorts(address);
-        MetaClient metaClient = null;
         try {
-            metaClient = new MetaClient(hostAndPorts);
-        } catch (UnknownHostException e) {
-            throw new IllegalArgumentException("address is illegal, ", e);
+            graphProvider = new GraphProvider(connectionOptions);
+        } catch (Exception e) {
+            LOG.error("create Graph client error, ", e);
+            throw new CatalogException("create Graph client error.", e);
         }
-        try {
-            metaClient.connect();
-            metaClient.close();
-        } catch (TException | ClientServerIncompatibleException e) {
-            throw new ValidationException(String.format("Failed connecting to meta service via "
-                    + "%s, ", address), e);
-        }
-        LOG.info("Catalog {} established connection to {}", getName(), address);
+        LOG.info("Catalog {} established connection to {}",
+                 getName(),
+                 connectionOptions.getGraphAddress());
     }
 
     @Override
@@ -93,15 +66,15 @@ public abstract class AbstractNebulaCatalog extends AbstractCatalog {
     }
 
     public String getUsername() {
-        return username;
+        return connectionOptions.getUser();
     }
 
     public String getPassword() {
-        return password;
+        return connectionOptions.getAuthInfo().get("password").toString();
     }
 
     public String getAddress() {
-        return address;
+        return connectionOptions.getGraphAddress();
     }
 
     @Override
@@ -152,7 +125,7 @@ public abstract class AbstractNebulaCatalog extends AbstractCatalog {
     }
 
     @Override
-    public void dropTable(ObjectPath tablePath,boolean ignoreIfNotExists) throws CatalogException {
+    public void dropTable(ObjectPath tablePath, boolean ignoreIfNotExists) throws CatalogException {
         throw new UnsupportedOperationException();
     }
 
@@ -247,7 +220,7 @@ public abstract class AbstractNebulaCatalog extends AbstractCatalog {
 
     @Override
     public CatalogFunction getFunction(ObjectPath functionPath) throws FunctionNotExistException,
-            CatalogException {
+                                                                       CatalogException {
         throw new FunctionNotExistException(getName(), functionPath);
     }
 

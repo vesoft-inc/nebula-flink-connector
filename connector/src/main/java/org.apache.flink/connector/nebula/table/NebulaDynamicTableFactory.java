@@ -1,4 +1,5 @@
-/* Copyright (c) 2020 vesoft inc. All rights reserved.
+/*
+ * Copyright (c) 2025 vesoft inc. All rights reserved.
  *
  * This source code is licensed under Apache 2.0 License.
  */
@@ -6,19 +7,23 @@
 package org.apache.flink.connector.nebula.table;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import org.apache.flink.configuration.ConfigOption;
 import org.apache.flink.configuration.ConfigOptions;
 import org.apache.flink.configuration.ReadableConfig;
-import org.apache.flink.connector.nebula.connection.NebulaClientOptions;
-import org.apache.flink.connector.nebula.statement.EdgeExecutionOptions;
-import org.apache.flink.connector.nebula.statement.ExecutionOptions;
-import org.apache.flink.connector.nebula.statement.VertexExecutionOptions;
+import org.apache.flink.connector.nebula.options.ConnectionOptions;
+import org.apache.flink.connector.nebula.options.ExecutionOptions;
+import org.apache.flink.connector.nebula.options.SinkEdgeOptions;
+import org.apache.flink.connector.nebula.options.SinkNodeOptions;
+import org.apache.flink.connector.nebula.options.SourceEdgeOptions;
+import org.apache.flink.connector.nebula.options.SourceExecutionOptions;
+import org.apache.flink.connector.nebula.options.SourceNodeOptions;
 import org.apache.flink.connector.nebula.utils.DataTypeEnum;
-import org.apache.flink.connector.nebula.utils.FailureHandlerEnum;
 import org.apache.flink.connector.nebula.utils.NebulaConstant;
+import org.apache.flink.connector.nebula.utils.WriteModeEnum;
 import org.apache.flink.table.api.TableSchema;
 import org.apache.flink.table.catalog.Column;
 import org.apache.flink.table.connector.sink.DynamicTableSink;
@@ -33,12 +38,6 @@ import org.apache.flink.table.utils.TableSchemaUtils;
 public class NebulaDynamicTableFactory implements DynamicTableSourceFactory,
         DynamicTableSinkFactory {
     public static final String IDENTIFIER = "nebula";
-
-    public static final ConfigOption<String> METAADDRESS = ConfigOptions
-            .key("meta-address")
-            .stringType()
-            .noDefaultValue()
-            .withDescription("the nebula meta server address.");
 
     public static final ConfigOption<String> GRAPHADDRESS = ConfigOptions
             .key("graph-address")
@@ -58,11 +57,11 @@ public class NebulaDynamicTableFactory implements DynamicTableSourceFactory,
             .noDefaultValue()
             .withDescription("the nebula server password.");
 
-    public static final ConfigOption<String> GRAPH_SPACE = ConfigOptions
-            .key("graph-space")
+    public static final ConfigOption<String> GRAPH_NAME = ConfigOptions
+            .key("graph-name")
             .stringType()
             .noDefaultValue()
-            .withDescription("the nebula graph space name.");
+            .withDescription("the nebula graph name.");
 
     public static final ConfigOption<String> LABEL_NAME = ConfigOptions
             .key("label-name")
@@ -70,41 +69,78 @@ public class NebulaDynamicTableFactory implements DynamicTableSourceFactory,
             .noDefaultValue()
             .withDescription("the nebula graph space label name.");
 
-    public static final ConfigOption<DataTypeEnum> DATA_TYPE = ConfigOptions
+    public static final ConfigOption<WriteModeEnum> WRITE_MODE = ConfigOptions
+            .key("write-mode")
+            .enumType(WriteModeEnum.class)
+            .defaultValue(WriteModeEnum.INSERTREPLACE)
+            .withDescription("the write mode when save table into NebulaGraph.");
+    public static final ConfigOption<DataTypeEnum>  DATA_TYPE  = ConfigOptions
             .key("data-type")
             .enumType(DataTypeEnum.class)
             .noDefaultValue()
             .withDescription("the nebula graph data type.");
 
+    public static final ConfigOption<String> EDGE_PATTERN_TYPE = ConfigOptions
+            .key("edge-pattern-type")
+            .stringType()
+            .noDefaultValue()
+            .withDescription("edge pattern");
+
+    public static final ConfigOption<String> SRC_NODE_TYPE = ConfigOptions
+            .key("src-node-type")
+            .stringType()
+            .noDefaultValue()
+            .withDescription("the source node type of edge");
+
+    public static final ConfigOption<String> DST_NODE_TYPE = ConfigOptions
+            .key("dst-node-type")
+            .stringType()
+            .noDefaultValue()
+            .withDescription("the target node type of edge");
+
     public static final ConfigOption<Integer> TIMEOUT = ConfigOptions
             .key("timeout")
             .intType()
-            .defaultValue(NebulaConstant.DEFAULT_TIMEOUT_MS)
+            .defaultValue(NebulaConstant.DEFAULT_REQUEST_TIMEOUT_MS)
             .withDescription("the nebula execute timeout duration.");
 
-    public static final ConfigOption<Integer> ID_INDEX = ConfigOptions
-            .key("id-index")
-            .intType()
-            .defaultValue(NebulaConstant.DEFAULT_VERTEX_ID_INDEX)
-            .withDescription("the nebula execute vertex index.");
+    public static final ConfigOption<String> PK_COLUMNS = ConfigOptions
+            .key("pk-columns")
+            .stringType()
+            .noDefaultValue()
+            .withDescription("the nebula node primary keys.");
 
-    public static final ConfigOption<Integer> SRC_ID_INDEX = ConfigOptions
-            .key("src-id-index")
-            .intType()
-            .defaultValue(NebulaConstant.DEFAULT_ROW_INFO_INDEX)
-            .withDescription("the nebula execute edge src index.");
+    public static final ConfigOption<String> NODE_PKS = ConfigOptions
+            .key("node-pks")
+            .stringType()
+            .defaultValue("")
+            .withDescription("the nebula node primary keys.");
 
-    public static final ConfigOption<Integer> DST_ID_INDEX = ConfigOptions
-            .key("dst-id-index")
-            .intType()
-            .defaultValue(NebulaConstant.DEFAULT_ROW_INFO_INDEX)
-            .withDescription("the nebula execute edge dst index.");
+    public static final ConfigOption<String> SRC_PK_COLUMNS = ConfigOptions
+            .key("src-pk-columns")
+            .stringType()
+            .noDefaultValue()
+            .withDescription("the columns as source node primary keys, sep by comma.");
 
-    public static final ConfigOption<Integer> RANK_ID_INDEX = ConfigOptions
-            .key("rank-id-index")
-            .intType()
-            .defaultValue(NebulaConstant.DEFAULT_ROW_INFO_INDEX)
-            .withDescription("the nebula execute rank index.");
+    public static final ConfigOption<String> EDGE_SRC_PKS = ConfigOptions
+            .key("edge-src-pks")
+            .stringType()
+            .defaultValue("")
+            .withDescription("the pks of source node type, sep by comma.");
+
+
+    public static final ConfigOption<String> DST_PK_COLUMNS = ConfigOptions
+            .key("dst-pk-columns")
+            .stringType()
+            .noDefaultValue()
+            .withDescription("the columns as target node primary keys, sep by comma.");
+
+    public static final ConfigOption<String> EDGE_DST_PKS = ConfigOptions
+            .key("edge-dst-pks")
+            .stringType()
+            .defaultValue("")
+            .withDescription("the pks of target node type, sep by comma.");
+
 
     public static final ConfigOption<Integer> BATCH_SIZE = ConfigOptions
             .key("batch-size")
@@ -118,24 +154,6 @@ public class NebulaDynamicTableFactory implements DynamicTableSourceFactory,
             .noDefaultValue()
             .withDescription("batch commit interval in milliseconds.");
 
-    public static final ConfigOption<FailureHandlerEnum> FAILURE_HANDLER = ConfigOptions
-            .key("failure-handler")
-            .enumType(FailureHandlerEnum.class)
-            .defaultValue(FailureHandlerEnum.IGNORE)
-            .withDescription("failure handler.");
-
-    public static final ConfigOption<Integer> MAX_RETRIES = ConfigOptions
-            .key("max-retries")
-            .intType()
-            .defaultValue(NebulaConstant.DEFAULT_EXECUTION_RETRY)
-            .withDescription("maximum number of retries.");
-
-    public static final ConfigOption<Integer> RETRY_DELAY_MS = ConfigOptions
-            .key("retry-delay-ms")
-            .intType()
-            .defaultValue(NebulaConstant.DEFAULT_RETRY_DELAY_MS)
-            .withDescription("retry delay in milliseconds.");
-
     @Override
     public DynamicTableSink createDynamicTableSink(Context context) {
         final FactoryUtil.TableFactoryHelper helper =
@@ -147,8 +165,9 @@ public class NebulaDynamicTableFactory implements DynamicTableSourceFactory,
 
         helper.validate();
         validateConfigOptions(config);
-        return new NebulaDynamicTableSink(
-                getClientOptions(config), getExecutionOptions(context, config), producedDataType);
+        return new NebulaDynamicTableSink(getConnectionOptions(config),
+                                          getExecutionOptions(context, config),
+                                          producedDataType);
     }
 
     @Override
@@ -160,76 +179,112 @@ public class NebulaDynamicTableFactory implements DynamicTableSourceFactory,
         validateConfigOptions(readableConfig);
         TableSchema physicalSchema =
                 TableSchemaUtils.getPhysicalSchema(context.getCatalogTable().getSchema());
-        ExecutionOptions executionOptions = getExecutionOptions(context, readableConfig);
-        NebulaClientOptions nebulaClientOptions = getClientOptions(readableConfig);
-        return new NebulaDynamicTableSource(nebulaClientOptions, executionOptions, physicalSchema);
+        SourceExecutionOptions executionOptions  = getSourceExecutionOptions(context,
+                                                                             readableConfig);
+        ConnectionOptions      connectionOptions = getConnectionOptions(readableConfig);
+        return new NebulaDynamicTableSource(connectionOptions, executionOptions, physicalSchema);
     }
 
     private void validateConfigOptions(ReadableConfig config) {
         if (config.getOptional(TIMEOUT).isPresent() && config.get(TIMEOUT) < 0) {
             throw new IllegalArgumentException(
                     String.format("The value of '%s' option should not be negative, but is %s.",
-                            TIMEOUT.key(), config.get(TIMEOUT)));
+                                  TIMEOUT.key(), config.get(TIMEOUT)));
         }
     }
 
-    private NebulaClientOptions getClientOptions(ReadableConfig config) {
-        return new NebulaClientOptions.NebulaClientOptionsBuilder()
-                .setMetaAddress(config.get(METAADDRESS))
-                .setGraphAddress(config.get(GRAPHADDRESS))
-                .setUsername(config.get(USERNAME))
-                .setPassword(config.get(PASSWORD))
-                .setTimeout(config.get(TIMEOUT))
+    private ConnectionOptions getConnectionOptions(ReadableConfig config) {
+        return new ConnectionOptions.Builder()
+                .withGraphAddress(config.get(GRAPHADDRESS))
+                .withUser(config.get(USERNAME))
+                .withPassword(config.get(PASSWORD))
                 .build();
     }
 
     private ExecutionOptions getExecutionOptions(Context context, ReadableConfig config) {
-        List<String> fields = new ArrayList<>();
-        List<Integer> positions = new ArrayList<>();
+        List<String> fields  = new ArrayList<>();
         List<Column> columns = context.getCatalogTable().getResolvedSchema().getColumns();
-        String labelName = config.get(LABEL_NAME);
 
-        if (config.get(DATA_TYPE).isVertex()) {
-            for (int i = 1; i < columns.size(); i++) {
-                positions.add(i);
+        String        labelName = config.get(LABEL_NAME);
+        WriteModeEnum writeMode = config.get(WRITE_MODE);
+
+        if (config.get(DATA_TYPE).isNode()) {
+            for (int i = 0; i < columns.size(); i++) {
                 fields.add(columns.get(i).getName());
             }
 
-            VertexExecutionOptions.ExecutionOptionBuilder builder =
-                    new VertexExecutionOptions.ExecutionOptionBuilder()
-                            .setFields(fields)
-                            .setIdIndex(config.get(ID_INDEX))
-                            .setPositions(positions)
-                            .setGraphSpace(config.get(GRAPH_SPACE))
-                            .setTag(labelName)
-                            .setFailureHandler(config.get(FAILURE_HANDLER))
-                            .setMaxRetries(config.get(MAX_RETRIES))
-                            .setRetryDelayMs(config.get(RETRY_DELAY_MS));
-            config.getOptional(BATCH_SIZE).ifPresent(builder::setBatchSize);
-            config.getOptional(BATCH_INTERVAL_MS).ifPresent(builder::setBatchIntervalMs);
+            SinkNodeOptions.Builder builder =
+                    new SinkNodeOptions.Builder()
+                            .withGraphName(config.get(GRAPH_NAME))
+                            .withNodeType(labelName)
+                            .withFlinkFields(fields)
+                            .withNebulaFields(fields)
+                            .withWriteMode(writeMode);
+            config.getOptional(BATCH_SIZE).ifPresent(builder::withBatchSize);
+            config.getOptional(BATCH_INTERVAL_MS).ifPresent(builder::withIntervalMs);
             return builder.build();
         } else {
-            for (int i = 2; i < columns.size(); i++) {
-                if (config.get(RANK_ID_INDEX) != i) {
-                    positions.add(i);
-                    fields.add(columns.get(i).getName());
+            List<String> flinkSrcNames = Arrays.asList(config.get(SRC_PK_COLUMNS).split(","));
+            List<String> nebulaSrcPks  = Arrays.asList(config.get(EDGE_SRC_PKS).split(","));
+            List<String> flinkDstNames = Arrays.asList(config.get(DST_PK_COLUMNS).split(","));
+            List<String> nebulaDstPks  = Arrays.asList(config.get(EDGE_DST_PKS).split(","));
+            for (int i = 0; i < columns.size(); i++) {
+                if (flinkSrcNames.contains(columns.get(i).getName())
+                        || flinkDstNames.contains(columns.get(i).getName())) {
+                    continue;
                 }
+                fields.add(columns.get(i).getName());
             }
 
-            EdgeExecutionOptions.ExecutionOptionBuilder builder =
-                    new EdgeExecutionOptions.ExecutionOptionBuilder()
-                            .setFields(fields)
-                            .setSrcIndex(config.get(SRC_ID_INDEX))
-                            .setDstIndex(config.get(DST_ID_INDEX))
-                            .setRankIndex(config.get(RANK_ID_INDEX))
-                            .setPositions(positions)
-                            .setGraphSpace(config.get(GRAPH_SPACE))
-                            .setEdge(labelName)
-                            .setFailureHandler(config.get(FAILURE_HANDLER))
-                            .setMaxRetries(config.get(MAX_RETRIES))
-                            .setRetryDelayMs(config.get(RETRY_DELAY_MS));
-            config.getOptional(BATCH_SIZE).ifPresent(builder::setBatchSize);
-            config.getOptional(BATCH_INTERVAL_MS).ifPresent(builder::setBatchIntervalMs);
+            SinkEdgeOptions.Builder builder =
+                    new SinkEdgeOptions.Builder()
+                            .withGraphName(config.get(GRAPH_NAME))
+                            .withEdgeType(labelName)
+                            .withFlinkFields(fields)
+                            .withNebulaFields(fields)
+                            .withFlinkSrcPkFields(flinkSrcNames)
+                            .withFlinkDstPkFields(flinkDstNames)
+                            .withNebulaSrcPks(nebulaSrcPks)
+                            .withNebulaDstPks(nebulaDstPks)
+                            .withWriteMode(writeMode);
+            config.getOptional(BATCH_SIZE).ifPresent(builder::withBatchSize);
+            config.getOptional(BATCH_INTERVAL_MS).ifPresent(builder::withIntervalMs);
+            return builder.build();
+        }
+    }
+
+
+    private SourceExecutionOptions getSourceExecutionOptions(Context context,
+                                                             ReadableConfig config) {
+        List<String> fields  = new ArrayList<>();
+        List<Column> columns = context.getCatalogTable().getResolvedSchema().getColumns();
+
+        String labelName = config.get(LABEL_NAME);
+
+
+        if (config.get(DATA_TYPE).isNode()) {
+            for (int i = 0; i < columns.size(); i++) {
+                fields.add(columns.get(i).getName());
+            }
+
+            SourceNodeOptions.Builder builder =
+                    new SourceNodeOptions.Builder()
+                            .withGraphName(config.get(GRAPH_NAME))
+                            .withNodeType(labelName)
+                            .withReturnCols(fields);
+            config.getOptional(BATCH_SIZE).ifPresent(builder::withBatchSize);
+            return builder.build();
+        } else {
+            for (int i = 0; i < columns.size(); i++) {
+                fields.add(columns.get(i).getName());
+            }
+
+            SourceEdgeOptions.Builder builder =
+                    new SourceEdgeOptions.Builder()
+                            .withGraphName(config.get(GRAPH_NAME))
+                            .withEdgeType(labelName)
+                            .withReturnCols(fields);
+            config.getOptional(BATCH_SIZE).ifPresent(builder::withBatchSize);
             return builder.build();
         }
     }
@@ -242,29 +297,27 @@ public class NebulaDynamicTableFactory implements DynamicTableSourceFactory,
     @Override
     public Set<ConfigOption<?>> requiredOptions() {
         Set<ConfigOption<?>> set = new HashSet<>();
-        set.add(METAADDRESS);
+        set.add(GRAPH_NAME);
+        set.add(LABEL_NAME);
+        set.add(DATA_TYPE);
         set.add(GRAPHADDRESS);
         set.add(USERNAME);
         set.add(PASSWORD);
+        set.add(SRC_PK_COLUMNS);
+        set.add(DST_PK_COLUMNS);
+        set.add(PK_COLUMNS);
         return set;
     }
 
     @Override
     public Set<ConfigOption<?>> optionalOptions() {
         Set<ConfigOption<?>> set = new HashSet<>();
-        set.add(GRAPH_SPACE);
-        set.add(LABEL_NAME);
-        set.add(DATA_TYPE);
         set.add(TIMEOUT);
-        set.add(ID_INDEX);
-        set.add(SRC_ID_INDEX);
-        set.add(DST_ID_INDEX);
-        set.add(RANK_ID_INDEX);
+        set.add(NODE_PKS);
+        set.add(EDGE_SRC_PKS);
+        set.add(EDGE_DST_PKS);
         set.add(BATCH_SIZE);
         set.add(BATCH_INTERVAL_MS);
-        set.add(FAILURE_HANDLER);
-        set.add(MAX_RETRIES);
-        set.add(RETRY_DELAY_MS);
         return set;
     }
 }

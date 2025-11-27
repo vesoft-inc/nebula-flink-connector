@@ -1,6 +1,11 @@
+/*
+ * Copyright (c) 2025 vesoft inc. All rights reserved.
+ *
+ * This source code is licensed under Apache 2.0 License.
+ */
+
 package org.apache.flink.connector.nebula.utils;
 
-import com.vesoft.nebula.PropertyType;
 import junit.framework.TestCase;
 
 public class NebulaUtilsTest extends TestCase {
@@ -36,41 +41,36 @@ public class NebulaUtilsTest extends TestCase {
     }
 
     public void testExtraValue() {
-        assert (null == NebulaUtils.extraValue(null, PropertyType.STRING.getValue()));
-        assert ("\"\"".equals(NebulaUtils.extraValue("", PropertyType.STRING.getValue())));
-        assert ("\"\"".equals(NebulaUtils.extraValue("", PropertyType.FIXED_STRING.getValue())));
-        assert ("1".equals(NebulaUtils.extraValue(1, PropertyType.INT8.getValue())));
-        assert ("timestamp(\"2021-01-01T12:12:12\")".equals(
-                NebulaUtils.extraValue("2021-01-01T12:12:12", PropertyType.TIMESTAMP.getValue())));
-        assert ("datetime(\"2021-01-01T12:12:12\")".equals(
-                NebulaUtils.extraValue("2021-01-01T12:12:12", PropertyType.DATETIME.getValue())));
-        assert ("date(\"2021-01-01\")".equals(NebulaUtils.extraValue("2021-01-01",
-                PropertyType.DATE.getValue())));
-        assert ("time(\"12:12:12\")".equals(NebulaUtils.extraValue("12:12:12",
-                PropertyType.TIME.getValue())));
-        assert ("ST_GeogFromText(\"POINT(1 3)\")".equals(NebulaUtils.extraValue("POINT(1 3)",
-                PropertyType.GEOGRAPHY.getValue())));
-        assert ("ST_GeogFromText(\"LINESTRING(1 2, 3 4)\")".equals(NebulaUtils.extraValue(
-                "LINESTRING(1 2, 3 4)",
-                PropertyType.GEOGRAPHY.getValue())));
-        assert ("ST_GeogFromText(\"POLYGON((0 1, 1 2, 2 3, 0 1))\")"
-                .equals(NebulaUtils.extraValue("POLYGON((0 1, 1 2, 2 3, 0 1))",
-                        PropertyType.GEOGRAPHY.getValue())));
+        assert (null == NebulaUtils.extractValue("STRING", null, null));
+        assert (null == NebulaUtils.extractValue("DATE", "", null));
+        assert ("\"\"".equals(NebulaUtils.extractValue("STRING", "", null)));
+        assert (null == NebulaUtils.extractValue("STRING", "", ""));
+        assert ("\"a\\t\\bb\"".equals(NebulaUtils.extractValue("STRING", "a\t\bb", null)));
+        assert ("\"aa\\nbb\"".equals(NebulaUtils.extractValue("STRING", "aa\nbb", null)));
+
+        assert ("1".equals(NebulaUtils.extractValue("INT32", "1", null)));
+        assert ("local_datetime(\"2021-01-01T12:12:12\")".equals(
+                NebulaUtils.extractValue("LOCAL DATETIME", "2021-01-01T12:12:12", null)));
+        assert ("zoned_datetime(\"2021-01-01T12:12:12\")".equals(
+                NebulaUtils.extractValue("ZONED DATETIME", "2021-01-01T12:12:12", null)));
+        assert ("date(\"2021-01-01\")".equals(
+                NebulaUtils.extractValue("DATE", "2021-01-01", null)));
+        assert ("local_time(\"12:12:12\")".equals(
+                NebulaUtils.extractValue("LOCAL TIME", "12:12:12", null)));
+        assert ("zoned_time(\"12:12:12\")".equals(
+                NebulaUtils.extractValue("ZONED TIME", "12:12:12", null)));
+
+        assert ("LIST[\"a\",\"b\"]".equals(
+                NebulaUtils.extractValue("LIST<STRING>", "[a,b]", null)));
+        assert ("VECTOR<3,DOUBLE>([1.0,2.0])".equals(
+                NebulaUtils.extractValue("VECTOR<3,DOUBLE>", "[1.0,2.0]", null)));
+
+        assert ("ST_GeogFromText(\"POINT(3 4)\")".equals(
+                NebulaUtils.extractValue("GEOGRAPHY<ANY>", "POINT(3 4)", null)));
     }
 
     public void testMkString() {
         assertEquals("\"test\"", NebulaUtils.mkString("test", "\"", "", "\""));
         assertEquals("\"t,e,s,t\"", NebulaUtils.mkString("test", "\"", ",", "\""));
-    }
-
-    public void testCheckValidVidType() {
-        assertTrue(NebulaUtils.checkValidVidType("INT"));
-        assertTrue(NebulaUtils.checkValidVidType("INT64"));
-        assertTrue(NebulaUtils.checkValidVidType("FIXED_STRING(10)"));
-
-        assertFalse(NebulaUtils.checkValidVidType("INT32"));
-        assertFalse(NebulaUtils.checkValidVidType("FIXED_STRING"));
-        assertFalse(NebulaUtils.checkValidVidType("FIXED_STRING(-1)"));
-        assertFalse(NebulaUtils.checkValidVidType("FIXED_STRING(aaa)"));
     }
 }

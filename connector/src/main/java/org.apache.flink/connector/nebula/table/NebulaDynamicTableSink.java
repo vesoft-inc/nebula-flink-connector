@@ -1,15 +1,20 @@
+/*
+ * Copyright (c) 2025 vesoft inc. All rights reserved.
+ *
+ * This source code is licensed under Apache 2.0 License.
+ */
+
 package org.apache.flink.connector.nebula.table;
 
-import org.apache.flink.connector.nebula.connection.NebulaClientOptions;
-import org.apache.flink.connector.nebula.connection.NebulaGraphConnectionProvider;
-import org.apache.flink.connector.nebula.connection.NebulaMetaConnectionProvider;
+import org.apache.flink.connector.nebula.connection.GraphProvider;
+import org.apache.flink.connector.nebula.options.ConnectionOptions;
+import org.apache.flink.connector.nebula.options.ExecutionOptions;
+import org.apache.flink.connector.nebula.options.SinkEdgeOptions;
+import org.apache.flink.connector.nebula.options.SinkNodeOptions;
 import org.apache.flink.connector.nebula.sink.NebulaBatchOutputFormat;
 import org.apache.flink.connector.nebula.sink.NebulaEdgeBatchTableOutputFormat;
+import org.apache.flink.connector.nebula.sink.NebulaNodeBatchTableOutputFormat;
 import org.apache.flink.connector.nebula.sink.NebulaSinkFunction;
-import org.apache.flink.connector.nebula.sink.NebulaVertexBatchTableOutputFormat;
-import org.apache.flink.connector.nebula.statement.EdgeExecutionOptions;
-import org.apache.flink.connector.nebula.statement.ExecutionOptions;
-import org.apache.flink.connector.nebula.statement.VertexExecutionOptions;
 import org.apache.flink.table.connector.ChangelogMode;
 import org.apache.flink.table.connector.sink.DynamicTableSink;
 import org.apache.flink.table.connector.sink.SinkFunctionProvider;
@@ -18,13 +23,13 @@ import org.apache.flink.table.types.DataType;
 import org.apache.flink.types.RowKind;
 
 public class NebulaDynamicTableSink implements DynamicTableSink {
-    private final NebulaClientOptions nebulaClientOptions;
-    private final ExecutionOptions executionOptions;
-    final DataType producedDataType;
+    private final ConnectionOptions connectionOptions;
+    private final ExecutionOptions  executionOptions;
+    final         DataType          producedDataType;
 
-    public NebulaDynamicTableSink(NebulaClientOptions clientOptions,
+    public NebulaDynamicTableSink(ConnectionOptions connectionOptions,
                                   ExecutionOptions executionOptions, DataType producedDataType) {
-        this.nebulaClientOptions = clientOptions;
+        this.connectionOptions = connectionOptions;
         this.executionOptions = executionOptions;
         this.producedDataType = producedDataType;
     }
@@ -42,20 +47,17 @@ public class NebulaDynamicTableSink implements DynamicTableSink {
 
     @Override
     public SinkRuntimeProvider getSinkRuntimeProvider(Context context) {
-
-        NebulaGraphConnectionProvider graphProvider =
-                new NebulaGraphConnectionProvider(nebulaClientOptions);
-        NebulaMetaConnectionProvider metaProvider =
-                new NebulaMetaConnectionProvider(nebulaClientOptions);
+        GraphProvider graphProvider = new GraphProvider(connectionOptions);
         DataStructureConverter converter =
                 context.createDataStructureConverter(producedDataType);
         NebulaBatchOutputFormat<RowData, ?> outputFormat;
-        if (executionOptions instanceof VertexExecutionOptions) {
-            outputFormat = new NebulaVertexBatchTableOutputFormat(graphProvider, metaProvider,
-                    (VertexExecutionOptions) executionOptions, converter);
-        } else if (executionOptions instanceof EdgeExecutionOptions) {
-            outputFormat = new NebulaEdgeBatchTableOutputFormat(graphProvider, metaProvider,
-                    (EdgeExecutionOptions) executionOptions, converter);
+        if (executionOptions instanceof SinkNodeOptions) {
+            outputFormat = new NebulaNodeBatchTableOutputFormat((SinkNodeOptions) executionOptions,
+                                                                connectionOptions,
+                                                                converter);
+        } else if (executionOptions instanceof SinkEdgeOptions) {
+            outputFormat = new NebulaEdgeBatchTableOutputFormat(
+                    (SinkEdgeOptions) executionOptions, connectionOptions, converter);
         } else {
             throw new IllegalArgumentException("unknown execution options type");
         }

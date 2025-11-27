@@ -1,16 +1,24 @@
+/*
+ * Copyright (c) 2025 vesoft inc. All rights reserved.
+ *
+ * This source code is licensed under Apache 2.0 License.
+ */
+
 package org.apache.flink.connector.nebula.sink;
 
-import com.vesoft.nebula.client.graph.net.Session;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.apache.flink.api.java.tuple.Tuple2;
+import org.apache.flink.connector.nebula.connection.GraphProvider;
 import org.apache.flink.table.connector.sink.DynamicTableSink.DataStructureConverter;
 import org.apache.flink.table.data.RowData;
 import org.apache.flink.types.Row;
 
-public class NebulaTableBufferReducedExecutor extends NebulaBatchExecutor<RowData> {
+public class NebulaTableBufferReducedExecutor implements NebulaBatchExecutor<RowData> {
     private final DataStructureConverter dataStructureConverter;
     private final Function<Row, Row> keyExtractor;
     private final NebulaBatchExecutor<Row> insertExecutor;
@@ -48,20 +56,7 @@ public class NebulaTableBufferReducedExecutor extends NebulaBatchExecutor<RowDat
     }
 
     @Override
-    public void clearBatch() {
-        reduceBuffer.clear();
-    }
-
-    @Override
-    public boolean isBatchEmpty() {
-        return reduceBuffer.isEmpty();
-    }
-
-    @Override
-    public void executeBatch(Session session) throws IOException {
-        if (isBatchEmpty()) {
-            return;
-        }
+    public String executeBatch(GraphProvider provider) {
         for (Tuple2<Boolean, Row> value : reduceBuffer.values()) {
             boolean isUpsert = value.f0;
             Row row = value.f1;
@@ -71,13 +66,11 @@ public class NebulaTableBufferReducedExecutor extends NebulaBatchExecutor<RowDat
                 deleteExecutor.addToBatch(row);
             }
         }
-        try {
-            insertExecutor.executeBatch(session);
-            deleteExecutor.executeBatch(session);
-        } finally {
-            insertExecutor.clearBatch();
-            deleteExecutor.clearBatch();
-        }
-        clearBatch();
+        String insertErrorStatement = insertExecutor.executeBatch(provider);
+        String deleteErrorStatement = deleteExecutor.executeBatch(provider);
+        reduceBuffer.clear();
+        String errorStatements = Stream.of(insertErrorStatement, deleteErrorStatement)
+                .filter(Objects::nonNull).collect(Collectors.joining("; "));
+        return errorStatements.isEmpty() ? null : errorStatements;
     }
 }

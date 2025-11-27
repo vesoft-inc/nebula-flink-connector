@@ -1,14 +1,20 @@
+/*
+ * Copyright (c) 2025 vesoft inc. All rights reserved.
+ *
+ * This source code is licensed under Apache 2.0 License.
+ */
+
 package org.apache.flink.connector.nebula.sink;
 
-import com.vesoft.nebula.PropertyType;
+import static org.apache.flink.connector.nebula.TestConstant.sinkGraph;
+
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import org.apache.flink.connector.nebula.statement.EdgeExecutionOptions;
-import org.apache.flink.connector.nebula.statement.ExecutionOptions;
+import org.apache.flink.connector.nebula.options.SinkEdgeOptions;
 import org.apache.flink.connector.nebula.utils.NebulaEdge;
-import org.apache.flink.connector.nebula.utils.PolicyEnum;
-import org.apache.flink.connector.nebula.utils.VidTypeEnum;
+import org.apache.flink.connector.nebula.utils.NebulaEdgeSchema;
+import org.apache.flink.connector.nebula.utils.WriteModeEnum;
 import org.apache.flink.types.Row;
 import org.junit.Before;
 import org.junit.Test;
@@ -20,40 +26,44 @@ public class NebulaRowEdgeOutputFormatConverterTest {
     private static final Logger LOGGER =
             LoggerFactory.getLogger(NebulaRowEdgeOutputFormatConverterTest.class);
 
-    EdgeExecutionOptions.ExecutionOptionBuilder builder = null;
-    Map<String, Integer> schema = new HashMap<>();
-    Row row = new Row(10);
+    SinkEdgeOptions.Builder builder = null;
+    Map<String, String>     schema  = new HashMap<>();
+    Row                     row     = Row.withNames();
 
     @Before
     public void setUp() {
-        builder = new EdgeExecutionOptions.ExecutionOptionBuilder()
-                .setGraphSpace("test")
-                .setEdge("friend")
-                .setSrcIndex(0)
-                .setDstIndex(1)
-                .setFields(Arrays.asList("col1", "col2", "col3", "col4", "col5", "col6", "col7",
-                        "col8"))
-                .setPositions(Arrays.asList(2, 3, 4, 5, 6, 7, 8, 9));
+        builder = SinkEdgeOptions.builder()
+                .withGraphName(sinkGraph)
+                .withWriteMode(WriteModeEnum.INSERTREPLACE)
+                .withEdgeType("friend")
+                .withNebulaSrcPks(Arrays.asList("id"))
+                .withNebulaDstPks(Arrays.asList("id"))
+                .withFlinkSrcPkFields(Arrays.asList("src"))
+                .withFlinkDstPkFields(Arrays.asList("dst"))
+                .withNebulaFields(Arrays.asList("col1", "col2", "col3", "col4", "col5",
+                                                "col6", "col7", "col8"))
+                .withFlinkFields(Arrays.asList("c1", "c2", "c3", "c4", "c5", "c6", "c7", "c8"))
+                .withBatchSize(2);
 
-        schema.put("col1", PropertyType.STRING.getValue());
-        schema.put("col2", PropertyType.FIXED_STRING.getValue());
-        schema.put("col3", PropertyType.INT32.getValue());
-        schema.put("col4", PropertyType.DOUBLE.getValue());
-        schema.put("col5", PropertyType.DATE.getValue());
-        schema.put("col6", PropertyType.DATETIME.getValue());
-        schema.put("col7", PropertyType.TIME.getValue());
-        schema.put("col8", PropertyType.TIMESTAMP.getValue());
+        schema.put("col1", "STRING");
+        schema.put("col2", "STRING");
+        schema.put("col3", "INT32");
+        schema.put("col4", "DOUBLE");
+        schema.put("col5", "DATE");
+        schema.put("col6", "LOCAL DATETIME");
+        schema.put("col7", "LOCAL TIME");
+        schema.put("col8", "INT64");
 
-        row.setField(0, 1);
-        row.setField(1, 2);
-        row.setField(2, "Tom");
-        row.setField(3, "Tom");
-        row.setField(4, 10);
-        row.setField(5, 1.0);
-        row.setField(6, "2021-01-01");
-        row.setField(7, "2021-01-01T12:00:00");
-        row.setField(8, "12:00:00");
-        row.setField(9, 372435234);
+        row.setField("src", 1);
+        row.setField("dst", 2);
+        row.setField("c1", "Tom");
+        row.setField("c2", "Tom");
+        row.setField("c3", 10);
+        row.setField("c4", 1.0);
+        row.setField("c5", "2021-01-01");
+        row.setField("c6", "2021-01-01T12:00:00");
+        row.setField("c7", "12:00:00");
+        row.setField("c8", 372435234);
     }
 
     public void tearDown() {
@@ -63,72 +73,36 @@ public class NebulaRowEdgeOutputFormatConverterTest {
      * test create edge for int id
      */
     @Test
-    public void testCreateEdgeIntId() {
-        EdgeExecutionOptions options = builder.build();
+    public void testCreateEdge() {
+        SinkEdgeOptions  options    = builder.build();
+        NebulaEdgeSchema edgeSchema = new NebulaEdgeSchema();
+        edgeSchema.setEdgeTypeName("friend");
+        edgeSchema.setSrcNodeTypeName("person");
+        edgeSchema.setDstNodeTypeName("person");
+        edgeSchema.setSrcPkDataTypeMap(new HashMap<String, String>() {
+            {
+                put("id", "STRING");
+            }
+        });
+        edgeSchema.setDstPkDataTypeMap(new HashMap<String, String>() {
+            {
+                put("id", "STRING");
+            }
+        });
+        edgeSchema.setProperties(schema);
         NebulaRowEdgeOutputFormatConverter converter =
-                new NebulaRowEdgeOutputFormatConverter(options, VidTypeEnum.INT, schema);
-        NebulaEdge edge = converter.createEdge(row, null);
-        assert (edge.getSource().equals("1"));
-        assert (edge.getTarget().equals("2"));
-        assert (edge.getRank() == null);
-        assert (edge.getPropValuesString().equals("\"Tom\",\"Tom\",10,1.0,date(\"2021-01-01\"),"
-                + "datetime(\"2021-01-01T12:00:00\"),time(\"12:00:00\"),372435234"));
-
-    }
-
-    /**
-     * test create edge with rank for int id
-     */
-    @Test
-    public void testCreateEdgeIntIdWithRank() {
-        EdgeExecutionOptions options = builder.setRankIndex(4).build();
-        NebulaRowEdgeOutputFormatConverter converter =
-                new NebulaRowEdgeOutputFormatConverter(options, VidTypeEnum.INT, schema);
-        NebulaEdge edge = converter.createEdge(row, null);
-        assert (edge.getSource().equals("1"));
-        assert (edge.getTarget().equals("2"));
-        assert (edge.getRank() == 10L);
-    }
-
-    /**
-     * test create edge with policy for int id
-     */
-    @Test
-    public void testCreateEdgeIntIdWithPolicy() {
-        EdgeExecutionOptions options = builder.build();
-        NebulaRowEdgeOutputFormatConverter converter =
-                new NebulaRowEdgeOutputFormatConverter(options, VidTypeEnum.INT, schema);
-        NebulaEdge edge = converter.createEdge(row, PolicyEnum.HASH);
-        assert (edge.getSource().equals("1"));
-        assert (edge.getTarget().equals("2"));
-        assert (edge.getRank() == null);
-    }
-
-    /**
-     * test create edge for String id
-     */
-    @Test
-    public void testCreateEdgeStringId() {
-        EdgeExecutionOptions options = builder.build();
-        NebulaRowEdgeOutputFormatConverter converter =
-                new NebulaRowEdgeOutputFormatConverter(options, VidTypeEnum.STRING, schema);
-        NebulaEdge edge = converter.createEdge(row, null);
-        assert (edge.getSource().equals("\"1\""));
-        assert (edge.getTarget().equals("\"2\""));
-        assert (edge.getRank() == null);
-    }
-
-    /**
-     * test create edge with rank for String id
-     */
-    @Test
-    public void testCreateEdgeStringIdWithRank() {
-        EdgeExecutionOptions options = builder.setRankIndex(4).build();
-        NebulaRowEdgeOutputFormatConverter converter =
-                new NebulaRowEdgeOutputFormatConverter(options, VidTypeEnum.STRING, schema);
-        NebulaEdge edge = converter.createEdge(row, null);
-        assert (edge.getSource().equals("\"1\""));
-        assert (edge.getTarget().equals("\"2\""));
-        assert (edge.getRank() == 10L);
+                new NebulaRowEdgeOutputFormatConverter(options, edgeSchema);
+        NebulaEdge edge = converter.createEdge(row);
+        assert (edge.getSrcPks().get("id").equals("\"1\""));
+        assert (edge.getDstPks().get("id").equals("\"2\""));
+        assert (edge.getProperties().size() == 8);
+        assert (edge.getProperties().get("col1").equals("\"Tom\""));
+        assert (edge.getProperties().get("col2").equals("\"Tom\""));
+        assert (edge.getProperties().get("col3").equals("10"));
+        assert (edge.getProperties().get("col4").equals("1.0"));
+        assert (edge.getProperties().get("col5").equals("date(\"2021-01-01\")"));
+        assert (edge.getProperties().get("col6").equals("local_datetime(\"2021-01-01T12:00:00\")"));
+        assert (edge.getProperties().get("col7").equals("local_time(\"12:00:00\")"));
+        assert (edge.getProperties().get("col8").equals("372435234"));
     }
 }

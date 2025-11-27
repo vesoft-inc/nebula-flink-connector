@@ -1,20 +1,19 @@
-/* Copyright (c) 2020 vesoft inc. All rights reserved.
+/*
+ * Copyright (c) 2025 vesoft inc. All rights reserved.
  *
  * This source code is licensed under Apache 2.0 License.
  */
 
 package org.apache.flink.connector.nebula.source;
 
-import com.vesoft.nebula.client.meta.MetaClient;
-import com.vesoft.nebula.client.storage.StorageClient;
-import com.vesoft.nebula.client.storage.data.BaseTableRow;
+import com.vesoft.nebula.driver.graph.scan.TableRow;
 import java.util.List;
 import org.apache.flink.api.common.functions.RuntimeContext;
 import org.apache.flink.configuration.Configuration;
-import org.apache.flink.connector.nebula.connection.NebulaClientOptions;
-import org.apache.flink.connector.nebula.connection.NebulaMetaConnectionProvider;
-import org.apache.flink.connector.nebula.connection.NebulaStorageConnectionProvider;
-import org.apache.flink.connector.nebula.statement.ExecutionOptions;
+import org.apache.flink.connector.nebula.connection.GraphProvider;
+import org.apache.flink.connector.nebula.options.ConnectionOptions;
+import org.apache.flink.connector.nebula.options.SourceExecutionOptions;
+import org.apache.flink.connector.nebula.options.SourceNodeOptions;
 import org.apache.flink.connector.nebula.utils.PartitionUtils;
 import org.apache.flink.streaming.api.functions.source.RichParallelSourceFunction;
 import org.slf4j.Logger;
@@ -23,29 +22,24 @@ import org.slf4j.LoggerFactory;
 /**
  * Implementation of {@link RichParallelSourceFunction} to get NebulaGraph vertex and edge.
  */
-public class NebulaSourceFunction extends RichParallelSourceFunction<BaseTableRow> {
+public class NebulaSourceFunction extends RichParallelSourceFunction<TableRow> {
 
     private static final Logger LOG = LoggerFactory.getLogger(NebulaSourceFunction.class);
 
     private static final long serialVersionUID = -4864517634021753949L;
 
-    private StorageClient storageClient;
-    private MetaClient metaClient;
-    private final NebulaStorageConnectionProvider storageConnectionProvider;
-    private final NebulaMetaConnectionProvider metaConnectionProvider;
-    private ExecutionOptions executionOptions;
+    private SourceExecutionOptions executionOptions;
+    private ConnectionOptions      connectionOptions;
     /**
      * the number of graph partitions
      */
-    private int numPart;
+    private int                    numPart;
 
-    public NebulaSourceFunction(NebulaStorageConnectionProvider storageConnectionProvider) {
+    public NebulaSourceFunction(ConnectionOptions connectionOptions,
+                                SourceExecutionOptions sourceExecutionOptions) {
         super();
-        this.storageConnectionProvider = storageConnectionProvider;
-        NebulaClientOptions nebulaClientOptions =
-                storageConnectionProvider.getNebulaClientOptions();
-        this.metaConnectionProvider =
-                new NebulaMetaConnectionProvider(nebulaClientOptions);
+        this.executionOptions = sourceExecutionOptions;
+        this.connectionOptions = connectionOptions;
     }
 
     /**
@@ -54,33 +48,30 @@ public class NebulaSourceFunction extends RichParallelSourceFunction<BaseTableRo
     @Override
     public void open(Configuration parameters) throws Exception {
         super.open(parameters);
-        storageClient = storageConnectionProvider.getStorageClient();
-        metaClient = metaConnectionProvider.getMetaClient();
-        numPart = metaClient.getPartsAlloc(executionOptions.getGraphSpace()).size();
+        GraphProvider graphProvider = null;
+        try {
+            graphProvider = new GraphProvider(connectionOptions);
+            numPart = graphProvider.getAllParts().size();
+        } finally {
+            if (graphProvider != null) {
+                graphProvider.close();
+            }
+        }
+
     }
 
     /**
      * close nebula client
      */
     @Override
-    public void close() throws Exception {
-        try {
-            if (storageClient != null) {
-                storageClient.close();
-            }
-            if (metaClient != null) {
-                metaClient.close();
-            }
-        } catch (Exception e) {
-            LOG.error("cancel exception:{}", e.getMessage(), e);
-        }
+    public void close() {
     }
 
     /**
      * execute scan nebula data
      */
     @Override
-    public void run(SourceContext<BaseTableRow> sourceContext) throws Exception {
+    public void run(SourceContext<TableRow> sourceContext) throws Exception {
         RuntimeContext runtimeContext = getRuntimeContext();
         List<Integer> scanParts = PartitionUtils.getScanParts(
                 runtimeContext.getIndexOfThisSubtask() + 1,
@@ -88,34 +79,19 @@ public class NebulaSourceFunction extends RichParallelSourceFunction<BaseTableRo
                 runtimeContext.getNumberOfParallelSubtasks());
 
         NebulaSource nebulaSource;
-        if (executionOptions.getDataType().isVertex()) {
-            nebulaSource = new NebulaVertexSource(storageClient, executionOptions, scanParts);
+        if (executionOptions instanceof SourceNodeOptions) {
+            nebulaSource = new NebulaNodeSource(connectionOptions, executionOptions, scanParts);
         } else {
-            nebulaSource = new NebulaEdgeSource(storageClient, executionOptions, scanParts);
+            nebulaSource = new NebulaEdgeSource(connectionOptions, executionOptions, scanParts);
         }
 
         while (nebulaSource.hasNext()) {
-            BaseTableRow row = nebulaSource.next();
+            TableRow row = nebulaSource.next();
             sourceContext.collect(row);
         }
     }
 
     @Override
     public void cancel() {
-        try {
-            if (storageClient != null) {
-                storageClient.close();
-            }
-            if (metaClient != null) {
-                metaClient.close();
-            }
-        } catch (Exception e) {
-            LOG.error("cancel exception:{}", e.getMessage(), e);
-        }
-    }
-
-    public NebulaSourceFunction setExecutionOptions(ExecutionOptions executionOptions) {
-        this.executionOptions = executionOptions;
-        return this;
     }
 }

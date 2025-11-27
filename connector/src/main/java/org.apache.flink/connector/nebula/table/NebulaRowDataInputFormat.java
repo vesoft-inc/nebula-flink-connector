@@ -1,15 +1,16 @@
-/* Copyright (c) 2020 vesoft inc. All rights reserved.
+/*
+ * Copyright (c) 2025 vesoft inc. All rights reserved.
  *
  * This source code is licensed under Apache 2.0 License.
  */
 
 package org.apache.flink.connector.nebula.table;
 
-import com.vesoft.nebula.client.storage.data.BaseTableRow;
 import java.io.IOException;
-import org.apache.flink.connector.nebula.connection.NebulaStorageConnectionProvider;
+import org.apache.flink.connector.nebula.connection.GraphProvider;
+import org.apache.flink.connector.nebula.options.ConnectionOptions;
+import org.apache.flink.connector.nebula.options.SourceExecutionOptions;
 import org.apache.flink.connector.nebula.source.NebulaInputFormat;
-import org.apache.flink.connector.nebula.statement.ExecutionOptions;
 import org.apache.flink.core.io.InputSplit;
 import org.apache.flink.table.data.RowData;
 import org.apache.flink.table.types.logical.LogicalType;
@@ -17,16 +18,16 @@ import org.apache.flink.table.types.logical.RowType;
 
 /**
  * implementation of NebulaInputFormat.
- * Read NebulaGraph data in nebula's {@link BaseTableRow} format.
+ * Read NebulaGraph data in nebula's {@link com.vesoft.nebula.driver.graph.scan.TableRow} format.
  */
 public class NebulaRowDataInputFormat extends NebulaInputFormat<RowData> {
 
     private final LogicalType[] logicalTypes;
 
-    public NebulaRowDataInputFormat(NebulaStorageConnectionProvider storageConnectionProvider,
-                                    ExecutionOptions executionOptions,
+    public NebulaRowDataInputFormat(ConnectionOptions connectionOptions,
+                                    SourceExecutionOptions executionOptions,
                                     LogicalType[] logicalTypes) {
-        super(storageConnectionProvider, executionOptions);
+        super(connectionOptions, executionOptions);
         this.logicalTypes = logicalTypes;
     }
 

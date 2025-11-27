@@ -1,12 +1,12 @@
-# nebula-ng-flink-connector
+# nebula-flink-connector
 Flink Connector for Nebula Graph 5
 
 
 ![](https://img.shields.io/badge/language-java-orange.svg)
-[![GitHub stars](https://img.shields.io/github/stars/vesoft-inc/nebula-ng-flink-connector.svg?color=brightgreen)](https://GitHub.com/vesoft-inc/nebula-ng-flink-connector/stargazers/)
-[![GitHub fork](https://img.shields.io/github/forks/vesoft-inc/nebula-ng-flink-connector.svg?color=brightgreen)](https://GitHub.com/vesoft-inc/nebula-ng-flink-connector/forks/)
+[![GitHub stars](https://img.shields.io/github/stars/vesoft-inc/nebula-flink-connector.svg?color=brightgreen)](https://GitHub.com/vesoft-inc/nebula-flink-connector/stargazers/)
+[![GitHub fork](https://img.shields.io/github/forks/vesoft-inc/nebula-flink-connector.svg?color=brightgreen)](https://GitHub.com/vesoft-inc/nebula-flink-connector/forks/)
 
-Nebula-Ng-Flink-Connector 5 is a connector that helps Flink users to easily access Nebula Graph 5. 
+Nebula-Flink-Connector 5 is a connector that helps Flink users to easily access Nebula Graph 5. 
 ## Quick start
 
 ### Prerequisites
@@ -141,7 +141,7 @@ DataSource<Row> rowDataSource = env.createInput(inputRowFormat);
 System.out.println("rowDataSource count: " + rowDataSource.count());
 ```
 
-for more examples, see https://github.com/vesoft-inc/nebula-ng-flink-connector/tree/master/example/src/main/java/org/apache/flink
+for more examples, see https://github.com/vesoft-inc/nebula-flink-connector/tree/master/example/src/main/java/org/apache/flink
 
 ## Version match
 

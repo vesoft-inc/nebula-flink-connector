@@ -1,34 +1,50 @@
-/* Copyright (c) 2022 vesoft inc. All rights reserved.
+/*
+ * Copyright (c) 2025 vesoft inc. All rights reserved.
  *
  * This source code is licensed under Apache 2.0 License.
  */
 
 package org.apache.flink.connector.nebula.catalog;
 
+import static org.apache.flink.connector.nebula.TestConstant.graphAddr;
+import static org.apache.flink.connector.nebula.TestConstant.passwd;
+import static org.apache.flink.connector.nebula.TestConstant.user;
+
+import java.util.HashMap;
+import java.util.Map;
 import org.apache.flink.connector.nebula.utils.NebulaCatalogUtils;
 import org.apache.flink.table.api.EnvironmentSettings;
 import org.apache.flink.table.api.TableEnvironment;
 import org.junit.Test;
 
-public class NebulaCatalogCreateSpaceTest {
+public class NebulaCatalogCreateGraphTest {
 
-    private static final String CATALOG_NAME = "NebulaCatalog";
-    private static final String GRAPH_SPACE = "default";
-    private static final String USERNAME = "root";
-    private static final String PASSWORD = "nebula";
-    private static final String META_ADDRESS = "127.0.0.1:9559";
-    private static final String GRAPH_ADDRESS = "127.0.0.1:9669";
+    private static final String              CATALOG_NAME  = "NebulaCatalog";
+    private static final String              GRAPH_NAME    = "default";
+    private static final Map<String, Object> authInfo     = new HashMap<>();
 
     @Test
     public void testCreateGraphSpace() {
         NebulaCatalog nebulaCatalog = NebulaCatalogUtils.createNebulaCatalog(
                 CATALOG_NAME,
-                GRAPH_SPACE,
-                USERNAME,
-                PASSWORD,
-                META_ADDRESS,
-                GRAPH_ADDRESS
-        );
+                GRAPH_NAME,
+                graphAddr,
+                user,
+                passwd,
+                authInfo,
+                3000,
+                50000,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                false,
+                false,
+                null,
+                null,
+                null);
 
         EnvironmentSettings settings = EnvironmentSettings.newInstance()
                 .inStreamingMode()
@@ -39,27 +55,21 @@ public class NebulaCatalogCreateSpaceTest {
         tableEnv.useCatalog(CATALOG_NAME);
 
         String createDataBase1 = "CREATE DATABASE IF NOT EXISTS `db1`"
-                + " COMMENT 'space 1'"
+                + " COMMENT 'graph 1'"
                 + " WITH ("
-                + " 'partition_num' = '100',"
-                + " 'replica_factor' = '3',"
-                + " 'vid_type' = 'FIXED_STRING(10)'"
+                + " 'graph_type' = 'flink_catalog_type'"
                 + ")";
 
         String createDataBase2 = "CREATE DATABASE IF NOT EXISTS `db2`"
-                + " COMMENT 'space 2'"
+                + " COMMENT 'graph 2'"
                 + " WITH ("
-                + " 'partition_num' = '10',"
-                + " 'replica_factor' = '2',"
-                + " 'vid_type' = 'INT'"
+                + " 'graph_type' = 'flink_catalog_type'"
                 + ")";
 
         String createSameDataBase = "CREATE DATABASE IF NOT EXISTS `db1`"
-                + " COMMENT 'same name as space 1'"
+                + " COMMENT 'graph 1'"
                 + " WITH ("
-                + " 'partition_num' = '10',"
-                + " 'replica_factor' = '2',"
-                + " 'vid_type' = 'INT64'"
+                + " 'graph_type' = 'flink_catalog_type'"
                 + ")";
 
         tableEnv.executeSql(createDataBase1);

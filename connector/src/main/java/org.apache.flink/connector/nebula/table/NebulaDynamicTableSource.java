@@ -1,4 +1,5 @@
-/* Copyright (c) 2020 vesoft inc. All rights reserved.
+/*
+ * Copyright (c) 2025 vesoft inc. All rights reserved.
  *
  * This source code is licensed under Apache 2.0 License.
  */
@@ -8,9 +9,10 @@ package org.apache.flink.connector.nebula.table;
 
 import java.util.Arrays;
 import org.apache.flink.api.common.io.InputFormat;
-import org.apache.flink.connector.nebula.connection.NebulaClientOptions;
-import org.apache.flink.connector.nebula.connection.NebulaStorageConnectionProvider;
-import org.apache.flink.connector.nebula.statement.ExecutionOptions;
+import org.apache.flink.connector.nebula.connection.GraphProvider;
+import org.apache.flink.connector.nebula.options.ConnectionOptions;
+import org.apache.flink.connector.nebula.options.ExecutionOptions;
+import org.apache.flink.connector.nebula.options.SourceExecutionOptions;
 import org.apache.flink.core.io.InputSplit;
 import org.apache.flink.table.api.TableSchema;
 import org.apache.flink.table.connector.ChangelogMode;
@@ -23,14 +25,14 @@ import org.apache.flink.table.types.logical.LogicalType;
 
 public class NebulaDynamicTableSource implements ScanTableSource {
 
-    private final NebulaClientOptions nebulaClientOptions;
-    private final ExecutionOptions executionOptions;
+    private final ConnectionOptions connectionOptions;
+    private final SourceExecutionOptions executionOptions;
     private final TableSchema tableSchema;
 
-    public NebulaDynamicTableSource(NebulaClientOptions nebulaClientOptions,
-                                    ExecutionOptions executionOptions,
+    public NebulaDynamicTableSource(ConnectionOptions connectionOptions,
+                                    SourceExecutionOptions executionOptions,
                                     TableSchema tableSchema) {
-        this.nebulaClientOptions = nebulaClientOptions;
+        this.connectionOptions = connectionOptions;
         this.executionOptions = executionOptions;
         this.tableSchema = tableSchema;
     }
@@ -48,7 +50,7 @@ public class NebulaDynamicTableSource implements ScanTableSource {
                 .toArray(LogicalType[]::new);
 
         InputFormat<RowData, InputSplit> inputFormat = new NebulaRowDataInputFormat(
-                new NebulaStorageConnectionProvider(this.nebulaClientOptions),
+                connectionOptions,
                 this.executionOptions,
                 logicalTypes
         );
@@ -57,7 +59,7 @@ public class NebulaDynamicTableSource implements ScanTableSource {
 
     @Override
     public DynamicTableSource copy() {
-        return new NebulaDynamicTableSource(nebulaClientOptions, executionOptions, tableSchema);
+        return new NebulaDynamicTableSource(connectionOptions, executionOptions, tableSchema);
     }
 
     @Override

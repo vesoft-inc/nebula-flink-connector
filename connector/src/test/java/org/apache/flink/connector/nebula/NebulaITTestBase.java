@@ -1,59 +1,40 @@
-/* Copyright (c) 2022 vesoft inc. All rights reserved.
+/*
+ * Copyright (c) 2025 vesoft inc. All rights reserved.
  *
  * This source code is licensed under Apache 2.0 License.
  */
 
 package org.apache.flink.connector.nebula;
 
+import static org.apache.flink.connector.nebula.TestConstant.graphAddr;
+import static org.apache.flink.connector.nebula.TestConstant.passwd;
+import static org.apache.flink.connector.nebula.TestConstant.user;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.vesoft.nebula.Row;
-import com.vesoft.nebula.client.graph.NebulaPoolConfig;
-import com.vesoft.nebula.client.graph.data.HostAddress;
-import com.vesoft.nebula.client.graph.data.ResultSet;
-import com.vesoft.nebula.client.graph.exception.AuthFailedException;
-import com.vesoft.nebula.client.graph.exception.ClientServerIncompatibleException;
-import com.vesoft.nebula.client.graph.exception.IOErrorException;
-import com.vesoft.nebula.client.graph.exception.NotValidConnectionException;
-import com.vesoft.nebula.client.graph.net.NebulaPool;
-import com.vesoft.nebula.client.graph.net.Session;
-import java.net.UnknownHostException;
-import java.util.Collections;
+import com.vesoft.nebula.driver.graph.data.ResultSet;
+import java.util.ArrayList;
 import java.util.List;
-import org.apache.flink.connector.nebula.utils.NebulaConstant;
+import org.apache.flink.connector.nebula.connection.GraphProvider;
+import org.apache.flink.connector.nebula.options.ConnectionOptions;
 
 public class NebulaITTestBase {
 
-    protected static final String META_ADDRESS = "127.0.0.1:9559";
-    protected static final String GRAPH_ADDRESS = "127.0.0.1:9669";
-    protected static final String USERNAME = "root";
-    protected static final String PASSWORD = "nebula";
+    protected static GraphProvider graphProvider;
 
-    protected static Session session;
-    protected static NebulaPool pool;
+    protected static void initializeNebulaClient() {
 
-    protected static void initializeNebulaSession() {
-        NebulaPoolConfig nebulaPoolConfig = new NebulaPoolConfig();
-        String[] addressAndPort = GRAPH_ADDRESS.split(NebulaConstant.COLON);
-        List<HostAddress> addresses = Collections.singletonList(
-                new HostAddress(addressAndPort[0], Integer.parseInt(addressAndPort[1]))
-        );
-        pool = new NebulaPool();
         try {
-            boolean result = pool.init(addresses, nebulaPoolConfig);
-            if (!result) {
-                throw new RuntimeException("failed to initialize connection pool");
-            }
-        } catch (UnknownHostException e) {
-            throw new RuntimeException("init nebula pool error", e);
-        }
-        try {
-            session = pool.getSession(USERNAME, PASSWORD, true);
-        } catch (NotValidConnectionException
-                 | AuthFailedException
-                 | IOErrorException
-                 | ClientServerIncompatibleException e) {
+            ConnectionOptions connectionOptions = ConnectionOptions
+                    .builder()
+                    .withGraphAddress(graphAddr)
+                    .withUser(user)
+                    .withPassword(passwd)
+                    .withZonedDatetimeFormat("%Y-%m-%dT%H:%M:%S %Ez")
+                    .withZonedTimeFormat("%H:%M:%S %Ez")
+                    .build();
+            graphProvider = new GraphProvider(connectionOptions);
+        } catch (Exception e) {
             throw new RuntimeException("init nebula session error", e);
         }
     }
@@ -68,20 +49,17 @@ public class NebulaITTestBase {
         }
     }
 
-    protected static void closeNebulaSession() {
-        if (session != null) {
-            session.release();
-        }
-        if (pool != null) {
-            pool.close();
+    protected static void closeGraphProvider() {
+        if (graphProvider != null) {
+            graphProvider.close();
         }
     }
 
     protected static ResultSet executeNGql(String stmt) {
         ResultSet response;
         try {
-            response = session.execute(stmt);
-        } catch (IOErrorException e) {
+            response = graphProvider.execute(stmt);
+        } catch (Exception e) {
             throw new RuntimeException(String.format("failed to execute statement %s", stmt), e);
         }
         if (!response.isSucceeded()) {
@@ -92,12 +70,16 @@ public class NebulaITTestBase {
         return response;
     }
 
-    protected static void check(List<Row> expected, String stmt) {
+    protected static void check(List<ResultSet.Record> expected, String stmt) {
         ResultSet response = executeNGql(stmt);
         if (expected == null || expected.isEmpty()) {
             assertTrue(response.isEmpty());
         } else {
-            assertEquals(expected, response.getRows());
+            List<ResultSet.Record> result = new ArrayList<>();
+            while (response.hasNext()) {
+                result.add(response.next());
+            }
+            assertEquals(expected, result);
         }
     }
 }

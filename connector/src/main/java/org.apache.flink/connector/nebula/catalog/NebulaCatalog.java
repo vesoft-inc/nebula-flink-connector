@@ -1,14 +1,16 @@
-/* Copyright (c) 2020 vesoft inc. All rights reserved.
+/*
+ * Copyright (c) 2025 vesoft inc. All rights reserved.
  *
  * This source code is licensed under Apache 2.0 License.
  */
 
 package org.apache.flink.connector.nebula.catalog;
 
-import static org.apache.flink.connector.nebula.table.NebulaDynamicTableFactory.GRAPH_SPACE;
+import static org.apache.flink.connector.nebula.table.NebulaDynamicTableFactory.DATA_TYPE;
+import static org.apache.flink.connector.nebula.table.NebulaDynamicTableFactory.EDGE_PATTERN_TYPE;
+import static org.apache.flink.connector.nebula.table.NebulaDynamicTableFactory.GRAPH_NAME;
 import static org.apache.flink.connector.nebula.table.NebulaDynamicTableFactory.IDENTIFIER;
 import static org.apache.flink.connector.nebula.table.NebulaDynamicTableFactory.LABEL_NAME;
-import static org.apache.flink.connector.nebula.table.NebulaDynamicTableFactory.METAADDRESS;
 import static org.apache.flink.connector.nebula.table.NebulaDynamicTableFactory.PASSWORD;
 import static org.apache.flink.connector.nebula.table.NebulaDynamicTableFactory.USERNAME;
 import static org.apache.flink.table.factories.FactoryUtil.CONNECTOR;
@@ -16,37 +18,16 @@ import static org.apache.flink.util.Preconditions.checkArgument;
 import static org.apache.flink.util.Preconditions.checkNotNull;
 import static org.apache.flink.util.StringUtils.isNullOrWhitespaceOnly;
 
-import com.facebook.thrift.TException;
-import com.vesoft.nebula.PropertyType;
-import com.vesoft.nebula.client.graph.data.ResultSet;
-import com.vesoft.nebula.client.graph.exception.AuthFailedException;
-import com.vesoft.nebula.client.graph.exception.ClientServerIncompatibleException;
-import com.vesoft.nebula.client.graph.exception.IOErrorException;
-import com.vesoft.nebula.client.graph.exception.NotValidConnectionException;
-import com.vesoft.nebula.client.graph.net.NebulaPool;
-import com.vesoft.nebula.client.graph.net.Session;
-import com.vesoft.nebula.client.meta.MetaClient;
-import com.vesoft.nebula.client.meta.exception.ExecuteFailedException;
-import com.vesoft.nebula.meta.ColumnDef;
-import com.vesoft.nebula.meta.EdgeItem;
-import com.vesoft.nebula.meta.IdName;
-import com.vesoft.nebula.meta.Schema;
-import com.vesoft.nebula.meta.TagItem;
-import java.net.UnknownHostException;
+import com.vesoft.nebula.driver.graph.data.ResultSet;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.apache.commons.collections.map.HashedMap;
-import org.apache.flink.connector.nebula.connection.NebulaClientOptions;
-import org.apache.flink.connector.nebula.connection.NebulaGraphConnectionProvider;
-import org.apache.flink.connector.nebula.connection.NebulaMetaConnectionProvider;
-import org.apache.flink.connector.nebula.utils.DataTypeEnum;
-import org.apache.flink.connector.nebula.utils.NebulaConstant;
-import org.apache.flink.connector.nebula.utils.NebulaSpace;
-import org.apache.flink.connector.nebula.utils.NebulaSpaces;
+import org.apache.flink.connector.nebula.options.ConnectionOptions;
+import org.apache.flink.connector.nebula.utils.NebulaGraph;
 import org.apache.flink.connector.nebula.utils.NebulaUtils;
 import org.apache.flink.table.api.DataTypes;
 import org.apache.flink.table.api.TableSchema;
@@ -66,93 +47,71 @@ import org.slf4j.LoggerFactory;
 public class NebulaCatalog extends AbstractNebulaCatalog {
 
     private static final Logger LOG = LoggerFactory.getLogger(NebulaCatalog.class);
-    private final NebulaClientOptions nebulaClientOptions;
-    private MetaClient metaClient;
-    private NebulaPool nebulaPool;
-    private Session session;
+
+    // graphName -> NODE -> [node types]
+    // graphName -> EDGE -> [edge types]
+    private Map<String, Map<String, HashSet<String>>> graphDataTypes          = new HashMap<>();
+    private Map<String, String>                       graphName2GraphTypeName = new HashMap<>();
 
     public NebulaCatalog(
             String catalogName,
             @Nullable String defaultDatabase,
-            String username,
-            String password,
-            String metaAddress,
-            String graphAddress) {
-        super(catalogName, defaultDatabase, username, password, metaAddress);
-        nebulaClientOptions =
-                new NebulaClientOptions.NebulaClientOptionsBuilder()
-                        .setGraphAddress(graphAddress)
-                        .setMetaAddress(metaAddress)
-                        .setUsername(username)
-                        .setPassword(password)
-                        .build();
+            ConnectionOptions connectionOptions) {
+        super(catalogName, defaultDatabase, connectionOptions);
     }
 
     @Override
     public void open() throws CatalogException {
         super.open();
-        NebulaGraphConnectionProvider graphConnectionProvider =
-                new NebulaGraphConnectionProvider(nebulaClientOptions);
-        NebulaMetaConnectionProvider metaConnectionProvider =
-                new NebulaMetaConnectionProvider(nebulaClientOptions);
-        try {
-            this.metaClient = metaConnectionProvider.getMetaClient();
-        } catch (UnknownHostException | ClientServerIncompatibleException e) {
-            LOG.error("nebula get meta client error", e);
-            throw new CatalogException("nebula get meta client error.", e);
-        }
-
-        try {
-            nebulaPool = graphConnectionProvider.getNebulaPool();
-            session = nebulaPool.getSession(graphConnectionProvider.getUserName(),
-                    graphConnectionProvider.getPassword(), true);
-        } catch (NotValidConnectionException | IOErrorException | AuthFailedException
-                | ClientServerIncompatibleException | UnknownHostException e) {
-            LOG.error("failed to get graph session", e);
-            throw new CatalogException("get graph session error.", e);
-        }
     }
 
     @Override
     public void close() throws CatalogException {
         super.close();
-        if (session != null) {
-            session.release();
-        }
-        if (nebulaPool != null) {
-            nebulaPool.close();
-        }
-        if (metaClient != null) {
-            metaClient.close();
+        if (graphProvider != null) {
+            graphProvider.close();
         }
     }
 
     @Override
     public List<String> listDatabases() throws CatalogException {
-        List<String> spaceNames = new ArrayList<>();
+        List<String> graphNames = new ArrayList<>();
         try {
-            metaClient.connect();
-            List<IdName> spaces = metaClient.getSpaces();
-            for (IdName space : spaces) {
-                spaceNames.add(new String(space.getName()));
+            ResultSet resultSet = graphProvider.execute("SHOW GRAPHS");
+            if (!resultSet.isSucceeded()) {
+                LOG.error("listDatabases with `SHOW GRAPHS` failed:" + resultSet.getErrorMessage());
+                throw new CatalogException("listDatabases failed:" + resultSet.getErrorMessage());
             }
-        } catch (TException | ExecuteFailedException | ClientServerIncompatibleException e) {
-            LOG.error("failed to connect meta service via " + address, e);
-            throw new CatalogException("nebula meta service connect failed.", e);
+            while (resultSet.hasNext()) {
+                graphNames.add(resultSet.next().get("name").asString());
+            }
+        } catch (Exception e) {
+            LOG.error("listDatabases with `SHOW GRAPHS` error", e);
+            throw new CatalogException(e);
         }
-        return spaceNames;
+        return graphNames;
     }
 
     @Override
     public CatalogDatabase getDatabase(String databaseName) throws DatabaseNotExistException,
-            CatalogException {
+                                                                   CatalogException {
         if (listDatabases().contains(databaseName.trim())) {
             Map<String, String> props = new HashedMap();
             try {
-                props.put("spaceId",
-                        String.valueOf(metaClient.getSpace(databaseName).getSpace_id()));
-            } catch (TException | ExecuteFailedException e) {
-                LOG.error("get spaceId error", e);
+                ResultSet showGraphResult = graphProvider.execute(
+                        "DESC GRAPH `" + NebulaUtils.escape(databaseName) + "`");
+                props.put("name", databaseName);
+                while (showGraphResult.hasNext()) {
+                    ResultSet.Record record = showGraphResult.next();
+                    if (record.get("name").asString().equals(databaseName)) {
+                        props.put("graph_type", record.get("graph_type").toString());
+                        props.put("schema", record.get("schema").toString());
+                        props.put("owner", record.get("owner").toString());
+                    }
+                }
+            } catch (Exception e) {
+                LOG.error("get graph " + databaseName + " error, ", e);
+                throw new CatalogException("getDatabase error: " + e.getMessage(), e);
             }
             return new CatalogDatabaseImpl(props, databaseName);
         } else {
@@ -161,9 +120,9 @@ public class NebulaCatalog extends AbstractNebulaCatalog {
     }
 
     /**
-     * @param dataBaseName same as graph space name in nebula graph
+     * @param dataBaseName    same as graph space name in nebula graph
      * @param catalogDatabase catalog implementation
-     * @param ignoreIfExists true if contains [if not exists] clause else false
+     * @param ignoreIfExists  true if contains [if not exists] clause else false
      */
     @Override
     public void createDatabase(String dataBaseName,
@@ -171,152 +130,193 @@ public class NebulaCatalog extends AbstractNebulaCatalog {
                                boolean ignoreIfExists)
             throws CatalogException {
         checkArgument(
-                !isNullOrWhitespaceOnly(dataBaseName), "space name cannot be null or empty.");
-        checkNotNull(catalogDatabase, "space cannot be null.");
+                !isNullOrWhitespaceOnly(dataBaseName), "graph name cannot be null or empty.");
+        checkNotNull(catalogDatabase, "graph name cannot be null.");
 
         if (ignoreIfExists && listDatabases().contains(dataBaseName)) {
-            LOG.info("Repeat to create space, {} already exists, no effect.", dataBaseName);
+            LOG.info("Repeat to create graph, {} already exists, no effect.", dataBaseName);
             return;
         }
         Map<String, String> properties = catalogDatabase.getProperties();
-        Map<String, String> newProperties = properties.entrySet().stream().collect(
-            Collectors.toMap(
-                entry -> entry.getKey().toLowerCase(),
-                entry -> entry.getValue().toUpperCase()
-            )
-        );
-        if (!newProperties.containsKey(NebulaConstant.CREATE_VID_TYPE)) {
-            LOG.error("failed to create graph space {}, missing VID type", properties);
-            throw new CatalogException("nebula create graph space failed, missing VID type.");
-        }
-        String vidType = newProperties.get(NebulaConstant.CREATE_VID_TYPE);
-        if (!NebulaUtils.checkValidVidType(vidType)) {
-            LOG.error("invalid VID type: {}", vidType);
-            throw new CatalogException("nebula does not support the specified VID type.");
-        }
-        NebulaSpace space = new NebulaSpace(
-                dataBaseName,catalogDatabase.getComment(), newProperties);
-        NebulaSpaces nebulaSpaces = new NebulaSpaces(space);
-        String statement = nebulaSpaces.getCreateStatement();
+
+        NebulaGraph nebulaGraph = new NebulaGraph(dataBaseName, properties);
+
         ResultSet execResult = null;
         try {
-            execResult = session.execute(statement);
-        } catch (IOErrorException e) {
-            LOG.error("nebula create graph space execute failed.", e);
-            throw new CatalogException("nebula create graph space execute failed.");
+            execResult = graphProvider.execute(nebulaGraph.getCreateGraphType(ignoreIfExists));
+        } catch (Exception e) {
+            LOG.error("nebula create graph type failed.", e);
+            throw new CatalogException("nebula create graph type failed.", e);
         }
 
         if (execResult.isSucceeded()) {
-            LOG.debug("create space success.");
+            LOG.debug("create graph type success.");
         } else {
-            LOG.error("create space failed: {}", execResult.getErrorMessage());
-            throw new CatalogException("create space failed: " + execResult.getErrorMessage());
+            LOG.error("create graph type failed: {}", execResult.getErrorMessage());
+            throw new CatalogException("create graph type failed, " + execResult.getErrorMessage());
+        }
+
+        try {
+            execResult = graphProvider.execute(nebulaGraph.getCreateGraph(ignoreIfExists));
+        } catch (Exception e) {
+            LOG.error("nebula create graph failed.", e);
+            throw new CatalogException("nebula create graph failed.", e);
+        }
+
+        if (execResult.isSucceeded()) {
+            LOG.debug("create graph success.");
+        } else {
+            LOG.error("create graph failed: {}", execResult.getErrorMessage());
+            throw new CatalogException("create graph failed, " + execResult.getErrorMessage());
         }
     }
 
     /**
-     * objectName in tablePath mush start with VERTEX. or EDGE.
+     * check if NodeType or EdgeType exists in graph
      *
-     * @param tablePath A graphSpace name and label name.
+     * @param tablePath A graph name and label name.
      * @return Table exists or not
      */
     @Override
     public boolean tableExists(ObjectPath tablePath) throws CatalogException {
-        String graphSpace = tablePath.getDatabaseName();
-        String table = tablePath.getObjectName();
+        String graphName = tablePath.getDatabaseName();
+        String table     = tablePath.getObjectName();
         try {
-            return (listTables(graphSpace).contains(table));
+            if (graphDataTypes.containsKey(graphName)) {
+                Map<String, HashSet<String>> typeNamesMap = graphDataTypes.get(graphName);
+                for (Map.Entry<String, HashSet<String>> types : typeNamesMap.entrySet()) {
+                    if (types.getValue().contains(table)) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+            return (listTables(graphName).contains(table));
         } catch (DatabaseNotExistException e) {
-            throw new CatalogException("failed to call tableExists function.", e);
+            throw new CatalogException("failed to call tableExists function, ", e);
         }
     }
 
 
     /**
-     * show all tags and edges
+     * show all node types and edge types
      *
-     * @param graphSpace nebula graph space
-     * @return List of Tag and Edge, tag starts with VERTEX. and edge starts with EDGE.
+     * @param graphName nebula graph name
+     * @return List of NodeType and EdgeType.
      */
     @Override
-    public List<String> listTables(String graphSpace) throws DatabaseNotExistException,
-            CatalogException {
-        if (!databaseExists(graphSpace)) {
-            throw new DatabaseNotExistException(getName(), graphSpace);
+    public List<String> listTables(String graphName) throws DatabaseNotExistException,
+                                                            CatalogException {
+        if (!databaseExists(graphName)) {
+            throw new DatabaseNotExistException(getName(), graphName);
+        }
+        if (!graphDataTypes.containsKey(graphName)) {
+            graphDataTypes.put(graphName, new HashMap<>());
         }
 
+        String       graphType = null;
+        List<String> tables    = new ArrayList<>();
         try {
-            metaClient.connect();
-        } catch (TException | ClientServerIncompatibleException e) {
-            LOG.error("failed to connect meta service via " + address, e);
-            throw new CatalogException("nebula meta service connect failed.", e);
-        }
-        List<String> tables = new ArrayList<>();
-        try {
-            for (TagItem tag : metaClient.getTags(graphSpace)) {
-                tables.add("VERTEX" + NebulaConstant.POINT + new String(tag.tag_name));
+            graphType = getGraphType(graphName);
+            graphName2GraphTypeName.put(graphName, graphType);
+            ResultSet resultSet = graphProvider.execute("DESC GRAPH TYPE " + graphType);
+            if (!resultSet.isSucceeded()) {
+                LOG.error(String.format(
+                        "listTables with `DESC GRAPH TYPE %s` failed: %s",
+                        graphType, resultSet.getErrorMessage()));
+                throw new CatalogException(String.format(
+                        "listTables with `DESC GRAPH TYPE %s` failed: %s",
+                        graphType,
+                        resultSet.getErrorMessage()));
             }
-            for (EdgeItem edge : metaClient.getEdges(graphSpace)) {
-                tables.add("EDGE" + NebulaConstant.POINT + new String(edge.edge_name));
+            while (resultSet.hasNext()) {
+                ResultSet.Record record     = resultSet.next();
+                String           typeName   = record.get("type_name").asString();
+                String           entityType = record.get("entity_type").asString();
+                if (!graphDataTypes.get(graphName).containsKey(entityType)) {
+                    graphDataTypes.get(graphName).put(entityType, new HashSet<>());
+                }
+                graphDataTypes.get(graphName).get(entityType).add(typeName);
+                tables.add(typeName);
             }
-        } catch (TException | ExecuteFailedException e) {
-            LOG.error("get tags or edges error", e);
+        } catch (Exception e) {
+            LOG.error(String.format("listTables with `DESC GRAPH TYPE %s` error", graphType), e);
+            throw new CatalogException(
+                    String.format("listTables with `DESC GRAPH TYPE %s` error", graphType), e);
         }
         return tables;
     }
 
     @Override
     public CatalogBaseTable getTable(ObjectPath tablePath) throws TableNotExistException,
-            org.apache.flink.table.catalog.exceptions.CatalogException {
+                                                                  CatalogException {
         if (!tableExists(tablePath)) {
             throw new TableNotExistException(getName(), tablePath);
         }
 
-        String graphSpace = tablePath.getDatabaseName();
-        String[] typeAndLabel = tablePath.getObjectName().split(NebulaConstant.SPLIT_POINT);
-        String type = typeAndLabel[0];
-        String label = typeAndLabel[1];
-        if (!DataTypeEnum.checkValidDataType(type)) {
-            LOG.warn("tablePath does not exist in nebula");
-            return null;
-        }
+        String graphName = tablePath.getDatabaseName();
+        String typeName  = tablePath.getObjectName();
+        String dataType  = null;
+        String graphType = getGraphType(graphName);
 
-        try {
-            metaClient.connect();
-        } catch (TException | ClientServerIncompatibleException e) {
-            LOG.error("failed to connect meta service via " + address, e);
-            throw new CatalogException("nebula meta service connect failed.", e);
-        }
-
-        Schema schema;
-        try {
-            if (DataTypeEnum.valueOf(type).isVertex()) {
-                schema = metaClient.getTag(graphSpace, label);
-            } else {
-                schema = metaClient.getEdge(graphSpace, label);
+        for (Map.Entry<String, HashSet<String>> types : graphDataTypes.get(graphName).entrySet()) {
+            if (types.getValue().contains(typeName)) {
+                dataType = types.getKey();
             }
-        } catch (TException | ExecuteFailedException e) {
-            LOG.error("get tag or edge schema error", e);
-            return null;
+        }
+        if (dataType == null) {
+            throw new TableNotExistException(getName(), tablePath);
         }
 
-        String[] names = new String[schema.columns.size()];
-        DataType[] types = new DataType[schema.columns.size()];
-        for (int i = 0; i < schema.columns.size(); i++) {
-            names[i] = new String(schema.columns.get(i).getName());
-            types[i] = fromNebulaType(schema.columns, i);
-        }
-
-        TableSchema.Builder tableBuilder = new TableSchema.Builder()
-                .fields(names, types);
         Map<String, String> props = new HashMap<>();
         props.put(CONNECTOR.key(), IDENTIFIER);
-        props.put(METAADDRESS.key(), address);
-        props.put(USERNAME.key(), username);
-        props.put(PASSWORD.key(), password);
-        props.put(GRAPH_SPACE.key(), tablePath.getDatabaseName());
+        props.put(USERNAME.key(), connectionOptions.getUser());
+        props.put(PASSWORD.key(), (String) connectionOptions.getAuthInfo().get("password"));
+        props.put(GRAPH_NAME.key(), tablePath.getDatabaseName());
         props.put(LABEL_NAME.key(), tablePath.getObjectName());
-        TableSchema tableSchema = tableBuilder.build();
+        props.put(DATA_TYPE.key(), dataType);
+
+        TableSchema tableSchema = null;
+        ResultSet   descTypeRes = null;
+        try {
+            if ("Node".equalsIgnoreCase(dataType)) {
+                descTypeRes = graphProvider.execute(String.format("DESC NODE TYPE `%s` OF `%s`",
+                                                                  typeName,
+                                                                  graphType));
+            } else {
+                descTypeRes = graphProvider.execute(String.format("DESC EDGE TYPE `%s` OF `%s`",
+                                                                  typeName,
+                                                                  graphType));
+                ResultSet edgePatternRes = graphProvider.execute(String.format(
+                        "CALL describe_graph_type(\"%s\")filter type_name='%s' return type_pattern",
+                        graphType,
+                        typeName));
+                String pattern = null;
+                if (edgePatternRes.hasNext()) {
+                    pattern = edgePatternRes.next().get("type_pattern").asString();
+                }
+                props.put(EDGE_PATTERN_TYPE.key(), pattern);
+            }
+        } catch (Exception e) {
+            throw new CatalogException(e);
+        }
+
+        int size = (int) descTypeRes.rowSize();
+        if (size == 0) {
+            tableSchema = new TableSchema.Builder().build();
+        } else {
+            String[]   names = new String[size];
+            DataType[] types = new DataType[size];
+            int        index = 0;
+            while (descTypeRes.hasNext()) {
+                ResultSet.Record record = descTypeRes.next();
+                names[index] = record.get("property_name").asString();
+                types[index] = fromNebulaType(record.get("data_type").asString());
+                index++;
+            }
+            tableSchema = new TableSchema.Builder().fields(names, types).build();
+        }
+
 
         return new CatalogTableImpl(tableSchema, props, "nebulaTableCatalog");
     }
@@ -324,38 +324,55 @@ public class NebulaCatalog extends AbstractNebulaCatalog {
 
     /**
      * construct flink datatype from nebula type
-     *
-     * @see PropertyType
      */
-    private DataType fromNebulaType(List<ColumnDef> columns, int colIndex) {
-        int type = columns.get(colIndex).getType().type.getValue();
+    private DataType fromNebulaType(String nebulaDataType) {
 
-        switch (PropertyType.findByValue(type)) {
-            case INT8:
-            case INT16:
-            case INT32:
-            case INT64:
-            case VID:
+        switch (nebulaDataType) {
+            case "INT8":
+            case "UINT8":
+            case "INT16":
+            case "UINT16":
+            case "INT32":
+            case "UINT32":
+                return DataTypes.INT();
+            case "INT64":
+            case "UINT64":
                 return DataTypes.BIGINT();
-            case BOOL:
+            case "BOOL":
                 return DataTypes.BOOLEAN();
-            case FLOAT:
+            case "FLOAT":
                 return DataTypes.FLOAT();
-            case DOUBLE:
+            case "DOUBLE":
                 return DataTypes.DOUBLE();
-            case TIMESTAMP:
-                return DataTypes.TIMESTAMP();
-            case DATE:
-            case TIME:
-            case DATETIME:
-            case STRING:
-            case FIXED_STRING:
+
+            case "DATE":
+                return DataTypes.DATE();
+            case "LOCAL DATETIME":
+            case "LOCAL TIME":
+                return DataTypes.TIMESTAMP_WITH_LOCAL_TIME_ZONE();
+            case "ZONED DATETIME":
+            case "ZONED TIME":
+                return DataTypes.TIMESTAMP_WITH_TIME_ZONE();
+            case "STRING":
                 return DataTypes.STRING();
-            case UNKNOWN:
-                return DataTypes.NULL();
             default:
                 throw new UnsupportedOperationException(String.format("Doesn't support nebula "
-                        + "type '%s' yet", columns.get(colIndex).getType()));
+                                                                              + "type '%s' yet",
+                                                                      nebulaDataType));
         }
+    }
+
+
+    private String getGraphType(String graphName) {
+        if (!graphName2GraphTypeName.containsKey(graphName)) {
+            try {
+                String graphType = graphProvider.getGraphType(graphName);
+                graphName2GraphTypeName.put(graphName, graphType);
+            } catch (Exception e) {
+                LOG.error("get graph type error", e);
+                throw new CatalogException("get graph type error", e);
+            }
+        }
+        return graphName2GraphTypeName.get(graphName);
     }
 }

@@ -1,13 +1,12 @@
-# nebula-flink-connector
-Flink Connector for Nebula Graph
+# nebula-ng-flink-connector
+Flink Connector for Nebula Graph 5
 
 
 ![](https://img.shields.io/badge/language-java-orange.svg)
-[![GitHub stars](https://img.shields.io/github/stars/vesoft-inc/nebula-flink-connector.svg?color=brightgreen)](https://GitHub.com/vesoft-inc/nebula-flink-connector/stargazers/)
-[![GitHub fork](https://img.shields.io/github/forks/vesoft-inc/nebula-flink-connector.svg?color=brightgreen)](https://GitHub.com/vesoft-inc/nebula-flink-connector/forks/)
+[![GitHub stars](https://img.shields.io/github/stars/vesoft-inc/nebula-ng-flink-connector.svg?color=brightgreen)](https://GitHub.com/vesoft-inc/nebula-ng-flink-connector/stargazers/)
+[![GitHub fork](https://img.shields.io/github/forks/vesoft-inc/nebula-ng-flink-connector.svg?color=brightgreen)](https://GitHub.com/vesoft-inc/nebula-ng-flink-connector/forks/)
 
-Nebula-Flink-Connector 2.0/3.0 is a connector that helps Flink users to easily access Nebula Graph 2.0/3.0. If you want to access Nebula Graph 1.x with Flink, please refer to [Nebula-Flink-Connector 1.0](https://github.com/vesoft-inc/nebula-java/tree/v1.0/tools/nebula-flink).
-
+Nebula-Ng-Flink-Connector 5 is a connector that helps Flink users to easily access Nebula Graph 5. 
 ## Quick start
 
 ### Prerequisites
@@ -24,187 +23,125 @@ Add the dependency to your pom.xml.
 <dependency>
     <groupId>com.vesoft</groupId>
     <artifactId>nebula-flink-connector</artifactId>
-    <version>3.0-SNAPSHOT</version>
+    <version>5.0-SNAPSHOT</version>
 </dependency>
 ```
 
 
 ## Example
 
-To write data into NebulaGraph using Flink.
+To write data into Nebula Graph Node using Flink.
 ```
 StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-NebulaClientOptions nebulaClientOptions = new NebulaClientOptions.NebulaClientOptionsBuilder()
-                .setGraphAddress("127.0.0.1:9669")
-                .setMetaAddress("127.0.0.1:9559")
+ConnectionOptions connectionOptions = ConnectionOptions
+                .builder()
+                .withGraphAddress("127.0.0.1:9669")
+                .withUser("root")
+                .withPassword("NebulaGraph01")
                 .build();
-NebulaGraphConnectionProvider graphConnectionProvider = new NebulaGraphConnectionProvider(nebulaClientOptions);
-NebulaMetaConnectionProvider metaConnectionProvider = new NebulaMetaConnectionProvider(nebulaClientOptions);
+SinkNodeOptions sinkNodeOptions = SinkNodeOptions.builder()
+                        .withGraphName("flinkSink")
+                        .withNodeType("person")
+                        .withFlinkFields(Arrays.asList("c0", "c1", "c2", "c3", "c4", "c5", "c6", "c7", "c8", "c9", "c10", "c11", "c12"))
+                        .withNebulaFields(Arrays.asList("col1", "col2", "col3", "col4", "col5", "col6","col7", "col8", "col9", "col10", "col11", "col12", "col13"))
+                        .withWriteMode(WriteModeEnum.INSERTREPLACE)
+                        .withBatchSize(2)
+                        .build();
 
-VertexExecutionOptions executionOptions = new VertexExecutionOptions.ExecutionOptionBuilder()
-                .setGraphSpace("flinkSink")
-                .setTag("player")
-                .setIdIndex(0)
-                .setFields(Arrays.asList("name", "age"))
-                .setPositions(Arrays.asList(1, 2))
-                .setBatchSize(2)
+
+NebulaNodeBatchOutputFormat outputFormat       = new NebulaNodeBatchOutputFormat(connectionOptions, sinkNodeOptions);
+NebulaSinkFunction<Row>     nebulaSinkFunction = new NebulaSinkFunction<>(outputFormat);
+DataStream<Row> dataStream = playerSource.map(row -> {
+            org.apache.flink.types.Row record = Row.withNames();
+            for (int i = 0; i < row.size(); i++) {
+                record.setField("c" + i, row.get(i));
+            }
+            return record;
+        });
+dataStream.print().name("print");
+dataStream.addSink(nebulaSinkFunction);
+env.execute("write nebula");
+```
+
+To write data into NebulaGraph Edge using Flink.
+```agsl
+StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+ConnectionOptions connectionOptions = ConnectionOptions
+                .builder()
+                .withGraphAddress("127.0.0.1:9669")
+                .withUser("root")
+                .withPassword("NebulaGraph01")
                 .build();
+SinkEdgeOptions sinkEdgeOptions = SinkEdgeOptions.builder()
+                        .withGraphName("flinkSink")
+                        .withEdgeType("friend")
+                        .withFlinkSrcPkFields(Arrays.asList("c0"))
+                        .withNebulaSrcPks(Arrays.asList("col1"))
+                        .withFlinkDstPkFields(Arrays.asList("c1"))
+                        .withNebulaDstPks(Arrays.asList("col1"))
+                        .withFlinkFields(Arrays.asList("c2", "c3", "c4", "c5", "c6", "c7", "c8", "c9", "c10", "c11", "c12", "c13", "c14"))
+                        .withNebulaFields(Arrays.asList("col1", "col2", "col3", "col4", "col5", "col6", "col7", "col8", "col9", "col10", "col11", "col12", "col13"))
+                        .withWriteMode(WriteModeEnum.INSERTIGNORE)
+                        .withBatchSize(2)
+                        .build();
 
-NebulaVertexBatchOutputFormat outputFormat = new NebulaVertexBatchOutputFormat(
-                graphConnectionProvider, metaConnectionProvider, executionOptions);
+NebulaEdgeBatchOutputFormat outputFormat = new NebulaEdgeBatchOutputFormat(connectionOptions, sinkEdgeOptions);
 NebulaSinkFunction<Row> nebulaSinkFunction = new NebulaSinkFunction<>(outputFormat);
 DataStream<Row> dataStream = playerSource.map(row -> {
-            Row record = new org.apache.flink.types.Row(row.size());
+            org.apache.flink.types.Row record = Row.withNames();
             for (int i = 0; i < row.size(); i++) {
-                record.setField(i, row.get(i));
+                record.setField("c" + i, row.get(i));
             }
             return record;
         });
 dataStream.addSink(nebulaSinkFunction);
-env.execute("write nebula")
+env.execute("Write Nebula Edge");
 ```
 
-To read data from NebulaGraph using Flink.
-```
-        NebulaClientOptions nebulaClientOptions = new NebulaClientOptions.NebulaClientOptionsBuilder()
-                .setMetaAddress("127.0.0.1:9559")
+To read Node data to Flink Row from NebulaGraph using Flink.
+```agsl
+StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+ConnectionOptions connectionOptions = ConnectionOptions
+                .builder()
+                .withGraphAddress("127.0.0.1:9669")
+                .withUser("root")
+                .withPassword("NebulaGraph01")
                 .build();
-        storageConnectionProvider = new NebulaStorageConnectionProvider(nebulaClientOptions);
-        StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-        env.setParallelism(1);
-
-        VertexExecutionOptions vertexExecutionOptions = new VertexExecutionOptions.ExecutionOptionBuilder()
-                .setGraphSpace("flinkSource")
-                .setTag("person")
-                .setNoColumn(false)
-                .setFields(Arrays.asList())
-                .setLimit(100)
+SourceExecutionOptions nodeExecutionOptions = SourceNodeOptions.builder()
+                .withGraphName("flinkSource")
+                .withNodeType("person")
+                .withReturnCols(null)
+                .withBatchSize(10)
                 .build();
-        NebulaSourceFunction sourceFunction = new NebulaSourceFunction(storageConnectionProvider)
-                .setExecutionOptions(vertexExecutionOptions);
-        DataStreamSource<BaseTableRow> dataStreamSource = env.addSource(sourceFunction);
-        dataStreamSource.map(row -> {
-            List<ValueWrapper> values = row.getValues();
-            Row record = new Row(15);
-            record.setField(0, values.get(0).asLong());
-            record.setField(1, values.get(1).asString());
-            record.setField(2, values.get(2).asString());
-            record.setField(3, values.get(3).asLong());
-            record.setField(4, values.get(4).asLong());
-            record.setField(5, values.get(5).asLong());
-            record.setField(6, values.get(6).asLong());
-            record.setField(7, values.get(7).asDate());
-            record.setField(8, values.get(8).asDateTime().getUTCDateTimeStr());
-            record.setField(9, values.get(9).asLong());
-            record.setField(10, values.get(10).asBoolean());
-            record.setField(11, values.get(11).asDouble());
-            record.setField(12, values.get(12).asDouble());
-            record.setField(13, values.get(13).asTime().getUTCTimeStr());
-            record.setField(14, values.get(14).asGeography());
-            return record;
-        }).print();
-        env.execute("NebulaStreamSource");
+
+NebulaInputRowFormat inputRowFormat = new NebulaInputRowFormat(connectionOptions, nodeExecutionOptions);
+DataSource<Row> rowDataSource = env.createInput(inputRowFormat);
+
+System.out.println("rowDataSource count: " + rowDataSource.count());
 ```
-
-To operate Schema and data using Flink SQL.
-
-1. create graph space
-```
-        NebulaCatalog nebulaCatalog = NebulaCatalogUtils.createNebulaCatalog(
-                "NebulaCatalog",
-                "default",
-                "root",
-                "nebula",
-                "127.0.0.1:9559",
-                "127.0.0.1:9669");
-
-        EnvironmentSettings settings = EnvironmentSettings.newInstance()
-                .inStreamingMode()
+To read Edge data to Flink Row from NebulaGraph using Flink.
+```agsl
+StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+ConnectionOptions connectionOptions = ConnectionOptions
+                .builder()
+                .withGraphAddress("127.0.0.1:9669")
+                .withUser("root")
+                .withPassword("NebulaGraph01")
                 .build();
-        TableEnvironment tableEnv = TableEnvironment.create(settings);
+SourceExecutionOptions edgeExecutionOptions = SourceEdgeOptions.builder()
+                .withGraphName("flinkSource")
+                .withEdgeType("friend")
+                .withReturnCols(null)
+                .withBatchSize(10)
+                .build();
 
-        tableEnv.registerCatalog(CATALOG_NAME, nebulaCatalog);
-        tableEnv.useCatalog(CATALOG_NAME);
+NebulaInputRowFormat inputRowFormat = new NebulaInputRowFormat(connectionOptions, edgeExecutionOptions);
+DataSource<Row> rowDataSource = env.createInput(inputRowFormat);
 
-        String createDataBase = "CREATE DATABASE IF NOT EXISTS `db1`"
-                + " COMMENT 'space 1'"
-                + " WITH ("
-                + " 'partition_num' = '100',"
-                + " 'replica_factor' = '3',"
-                + " 'vid_type' = 'FIXED_STRING(10)'"
-                + ")";
-        tableEnv.executeSql(createDataBase);
+System.out.println("rowDataSource count: " + rowDataSource.count());
 ```
-2. create tag
-```
-        tableEnvironment.executeSql("CREATE TABLE `person` ("
-                + " vid BIGINT,"
-                + " col1 STRING,"
-                + " col2 STRING,"
-                + " col3 BIGINT,"
-                + " col4 BIGINT,"
-                + " col5 BIGINT,"
-                + " col6 BIGINT,"
-                + " col7 DATE,"
-                + " col8 TIMESTAMP,"
-                + " col9 BIGINT,"
-                + " col10 BOOLEAN,"
-                + " col11 DOUBLE,"
-                + " col12 DOUBLE,"
-                + " col13 TIME,"
-                + " col14 STRING"
-                + ") WITH ("
-                + " 'connector' = 'nebula',"
-                + " 'meta-address' = '127.0.0.1:9559',"
-                + " 'graph-address' = '127.0.0.1:9669',"
-                + " 'username' = 'root',"
-                + " 'password' = 'nebula',"
-                + " 'data-type' = 'vertex',"
-                + " 'graph-space' = 'flink_test',"
-                + " 'label-name' = 'person'"
-                + ")"
-        );
-```
-3. create edge
-```
-        tableEnvironment.executeSql("CREATE TABLE `friend` ("
-                + " sid BIGINT,"
-                + " did BIGINT,"
-                + " rid BIGINT,"
-                + " col1 STRING,"
-                + " col2 STRING,"
-                + " col3 BIGINT,"
-                + " col4 BIGINT,"
-                + " col5 BIGINT,"
-                + " col6 BIGINT,"
-                + " col7 DATE,"
-                + " col8 TIMESTAMP,"
-                + " col9 BIGINT,"
-                + " col10 BOOLEAN,"
-                + " col11 DOUBLE,"
-                + " col12 DOUBLE,"
-                + " col13 TIME,"
-                + " col14 STRING"
-                + ") WITH ("
-                + " 'connector' = 'nebula',"
-                + " 'meta-address' = '127.0.0.1:9559',"
-                + " 'graph-address' = '127.0.0.1:9669',"
-                + " 'username' = 'root',"
-                + " 'password' = 'nebula',"
-                + " 'graph-space' = 'flink_test',"
-                + " 'label-name' = 'friend',"
-                + " 'data-type'='edge',"
-                + " 'src-id-index'='0',"
-                + " 'dst-id-index'='1',"
-                + " 'rank-id-index'='2'"
-                + ")"
-        );
-```
-4. query edge data and insert into another edge type
-```
-        Table table = tableEnvironment.sqlQuery("SELECT * FROM `friend`");
-        table.executeInsert("`friend_sink`").await();
-```
+
+for more examples, see https://github.com/vesoft-inc/nebula-ng-flink-connector/tree/master/example/src/main/java/org/apache/flink
 
 ## Version match
 
@@ -216,10 +153,13 @@ There are the version correspondence between Nebula Flink Connector and Nebula:
 |             2.5.0              |  2.5.0, 2.5.1  |
 |             2.6.0              |  2.6.0, 2.6.1  |
 |             2.6.1              |  2.6.0, 2.6.1  |
-|             3.0.0              |     3.x.x      | 
-|             3.3.0              |     3.x.x      | 
-|             3.5.0              |     3.x.x      | 
-|          3.0-SNAPSHOT          |    nightly     |
+|             3.0.0              |      3.x       | 
+|             3.5.0              |      3.x       |
+|          5.0-SNAPSHOT          |      5.x       |
 
 ## Note
-Flink version requirements: 1.11.x
+Flink version requirement: 1.14.x
+
+Scala version requirement: 2.11
+
+JDK version requirement: 1.8

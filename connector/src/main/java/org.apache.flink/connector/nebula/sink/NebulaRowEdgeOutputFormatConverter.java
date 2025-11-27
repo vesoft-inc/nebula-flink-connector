@@ -1,4 +1,5 @@
-/* Copyright (c) 2020 vesoft inc. All rights reserved.
+/*
+ * Copyright (c) 2025 vesoft inc. All rights reserved.
  *
  * This source code is licensed under Apache 2.0 License.
  */
@@ -7,91 +8,96 @@ package org.apache.flink.connector.nebula.sink;
 
 import com.esotericsoftware.minlog.Log;
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.apache.flink.connector.nebula.statement.EdgeExecutionOptions;
+import org.apache.flink.connector.nebula.options.SinkEdgeOptions;
 import org.apache.flink.connector.nebula.utils.NebulaEdge;
+import org.apache.flink.connector.nebula.utils.NebulaEdgeSchema;
 import org.apache.flink.connector.nebula.utils.NebulaUtils;
-import org.apache.flink.connector.nebula.utils.PolicyEnum;
-import org.apache.flink.connector.nebula.utils.VidTypeEnum;
 import org.apache.flink.types.Row;
 
 public class NebulaRowEdgeOutputFormatConverter implements Serializable {
+    private final List<String>     flinkFields;
+    private final List<String>     nebulaFields;
+    private final List<String>     flinkSrcPkFields;
+    private final List<String>     nebulaSrcPks;
+    private final List<String>     flinkDstPkFields;
+    private final List<String>     nebulaDstPks;
+    private final SinkEdgeOptions  executionOptions;
+    private final NebulaEdgeSchema schema;
 
-    private final int srcIdIndex;
-    private final int dstIdIndex;
-    private final int rankIndex;
-    private final VidTypeEnum vidType;
-    private final List<Integer> positions;
-    private final Map<Integer, String> pos2Field;
-    private final Map<String, Integer> schema;
-
-    public NebulaRowEdgeOutputFormatConverter(EdgeExecutionOptions executionOptions,
-                                              VidTypeEnum vidType,
-                                              Map<String, Integer> schema) {
-        this.srcIdIndex = executionOptions.getSrcIndex();
-        this.dstIdIndex = executionOptions.getDstIndex();
-        this.rankIndex = executionOptions.getRankIndex();
-        this.vidType = vidType;
+    public NebulaRowEdgeOutputFormatConverter(SinkEdgeOptions executionOptions,
+                                              NebulaEdgeSchema schema) {
+        this.flinkFields = executionOptions.getFlinkFields();
+        this.nebulaFields = executionOptions.getNebulaFields();
+        this.flinkSrcPkFields = executionOptions.getFlinkSrcPkFields();
+        this.nebulaSrcPks = executionOptions.getNebulaSrcPks();
+        this.flinkDstPkFields = executionOptions.getFlinkDstPkFields();
+        this.nebulaDstPks = executionOptions.getNebulaDstPks();
+        this.executionOptions = executionOptions;
         this.schema = schema;
-        this.positions = executionOptions.getPositions();
-        this.pos2Field = new HashMap<>();
-        List<String> fields = executionOptions.getFields();
-        for (int i = 0; i < positions.size(); i++) {
-            this.pos2Field.put(positions.get(i), fields.get(i));
-        }
     }
 
 
-    public NebulaEdge createEdge(Row row, PolicyEnum policy) {
+    public NebulaEdge createEdge(Row row) {
         // check row data
         if (row == null || row.getArity() == 0) {
             Log.error("empty row");
             return null;
         }
-        Object srcId = row.getField(srcIdIndex);
-        Object dstId = row.getField(dstIdIndex);
-        if (srcId == null || dstId == null) {
-            Log.error("null srcId or dstId");
-            return null;
+
+        for (String srcPk : schema.getSrcPkNames()) {
+            Object pkValue = row.getField(flinkSrcPkFields.get(nebulaSrcPks.indexOf(srcPk)));
+            if (pkValue == null) {
+                Log.warn(String.format("primary key %s of source node %s for %s is null. row:%s",
+                                       srcPk,
+                                       schema.getSrcNodeTypeName(),
+                                       schema.getEdgeTypeName(),
+                                       row));
+                return null;
+            }
         }
+        for (String dstPk : schema.getDstPkNames()) {
+            Object pkValue = row.getField(flinkDstPkFields.get(nebulaDstPks.indexOf(dstPk)));
+            if (pkValue == null) {
+                Log.warn(String.format("primary key %s of target node %s for %s is null. row:%s",
+                                       dstPk,
+                                       schema.getDstNodeTypeName(),
+                                       schema.getEdgeTypeName(),
+                                       row));
+                return null;
+            }
+        }
+
+        Map<String, String> srcPks = new HashMap<>();
+        for (int i = 0; i < nebulaSrcPks.size(); i++) {
+            String pkName     = nebulaSrcPks.get(i);
+            String dataType   = schema.getSrcPkDataTypeMap().get(pkName);
+            Object flinkValue = row.getField(flinkSrcPkFields.get(i));
+            String value      = flinkValue == null ? null : flinkValue.toString();
+            srcPks.put(pkName, NebulaUtils.extractValue(dataType, value, null));
+        }
+
+
+        Map<String, String> dstPks = new HashMap<>();
+        for (int i = 0; i < nebulaDstPks.size(); i++) {
+            String pkName     = nebulaDstPks.get(i);
+            String dataType   = schema.getDstPkDataTypeMap().get(pkName);
+            Object flinkValue = row.getField(flinkDstPkFields.get(i));
+            String value      = flinkValue == null ? null : flinkValue.toString();
+            dstPks.put(pkName, NebulaUtils.extractValue(dataType, value, null));
+        }
+
         // extract edge properties
-        List<String> edgeProps = new ArrayList<>();
-        for (int i : positions) {
-            String propName = pos2Field.get(i);
-            int type = schema.get(propName);
-            edgeProps.add(NebulaUtils.extraValue(row.getField(i), type));
+        Map<String, String> edgeProps = new HashMap<>();
+        for (int i = 0; i < nebulaFields.size(); i++) {
+            String dataType   = schema.getProperties().get(nebulaFields.get(i));
+            Object flinkValue = row.getField(flinkFields.get(i));
+            String value      = flinkValue == null ? null : flinkValue.toString();
+            edgeProps.put(nebulaFields.get(i), NebulaUtils.extractValue(dataType, value, null));
         }
-
-        // format edge source id and target id
-        String srcFormatId = srcId.toString();
-        String dstFormatId = dstId.toString();
-
-        if (policy == null) {
-            if (vidType == VidTypeEnum.STRING) {
-                srcFormatId = NebulaUtils.mkString(srcFormatId, "\"", "", "\"");
-                dstFormatId = NebulaUtils.mkString(dstFormatId, "\"", "", "\"");
-            } else {
-                assert (NebulaUtils.isNumeric(srcFormatId));
-                assert (NebulaUtils.isNumeric(dstFormatId));
-            }
-        } else {
-            assert (vidType == VidTypeEnum.INT);
-        }
-
-        // extract edge rank
-        Long rank = null;
-        if (rankIndex >= 0) {
-            if (row.getField(rankIndex) == null) {
-                rank = 0L;
-            } else {
-                rank = Long.parseLong(row.getField(rankIndex).toString());
-            }
-        }
-
-        NebulaEdge edge = new NebulaEdge(srcFormatId, dstFormatId, rank, edgeProps);
+        NebulaEdge edge = new NebulaEdge(srcPks, dstPks, edgeProps);
         return edge;
     }
 }

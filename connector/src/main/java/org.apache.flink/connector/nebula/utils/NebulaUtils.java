@@ -1,18 +1,23 @@
-/* Copyright (c) 2020 vesoft inc. All rights reserved.
+/*
+ * Copyright (c) 2025 vesoft inc. All rights reserved.
  *
  * This source code is licensed under Apache 2.0 License.
  */
 
 package org.apache.flink.connector.nebula.utils;
 
-import com.vesoft.nebula.PropertyType;
-import com.vesoft.nebula.client.graph.data.HostAddress;
+import com.vesoft.nebula.driver.graph.data.HostAddress;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class NebulaUtils {
+    private static final String vectorType     = "VECTOR<";
+    private static final String listType       = "LIST<";
+    private static final String listStringType = "LIST<STRING";
+    private static final String geoType        = "GEOGRAPHY";
 
     public static List<HostAddress> getHostAndPorts(String address) {
         if (address == null || "".equalsIgnoreCase(address)) {
@@ -45,38 +50,108 @@ public class NebulaUtils {
     }
 
 
-    public static String extraValue(Object value, int type) {
-        if (value == null) {
+    public static String extractPropertyValue(Map<String, String> schema,
+                                              String propName,
+                                              String value,
+                                              String nullValue) {
+        return extractValue(schema.get(propName), value, nullValue);
+    }
+
+    public static String extractValue(String dataType, String value, String nullValue) {
+        if (value == null || value.equals(nullValue)) {
             return null;
         }
-        switch (PropertyType.findByValue(type)) {
-            case STRING:
-            case FIXED_STRING:
-                return mkString(escapeUtil(String.valueOf(value)), "\"", "", "\"");
-            case DATE:
-                return "date(\"" + value + "\")";
-            case TIME:
-                return "time(\"" + value + "\")";
-            case DATETIME:
-                return "datetime(\"" + value + "\")";
-            case TIMESTAMP: {
-                if (isNumeric(String.valueOf(value))) {
-                    return String.valueOf(value);
-                } else {
-                    return "timestamp(\"" + value + "\")";
-                }
-            }
-            case GEOGRAPHY:
-                return "ST_GeogFromText(\"" + value + "\")";
-            default: {
-                return String.valueOf(value);
-            }
-
+        if (dataType.equals("STRING")) {
+            return mkString(escape(value), "\"", "", "\"");
         }
+        if (value.isEmpty()) {
+            return null;
+        }
+        // process the list type
+        if (dataType.startsWith(listType)) {
+            if (dataType.startsWith(listStringType)) {
+                StringBuilder sb = new StringBuilder();
+                sb.append("LIST[");
+                String  trimmedInput = value.replaceAll("^\\[|\\]$", "");
+                Pattern pattern      = Pattern.compile("(['\"])((?:\\\\\\1|.)*?)\\1|([^,]+)");
+                Matcher matcher      = pattern.matcher(trimmedInput);
+
+                while (matcher.find()) {
+                    if (matcher.group(1) != null) {
+                        String ele = matcher.group(2)
+                                .replace("\\" + matcher.group(1), matcher.group(1));
+                        sb.append("\"")
+                                .append(escape(ele))
+                                .append("\"").append(",");
+                    } else {
+                        sb.append("\"")
+                                .append(escape(matcher.group(3)))
+                                .append("\"").append(",");
+                    }
+                }
+
+                if (sb.length() > 5) {
+                    sb.deleteCharAt(sb.length() - 1);
+                }
+                sb.append("]");
+                return sb.toString();
+            } else {
+                return "LIST" + value;
+            }
+        }
+
+        // process the vector type
+        if (dataType.startsWith(vectorType)) {
+            StringBuilder sb = new StringBuilder();
+            sb.append(dataType).append("(").append(value).append(")");
+            return sb.toString();
+        }
+        if (dataType.startsWith(geoType)) {
+            StringBuilder sb = new StringBuilder();
+            sb.append("ST_GeogFromText(\"").append(value).append("\")");
+            return sb.toString();
+        }
+        // process other data type
+        switch (dataType) {
+            case "DATE":
+                return "date(\"" + value + "\")";
+            case "LOCAL DATETIME":
+                return "local_datetime(\"" + value + "\")";
+            case "LOCAL TIME": {
+                return "local_time(\"" + value + "\")";
+            }
+            case "ZONED DATETIME":
+                return "zoned_datetime(\"" + value + "\")";
+            case "ZONED TIME":
+                return "zoned_time(\"" + value + "\")";
+            case "DURATION": {
+                return "duration(\"" + value + "\")";
+            }
+            default:
+                return value;
+        }
+
+    }
+
+    public static String mkString(String value, String start, String sep, String end) {
+        StringBuilder builder = new StringBuilder();
+        boolean       first   = true;
+        builder.append(start);
+        for (char c : value.toCharArray()) {
+            if (first) {
+                builder.append(c);
+                first = false;
+            } else {
+                builder.append(sep);
+                builder.append(c);
+            }
+        }
+        builder.append(end);
+        return builder.toString();
     }
 
 
-    public static String escapeUtil(String value) {
+    public static String escape(String value) {
         String s = value;
         if (s.contains("\\")) {
             s = s.replaceAll("\\\\", "\\\\\\\\");
@@ -102,36 +177,4 @@ public class NebulaUtils {
         return s;
     }
 
-    public static String mkString(String value, String start, String sep, String end) {
-        StringBuilder builder = new StringBuilder();
-        boolean first = true;
-        builder.append(start);
-        for (char c : value.toCharArray()) {
-            if (first) {
-                builder.append(c);
-                first = false;
-            } else {
-                builder.append(sep);
-                builder.append(c);
-            }
-        }
-        builder.append(end);
-        return builder.toString();
-    }
-
-    /**
-     * Check valid VID definition
-     * @param vidType vid define string
-     * @return true if INT | INT64 | FIXED_STRING(n)
-     */
-    public static boolean checkValidVidType(String vidType) {
-        if ("INT".equals(vidType) || "INT64".equals(vidType)) {
-            return true;
-        }
-        String regex = "FIXED_STRING\\(\\d+\\)";
-        Pattern pattern = Pattern.compile(regex, Pattern.MULTILINE);
-        Matcher matcher = pattern.matcher(vidType);
-
-        return matcher.matches();
-    }
 }

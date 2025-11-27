@@ -1,4 +1,5 @@
-/* Copyright (c) 2021 vesoft inc. All rights reserved.
+/*
+ * Copyright (c) 2025 vesoft inc. All rights reserved.
  *
  * This source code is licensed under Apache 2.0 License.
  */
@@ -9,17 +10,39 @@ public enum WriteModeEnum {
     /**
      * INSERT write mode
      */
-    INSERT("insert"),
+    INSERT("INSERT"),
+
+    /**
+     * INSERT OR IGNORE write mode
+     */
+    INSERTIGNORE("INSERT OR IGNORE"),
+
+
+    /**
+     * INSERT OR IGNORE write mode
+     */
+    INSERTREPLACE("INSERT OR REPLACE"),
+
+
+    /**
+     * INSERT OR IGNORE write mode
+     */
+    INSERTUPDATE("INSERT OR UPDATE"),
 
     /**
      * UPDATE write mode
      */
-    UPDATE("update"),
+    UPDATE("UPDATE"),
 
     /**
      * DELETE write mode
      */
-    DELETE("delete");
+    DELETE("DELETE"),
+
+    /**
+     * DETACH DELETE wirte mode
+     */
+    DETACHDELETE("DETACH DELETE");
 
     private String mode;
 

@@ -1,58 +1,42 @@
-/* Copyright (c) 2020 vesoft inc. All rights reserved.
+/*
+ * Copyright (c) 2025 vesoft inc. All rights reserved.
  *
  * This source code is licensed under Apache 2.0 License.
  */
 
 package org.apache.flink.connector.nebula.source;
 
-import com.vesoft.nebula.client.storage.StorageClient;
-import com.vesoft.nebula.client.storage.data.BaseTableRow;
-import com.vesoft.nebula.client.storage.data.EdgeTableRow;
-import com.vesoft.nebula.client.storage.scan.ScanEdgeResult;
-import com.vesoft.nebula.client.storage.scan.ScanEdgeResultIterator;
+import com.vesoft.nebula.driver.graph.scan.ScanEdgeResult;
+import com.vesoft.nebula.driver.graph.scan.ScanEdgeResultIterator;
+import com.vesoft.nebula.driver.graph.scan.TableRow;
 import java.util.Iterator;
 import java.util.List;
-import org.apache.flink.connector.nebula.statement.ExecutionOptions;
+import org.apache.flink.connector.nebula.options.ConnectionOptions;
+import org.apache.flink.connector.nebula.options.SourceExecutionOptions;
 
 /**
  * Nebula Graph Edge reader
  */
 public class NebulaEdgeSource extends NebulaSource {
-    ScanEdgeResultIterator iterator = null;
-    Iterator<EdgeTableRow> dataIterator = null;
-    Iterator<Integer> scanPartIterator;
+    ScanEdgeResultIterator iterator     = null;
+    Iterator<TableRow>     dataIterator = null;
+    Iterator<Integer>      scanPartIterator;
 
-    public NebulaEdgeSource(StorageClient storageClient,
-                            ExecutionOptions executionOptions, List<Integer> scanParts) {
-        super(storageClient, executionOptions);
+    public NebulaEdgeSource(ConnectionOptions connectionOptions,
+                            SourceExecutionOptions executionOptions,
+                            List<Integer> scanParts) {
+        super(connectionOptions, executionOptions);
         this.scanPartIterator = scanParts.iterator();
     }
 
     public void getEdgeDataRow(int part) {
-        if (executionOptions.isNoColumn()) {
-            iterator = storageClient.scanEdge(
-                    executionOptions.getGraphSpace(),
-                    part,
-                    executionOptions.getLabel(),
-                    executionOptions.getLimit(),
-                    executionOptions.getStartTime(),
-                    executionOptions.getEndTime(),
-                    true,
-                    true
-            );
-        } else {
-            iterator = storageClient.scanEdge(
-                    executionOptions.getGraphSpace(),
-                    part,
-                    executionOptions.getLabel(),
-                    executionOptions.getFields(),
-                    executionOptions.getLimit(),
-                    executionOptions.getStartTime(),
-                    executionOptions.getEndTime(),
-                    true,
-                    true
-            );
-        }
+        iterator = graphProvider.scanEdge(executionOptions.getSchema(),
+                                          executionOptions.getGraphName(),
+                                          executionOptions.getTypeName(),
+                                          executionOptions.getReturnCols(),
+                                          part,
+                                          executionOptions.getBatchSize());
+
     }
 
     @Override
@@ -71,7 +55,7 @@ public class NebulaEdgeSource extends NebulaSource {
             } else {
                 ScanEdgeResult next = iterator.next();
                 if (!next.isEmpty()) {
-                    dataIterator = next.getEdgeTableRows().iterator();
+                    dataIterator = next.getTableRows().iterator();
                 }
             }
         }
@@ -83,7 +67,7 @@ public class NebulaEdgeSource extends NebulaSource {
     }
 
     @Override
-    public BaseTableRow next() {
+    public TableRow next() {
         return dataIterator.next();
     }
 }

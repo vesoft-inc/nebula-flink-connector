@@ -1,25 +1,30 @@
-/* Copyright (c) 2020 vesoft inc. All rights reserved.
+/*
+ * Copyright (c) 2025 vesoft inc. All rights reserved.
  *
  * This source code is licensed under Apache 2.0 License.
  */
 
 package org.apache.flink.connector.nebula.source;
 
-import com.vesoft.nebula.client.storage.StorageClient;
-import com.vesoft.nebula.client.storage.data.BaseTableRow;
-import org.apache.flink.connector.nebula.statement.ExecutionOptions;
+import com.vesoft.nebula.driver.graph.scan.TableRow;
+import org.apache.flink.connector.nebula.connection.GraphProvider;
+import org.apache.flink.connector.nebula.options.ConnectionOptions;
+import org.apache.flink.connector.nebula.options.SourceExecutionOptions;
 
 /**
  * NebulaSource is the reader to read NebulaGraph's data iteratively.
  */
 abstract class NebulaSource {
 
-    StorageClient storageClient;
-    ExecutionOptions executionOptions;
+    protected ConnectionOptions      connectionOptions;
+    protected SourceExecutionOptions executionOptions;
+    protected GraphProvider          graphProvider;
 
-    public NebulaSource(StorageClient storageClient, ExecutionOptions executionOptions) {
-        this.storageClient = storageClient;
+    public NebulaSource(ConnectionOptions connectionOptions,
+                        SourceExecutionOptions executionOptions) {
+        this.connectionOptions = connectionOptions;
         this.executionOptions = executionOptions;
+        this.graphProvider = new GraphProvider(connectionOptions);
     }
 
     /**
@@ -30,5 +35,5 @@ abstract class NebulaSource {
     /**
      * get another Nebula Graph data
      */
-    abstract BaseTableRow next();
+    abstract TableRow next();
 }

@@ -1,4 +1,5 @@
-/* Copyright (c) 2020 vesoft inc. All rights reserved.
+/*
+ * Copyright (c) 2025 vesoft inc. All rights reserved.
  *
  * This source code is licensed under Apache 2.0 License.
  */
@@ -6,9 +7,8 @@
 package org.apache.flink.connector.nebula.catalog.factory;
 
 import static org.apache.flink.connector.nebula.table.NebulaDynamicTableFactory.GRAPHADDRESS;
-import static org.apache.flink.connector.nebula.table.NebulaDynamicTableFactory.GRAPH_SPACE;
+import static org.apache.flink.connector.nebula.table.NebulaDynamicTableFactory.GRAPH_NAME;
 import static org.apache.flink.connector.nebula.table.NebulaDynamicTableFactory.LABEL_NAME;
-import static org.apache.flink.connector.nebula.table.NebulaDynamicTableFactory.METAADDRESS;
 import static org.apache.flink.connector.nebula.table.NebulaDynamicTableFactory.PASSWORD;
 import static org.apache.flink.connector.nebula.table.NebulaDynamicTableFactory.TIMEOUT;
 import static org.apache.flink.connector.nebula.table.NebulaDynamicTableFactory.USERNAME;
@@ -35,8 +35,7 @@ public class NebulaCatalogFactory implements CatalogFactory {
         options.add(GRAPHADDRESS);
         options.add(USERNAME);
         options.add(PASSWORD);
-        options.add(METAADDRESS);
-        options.add(GRAPH_SPACE);
+        options.add(GRAPH_NAME);
         return options;
     }
 

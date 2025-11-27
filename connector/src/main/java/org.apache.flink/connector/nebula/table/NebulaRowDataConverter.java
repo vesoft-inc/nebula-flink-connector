@@ -1,4 +1,5 @@
-/* Copyright (c) 2022 vesoft inc. All rights reserved.
+/*
+ * Copyright (c) 2025 vesoft inc. All rights reserved.
  *
  * This source code is licensed under Apache 2.0 License.
  */
@@ -7,11 +8,8 @@ package org.apache.flink.connector.nebula.table;
 
 import static org.apache.flink.util.Preconditions.checkNotNull;
 
-import com.vesoft.nebula.client.graph.data.DateTimeWrapper;
-import com.vesoft.nebula.client.graph.data.DateWrapper;
-import com.vesoft.nebula.client.graph.data.TimeWrapper;
-import com.vesoft.nebula.client.graph.data.ValueWrapper;
-import com.vesoft.nebula.client.storage.data.BaseTableRow;
+import com.vesoft.nebula.driver.graph.data.ValueWrapper;
+import com.vesoft.nebula.driver.graph.scan.TableRow;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.sql.Date;
@@ -21,6 +19,7 @@ import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZonedDateTime;
 import java.util.List;
 import org.apache.flink.connector.nebula.source.NebulaConverter;
 import org.apache.flink.table.data.GenericRowData;
@@ -34,14 +33,14 @@ import org.apache.flink.table.types.logical.TimestampType;
 import org.apache.flink.types.Row;
 
 /**
- * convert nebula {@link BaseTableRow} to flink {@link RowData}
+ * convert nebula {@link TableRow} to flink {@link RowData}
  */
 public class NebulaRowDataConverter implements NebulaConverter<RowData> {
 
-    private final RowType rowType;
+    private final RowType                          rowType;
     private final NebulaDeserializationConverter[] toInternalConverters;
-    private final NebulaSerializationConverter[] toExternalConverters;
-    private final LogicalType[] fieldTypes;
+    private final NebulaSerializationConverter[]   toExternalConverters;
+    private final LogicalType[]                    fieldTypes;
 
     public NebulaRowDataConverter(RowType rowType) {
         this.rowType = checkNotNull(rowType);
@@ -58,15 +57,15 @@ public class NebulaRowDataConverter implements NebulaConverter<RowData> {
     }
 
     @Override
-    public RowData convert(BaseTableRow record) throws UnsupportedEncodingException {
-        List<ValueWrapper> values = record.getValues();
-        GenericRowData genericRowData = new GenericRowData(rowType.getFieldCount());
+    public RowData convert(TableRow record) throws UnsupportedEncodingException {
+        List<ValueWrapper> values         = record.getValues();
+        GenericRowData     genericRowData = new GenericRowData(rowType.getFieldCount());
         for (int pos = 0; pos < rowType.getFieldCount(); pos++) {
             ValueWrapper valueWrapper = values.get(pos);
             if (!valueWrapper.isNull()) {
                 try {
                     genericRowData.setField(pos,
-                            toInternalConverters[pos].deserialize(valueWrapper));
+                                            toInternalConverters[pos].deserialize(valueWrapper));
                 } catch (SQLException e) {
                     e.printStackTrace();
                 }
@@ -95,7 +94,7 @@ public class NebulaRowDataConverter implements NebulaConverter<RowData> {
     @FunctionalInterface
     interface NebulaDeserializationConverter extends Serializable {
         /**
-         * Convert a Nebula DataStructure of {@link BaseTableRow}
+         * Convert a Nebula DataStructure of {@link TableRow}
          * to the internal data structure object.
          */
         Object deserialize(ValueWrapper valueWrapper)
@@ -126,37 +125,37 @@ public class NebulaRowDataConverter implements NebulaConverter<RowData> {
                 return ValueWrapper::asDouble;
             case CHAR:
             case VARCHAR:
-                return val -> val.isGeography() ? StringData.fromString(
-                        val.asGeography().toString())
-                        : StringData.fromString(val.asString());
+                return val -> StringData.fromString(val.asString());
             case DATE:
                 return val -> {
-                    DateWrapper dateWrapper = val.asDate();
-                    Date date = Date.valueOf(dateWrapper.toString());
+                    LocalDate dateWrapper = val.asDate();
+                    Date      date        = Date.valueOf(dateWrapper.toString());
                     return (int) date.toLocalDate().toEpochDay();
                 };
             case TIME_WITHOUT_TIME_ZONE:
                 return val -> {
-                    TimeWrapper t = val.asTime();
+                    LocalTime t = val.asLocalTime();
                     LocalTime localTime = LocalTime.of(
                             t.getHour(), t.getMinute(), t.getSecond());
                     Time time = Time.valueOf(localTime);
-                    return (int)(time.toLocalTime().toNanoOfDay() / 1_000_000L);
+                    return (int) (time.toLocalTime().toNanoOfDay() / 1_000_000L);
                 };
             case TIMESTAMP_WITH_TIME_ZONE:
-            case TIMESTAMP_WITHOUT_TIME_ZONE:
             case TIMESTAMP_WITH_LOCAL_TIME_ZONE:
                 return val -> {
-                    if (val.isDateTime()) {
-                        DateTimeWrapper t = val.asDateTime();
-                        LocalDateTime localDateTime = LocalDateTime.of(
-                                t.getYear(), t.getMonth(), t.getDay(),
-                                t.getHour(), t.getMinute(), t.getSecond());
+                    if (val.isZonedDateTime()) {
+                        ZonedDateTime t             = val.asZonedDateTime();
+                        LocalDateTime localDateTime = t.toLocalDateTime();
                         return TimestampData.fromLocalDateTime(localDateTime);
-                    } else {
+                    } else if (val.isLong()) {
                         return TimestampData.fromTimestamp(new Timestamp(val.asLong() * 1000));
+                    } else {
+                        throw new IllegalArgumentException(
+                                "do not support for " + val.getDataTypeString());
                     }
                 };
+            case TIMESTAMP_WITHOUT_TIME_ZONE:
+
             case BINARY:
             case ARRAY:
             case ROW:
@@ -191,8 +190,8 @@ public class NebulaRowDataConverter implements NebulaConverter<RowData> {
             case VARCHAR:
                 return (val, idx, row) -> row.setField(idx, val.getString(idx).toString());
             case DATE:
-                return (val, idx, row) -> row.setField(idx,
-                        Date.valueOf(LocalDate.ofEpochDay(val.getInt(idx))));
+                return (val, idx, row) -> row.setField(idx, Date.valueOf(
+                        LocalDate.ofEpochDay(val.getInt(idx))));
             case TIME_WITHOUT_TIME_ZONE:
                 return (val, idx, row) -> {
                     LocalTime localTime = LocalTime.ofNanoOfDay(val.getInt(idx) * 1_000_000L);

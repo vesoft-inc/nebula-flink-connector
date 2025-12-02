@@ -24,6 +24,7 @@ import java.util.regex.Pattern;
 import org.apache.flink.connector.nebula.options.ConnectionOptions;
 import org.apache.flink.connector.nebula.utils.NebulaEdgeSchema;
 import org.apache.flink.connector.nebula.utils.NebulaNodeSchema;
+import org.apache.flink.connector.nebula.utils.NebulaUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -146,10 +147,12 @@ public class GraphProvider implements Serializable {
     public NebulaNodeSchema getNodeSchema(String graphName, String nodeType)
             throws Exception {
         NebulaNodeSchema nodeSchema = new NebulaNodeSchema();
-        String           graphType  = getGraphType(graphName);
+        String           graphType  = getGraphType(NebulaUtils.escape(graphName));
 
         ResultSet result = execute(
-                String.format("DESCRIBE NODE TYPE %s OF %s", nodeType, graphType));
+                String.format("DESCRIBE NODE TYPE `%s` OF `%s`",
+                              NebulaUtils.escape(nodeType),
+                              NebulaUtils.escape(graphType)));
         if (!result.isSucceeded() || result.isEmpty()) {
             throw new IllegalArgumentException(
                     "node type " + nodeType + " does not exist in " + graphName);
@@ -183,12 +186,15 @@ public class GraphProvider implements Serializable {
     public NebulaEdgeSchema getEdgeSchema(String graphName, String edgeType)
             throws Exception {
 
-        String graphType = getGraphType(graphName);
+        String graphType = getGraphType(NebulaUtils.escape(graphName));
 
         String descEdgeType = String.format(
                 "CALL describe_graph_type('%s') filter type_name='%s' return type_pattern "
                         + "next OPTIONAL CALL describe_edge_type('%s','%s') return *",
-                graphType, edgeType, graphType, edgeType);
+                NebulaUtils.escape(graphType),
+                NebulaUtils.escape(edgeType),
+                NebulaUtils.escape(graphType),
+                NebulaUtils.escape(edgeType));
 
         ResultSet result = execute(descEdgeType);
         if (!result.isSucceeded() || result.isEmpty()) {
@@ -261,7 +267,7 @@ public class GraphProvider implements Serializable {
      * @return graph type name
      */
     public String getGraphType(String graphName) throws Exception {
-        ResultSet resultSet = execute("DESCRIBE GRAPH " + graphName);
+        ResultSet resultSet = execute("DESCRIBE GRAPH `" + graphName + "`");
         String    graphType;
         if (resultSet.isSucceeded() && !resultSet.isEmpty()) {
             graphType = resultSet.next().values().get(1).asString();

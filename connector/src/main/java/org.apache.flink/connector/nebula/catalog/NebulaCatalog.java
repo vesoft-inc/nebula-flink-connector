@@ -366,7 +366,7 @@ public class NebulaCatalog extends AbstractNebulaCatalog {
     private String getGraphType(String graphName) {
         if (!graphName2GraphTypeName.containsKey(graphName)) {
             try {
-                String graphType = graphProvider.getGraphType(graphName);
+                String graphType = graphProvider.getGraphType(NebulaUtils.escape(graphName));
                 graphName2GraphTypeName.put(graphName, graphType);
             } catch (Exception e) {
                 LOG.error("get graph type error", e);

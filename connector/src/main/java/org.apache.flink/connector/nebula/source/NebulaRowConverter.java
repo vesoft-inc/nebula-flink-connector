@@ -106,6 +106,12 @@ public class NebulaRowConverter implements NebulaConverter<Row> {
             if (valueWrapper.isGeography()) {
                 record.setField(pos, valueWrapper.asGeography().toString());
             }
+            if (valueWrapper.isSet()) {
+                record.setField(pos, valueWrapper.asSet().toString());
+            }
+            if (valueWrapper.isMap()) {
+                record.setField(pos, valueWrapper.asMap().toString());
+            }
         }
         return record;
     }

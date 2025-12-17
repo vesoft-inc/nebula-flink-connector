@@ -17,6 +17,9 @@ public class NebulaUtils {
     private static final String vectorType     = "VECTOR<";
     private static final String listType       = "LIST<";
     private static final String listStringType = "LIST<STRING";
+    private static final String setType        = "SET<";
+    private static final String setStringType  = "SET<STRING";
+    private static final String mapType        = "MAP<";
     private static final String geoType        = "GEOGRAPHY";
 
     public static List<HostAddress> getHostAndPorts(String address) {
@@ -99,7 +102,44 @@ public class NebulaUtils {
                 return "LIST" + value;
             }
         }
+        // process the list type
+        if (dataType.startsWith(setType)) {
+            if (dataType.startsWith(setStringType)) {
+                StringBuilder sb = new StringBuilder();
+                sb.append("SET{");
+                String  trimmedInput = value.replaceAll("^\\{|\\}$", "");
+                Pattern pattern      = Pattern.compile("(['\"])((?:\\\\\\1|.)*?)\\1|([^,]+)");
+                Matcher matcher      = pattern.matcher(trimmedInput);
 
+                while (matcher.find()) {
+                    if (matcher.group(1) != null) {
+                        String ele = matcher.group(2)
+                                .replace("\\" + matcher.group(1), matcher.group(1));
+                        sb.append("\"")
+                                .append(escape(ele))
+                                .append("\"").append(",");
+                    } else {
+                        sb.append("\"")
+                                .append(escape(matcher.group(3)))
+                                .append("\"").append(",");
+                    }
+                }
+
+                if (sb.length() > 5) {
+                    sb.deleteCharAt(sb.length() - 1);
+                }
+                sb.append("}");
+                return sb.toString();
+            } else {
+                return "SET" + value;
+            }
+        }
+        // process the map type
+        if (dataType.startsWith(mapType)) {
+            StringBuilder sb = new StringBuilder();
+            sb.append("MAP").append(value);
+            return sb.toString();
+        }
         // process the vector type
         if (dataType.startsWith(vectorType)) {
             StringBuilder sb = new StringBuilder();

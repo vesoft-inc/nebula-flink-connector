@@ -67,6 +67,14 @@ public class NebulaUtilsTest extends TestCase {
 
         assert ("ST_GeogFromText(\"POINT(3 4)\")".equals(
                 NebulaUtils.extractValue("GEOGRAPHY<ANY>", "POINT(3 4)", null)));
+
+        assert ("SET{1,2,3}".equals(NebulaUtils.extractValue("SET<INT32>", "{1,2,3}", null)));
+        assert ("SET{\"1\",\"2\",\"3\"}".equals(NebulaUtils.extractValue("SET<STRING>",
+                                                                         "{\"1\",\"2\",\"3\"}",
+                                                                         null)));
+
+        assert ("MAP{'a':123}".equals(NebulaUtils.extractValue("MAP<STRING,INT32>",
+                                                               "{'a':123}", null)));
     }
 
     public void testMkString() {

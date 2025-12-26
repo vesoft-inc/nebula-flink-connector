@@ -26,6 +26,7 @@ public class NebulaConstant {
     public static final long DEFAULT_INTERVAL_MILLIS = 0;
 
     public static final int DEFAULT_RETRY_TIMES = 0;
+    public static final boolean DEFAULT_ERROR_WHEN_FAILED = false;
 
     // default value for connection
     public static final int DEFAULT_CONNECTION_TIMEOUT_MS = 3000;

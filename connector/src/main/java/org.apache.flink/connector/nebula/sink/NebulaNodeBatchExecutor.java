@@ -93,6 +93,9 @@ public class NebulaNodeBatchExecutor implements NebulaBatchExecutor<Row> {
             end = System.currentTimeMillis();
         } catch (Exception e) {
             LOG.error("write data error, ", e);
+            if (executionOptions.throwErrorWhenFailed()) {
+                throw new RuntimeException("write node failed", e);
+            }
             nebulaVertexList.clear();
             return statement;
         }
@@ -105,6 +108,9 @@ public class NebulaNodeBatchExecutor implements NebulaBatchExecutor<Row> {
         } else {
             LOG.error(">>>>> write data failed: {}", execResult.getErrorMessage());
             LOG.error(">>>>> failed gql: {}", statement);
+            if (executionOptions.throwErrorWhenFailed()) {
+                throw new RuntimeException("write node failed:" + execResult.getErrorMessage());
+            }
             nebulaVertexList.clear();
             return statement;
         }

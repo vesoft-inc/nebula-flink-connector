@@ -6,6 +6,7 @@
 
 package org.apache.flink.connector.nebula.options;
 
+import static org.apache.flink.connector.nebula.utils.NebulaConstant.DEFAULT_ERROR_WHEN_FAILED;
 import static org.apache.flink.connector.nebula.utils.NebulaConstant.DEFAULT_INTERVAL_MILLIS;
 import static org.apache.flink.connector.nebula.utils.NebulaConstant.DEFAULT_RETRY_TIMES;
 import static org.apache.flink.connector.nebula.utils.NebulaConstant.DEFAULT_WRITE_BATCH_SIZE;
@@ -32,7 +33,8 @@ public class SinkEdgeOptions extends ExecutionOptions {
               builder.writeMode,
               builder.batchSize,
               builder.retryTimes,
-              builder.intervalMs);
+              builder.intervalMs,
+              builder.errorWhenFailed);
         this.builder = builder;
         this.edgeType = builder.edgeType;
         this.nebulaSrcPks = builder.nebulaSrcPks;
@@ -84,6 +86,7 @@ public class SinkEdgeOptions extends ExecutionOptions {
         private int           batchSize        = DEFAULT_WRITE_BATCH_SIZE;
         private int           retryTimes       = DEFAULT_RETRY_TIMES;
         private long          intervalMs       = DEFAULT_INTERVAL_MILLIS;
+        private boolean       errorWhenFailed  = DEFAULT_ERROR_WHEN_FAILED;
 
 
         public Builder withGraphName(String graphName) {
@@ -154,6 +157,10 @@ public class SinkEdgeOptions extends ExecutionOptions {
             return this;
         }
 
+        public Builder withErrorWhenFailed(boolean errorWhenFailed) {
+            this.errorWhenFailed = errorWhenFailed;
+            return this;
+        }
 
         private void check() {
             if (nebulaFields.size() != flinkFields.size()) {

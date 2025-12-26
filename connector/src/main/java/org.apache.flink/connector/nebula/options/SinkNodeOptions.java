@@ -6,6 +6,7 @@
 
 package org.apache.flink.connector.nebula.options;
 
+import static org.apache.flink.connector.nebula.utils.NebulaConstant.DEFAULT_ERROR_WHEN_FAILED;
 import static org.apache.flink.connector.nebula.utils.NebulaConstant.DEFAULT_INTERVAL_MILLIS;
 import static org.apache.flink.connector.nebula.utils.NebulaConstant.DEFAULT_RETRY_TIMES;
 import static org.apache.flink.connector.nebula.utils.NebulaConstant.DEFAULT_WRITE_BATCH_SIZE;
@@ -22,7 +23,8 @@ public class SinkNodeOptions extends ExecutionOptions {
 
     private SinkNodeOptions(Builder builder) {
         super(builder.graphName, builder.nebulaFields, builder.flinkFields,
-              builder.writeMode, builder.batchSize, builder.retryTimes, builder.intervalMs);
+              builder.writeMode, builder.batchSize, builder.retryTimes, builder.intervalMs,
+              builder.errorWhenFailed);
         this.builder = builder;
         this.nodeType = builder.nodeType;
     }
@@ -49,7 +51,8 @@ public class SinkNodeOptions extends ExecutionOptions {
         private WriteModeEnum writeMode    = WriteModeEnum.INSERTREPLACE;
         private int           batchSize    = DEFAULT_WRITE_BATCH_SIZE;
 
-        private int retryTimes = DEFAULT_RETRY_TIMES;
+        private int     retryTimes      = DEFAULT_RETRY_TIMES;
+        private boolean errorWhenFailed = DEFAULT_ERROR_WHEN_FAILED;
 
         public Builder withGraphName(String graphName) {
             this.graphName = graphName;
@@ -88,6 +91,11 @@ public class SinkNodeOptions extends ExecutionOptions {
 
         public Builder withIntervalMs(long intervalMs) {
             this.intervalMs = intervalMs;
+            return this;
+        }
+
+        public Builder withErrorWhenFailed(boolean errorWhenFailed) {
+            this.errorWhenFailed = errorWhenFailed;
             return this;
         }
 

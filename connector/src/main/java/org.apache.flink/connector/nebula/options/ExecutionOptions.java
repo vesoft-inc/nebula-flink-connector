@@ -18,6 +18,7 @@ public class ExecutionOptions implements Serializable {
     private final int           batchSize;
     private final int           retryTimes;
     private final long          intervalMs;
+    private final boolean       errorWhenFailed;
 
     protected ExecutionOptions(String graphName,
                                List<String> nebulaFields,
@@ -25,7 +26,8 @@ public class ExecutionOptions implements Serializable {
                                WriteModeEnum writeMode,
                                int batchSize,
                                int retryTimes,
-                               long intervalMs) {
+                               long intervalMs,
+                               boolean errorWhenFailed) {
         this.graphName = graphName;
         this.nebulaFields = nebulaFields;
         this.flinkFields = flinkFields;
@@ -33,6 +35,7 @@ public class ExecutionOptions implements Serializable {
         this.batchSize = batchSize;
         this.retryTimes = retryTimes;
         this.intervalMs = intervalMs;
+        this.errorWhenFailed = errorWhenFailed;
     }
 
     public String getGraphName() {
@@ -61,5 +64,9 @@ public class ExecutionOptions implements Serializable {
 
     public long getIntervalMs() {
         return intervalMs;
+    }
+
+    public boolean throwErrorWhenFailed() {
+        return errorWhenFailed;
     }
 }

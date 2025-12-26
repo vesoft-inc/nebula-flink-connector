@@ -7,8 +7,6 @@
 package org.apache.flink.connector.nebula.sink;
 
 
-
-
 import com.vesoft.nebula.driver.graph.data.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
@@ -104,6 +102,9 @@ public class NebulaEdgeBatchExecutor implements NebulaBatchExecutor<Row> {
             end = System.currentTimeMillis();
         } catch (Exception e) {
             LOG.error(">>>>>> write data error, ", e);
+            if (executionOptions.throwErrorWhenFailed()) {
+                throw new RuntimeException("write edge failed", e);
+            }
             nebulaEdgeList.clear();
             return statement;
         }
@@ -116,6 +117,9 @@ public class NebulaEdgeBatchExecutor implements NebulaBatchExecutor<Row> {
         } else {
             LOG.error(">>>>> write edge failed: {}", execResult.getErrorMessage());
             LOG.error(">>>>> failed gql: {}", statement);
+            if (executionOptions.throwErrorWhenFailed()) {
+                throw new RuntimeException("write edge failed:" + execResult.getErrorMessage());
+            }
             nebulaEdgeList.clear();
             return statement;
         }

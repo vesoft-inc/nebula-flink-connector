@@ -91,7 +91,7 @@ public abstract class NebulaBatchOutputFormat<T, OptionsT extends ExecutionOptio
      */
     @Override
     public final synchronized void writeRecord(T row) {
-        LOG.debug(">>>>> write row: {}", ((Row) row).toString());
+        LOG.debug(">>>>> write row: {}", row.toString());
         nebulaBatchExecutor.addToBatch(row);
 
         if (numPendingRow.incrementAndGet() >= executionOptions.getBatchSize()) {

@@ -179,9 +179,9 @@ public class NebulaDynamicTableFactory implements DynamicTableSourceFactory,
         validateConfigOptions(readableConfig);
         TableSchema physicalSchema =
                 TableSchemaUtils.getPhysicalSchema(context.getCatalogTable().getSchema());
-        SourceExecutionOptions executionOptions  = getSourceExecutionOptions(context,
-                                                                             readableConfig);
-        ConnectionOptions      connectionOptions = getConnectionOptions(readableConfig);
+        SourceExecutionOptions executionOptions = getSourceExecutionOptions(context,
+                                                                            readableConfig);
+        ConnectionOptions connectionOptions = getConnectionOptions(readableConfig);
         return new NebulaDynamicTableSource(connectionOptions, executionOptions, physicalSchema);
     }
 
@@ -263,8 +263,8 @@ public class NebulaDynamicTableFactory implements DynamicTableSourceFactory,
 
 
         if (config.get(DATA_TYPE).isNode()) {
-            for (int i = 0; i < columns.size(); i++) {
-                fields.add(columns.get(i).getName());
+            for (Column column : columns) {
+                fields.add(column.getName());
             }
 
             SourceNodeOptions.Builder builder =
@@ -275,8 +275,16 @@ public class NebulaDynamicTableFactory implements DynamicTableSourceFactory,
             config.getOptional(BATCH_SIZE).ifPresent(builder::withBatchSize);
             return builder.build();
         } else {
-            for (int i = 0; i < columns.size(); i++) {
-                fields.add(columns.get(i).getName());
+            List<String> flinkSrcNames = Arrays.asList(config.getOptional(SRC_PK_COLUMNS)
+                                                               .orElse("").split(","));
+            List<String> flinkDstNames = Arrays.asList(config.getOptional(DST_PK_COLUMNS)
+                                                               .orElse("").split(","));
+            for (Column column : columns) {
+                if (flinkSrcNames.contains(column.getName())
+                        || flinkDstNames.contains(column.getName())) {
+                    continue;
+                }
+                fields.add(column.getName());
             }
 
             SourceEdgeOptions.Builder builder =
@@ -303,9 +311,6 @@ public class NebulaDynamicTableFactory implements DynamicTableSourceFactory,
         set.add(GRAPHADDRESS);
         set.add(USERNAME);
         set.add(PASSWORD);
-        set.add(SRC_PK_COLUMNS);
-        set.add(DST_PK_COLUMNS);
-        set.add(PK_COLUMNS);
         return set;
     }
 
@@ -318,6 +323,10 @@ public class NebulaDynamicTableFactory implements DynamicTableSourceFactory,
         set.add(EDGE_DST_PKS);
         set.add(BATCH_SIZE);
         set.add(BATCH_INTERVAL_MS);
+        set.add(SRC_PK_COLUMNS);
+        set.add(DST_PK_COLUMNS);
+        set.add(WRITE_MODE);
+        set.add(PK_COLUMNS);
         return set;
     }
 }

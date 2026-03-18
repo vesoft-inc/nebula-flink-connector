@@ -59,7 +59,7 @@ public class NebulaNodeBatchTableOutputFormat
                                                          NebulaNodeSchema schema) {
         return row -> {
             Row key = new Row(schema.getPkNames().size());
-            for (int i = 0; i < schema.getPropNames().size(); i++) {
+            for (int i = 0; i < schema.getPkNames().size(); i++) {
                 int index = nebulaFields.indexOf(schema.getPkNames().get(i));
                 key.setField(i, row.getField(flinkFields.get(index)));
             }

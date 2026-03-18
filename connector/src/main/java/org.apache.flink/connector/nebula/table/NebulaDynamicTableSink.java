@@ -67,11 +67,11 @@ public class NebulaDynamicTableSink implements DynamicTableSink {
 
     @Override
     public DynamicTableSink copy() {
-        return null;
+        return new NebulaDynamicTableSink(connectionOptions, executionOptions, producedDataType);
     }
 
     @Override
     public String asSummaryString() {
-        return null;
+        return "NebulaDynamicTableSink";
     }
 }

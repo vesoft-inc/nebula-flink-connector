@@ -21,7 +21,6 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetTime;
 import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import org.apache.flink.connector.nebula.source.NebulaConverter;
 import org.apache.flink.table.data.GenericRowData;
@@ -118,9 +117,7 @@ public class NebulaRowDataConverter implements NebulaConverter<RowData> {
             case BOOLEAN:
                 return ValueWrapper::asBoolean;
             case TINYINT:
-                return val -> (byte) val.asInt();
             case SMALLINT:
-                return val -> (short) val.asInt();
             case INTEGER:
                 return ValueWrapper::asInt;
             case BIGINT:
@@ -147,6 +144,26 @@ public class NebulaRowDataConverter implements NebulaConverter<RowData> {
                     return (int) (time.toLocalTime().toNanoOfDay() / 1_000_000L);
                 };
             case TIMESTAMP_WITH_TIME_ZONE:
+                return val -> {
+                    if (val.isZonedDateTime()) {
+                        ZonedDateTime t             = val.asZonedDateTime();
+                        LocalDateTime localDateTime = t.toLocalDateTime();
+                        return TimestampData.fromLocalDateTime(localDateTime);
+                    } else if (val.isLong()) {
+                        return TimestampData.fromTimestamp(new Timestamp(val.asLong() * 1000));
+                    } else if (val.isLocalTime()) {
+                        LocalTime     localTime = val.asLocalTime();
+                        LocalDateTime ldateTime = LocalDateTime.of(LocalDate.now(), localTime);
+                        return TimestampData.fromLocalDateTime(ldateTime);
+                    } else if (val.isZonedTime()) {
+                        OffsetTime    offsetTime = val.asZonedTime();
+                        LocalDateTime ldateTime  = LocalDateTime.of(LocalDate.now(), offsetTime.toLocalTime());
+                        return TimestampData.fromLocalDateTime(ldateTime);
+                    } else {
+                        throw new IllegalArgumentException(
+                                "do not support for " + val.getDataTypeString());
+                    }
+                };
             case TIMESTAMP_WITH_LOCAL_TIME_ZONE:
                 return val -> {
                     if (val.isZonedDateTime()) {
@@ -160,9 +177,8 @@ public class NebulaRowDataConverter implements NebulaConverter<RowData> {
                         LocalDateTime ldateTime = LocalDateTime.of(LocalDate.now(), localTime);
                         return TimestampData.fromLocalDateTime(ldateTime);
                     } else if (val.isZonedTime()) {
-                        OffsetTime offsetTime = val.asZonedTime();
-                        LocalDateTime ldateTime = LocalDateTime.of(LocalDate.now(),
-                                                                   offsetTime.toLocalTime());
+                        OffsetTime    offsetTime = val.asZonedTime();
+                        LocalDateTime ldateTime  = LocalDateTime.of(LocalDate.now(), offsetTime.toLocalTime());
                         return TimestampData.fromLocalDateTime(ldateTime);
                     } else {
                         throw new IllegalArgumentException(
@@ -179,10 +195,9 @@ public class NebulaRowDataConverter implements NebulaConverter<RowData> {
                         LocalTime     localTime = val.asLocalTime();
                         LocalDateTime ldateTime = LocalDateTime.of(LocalDate.now(), localTime);
                         return TimestampData.fromLocalDateTime(ldateTime);
-                    } else if (val.isZonedTime()) {
-                        OffsetTime offsetTime = val.asZonedTime();
-                        LocalDateTime ldateTime = LocalDateTime.of(LocalDate.now(),
-                                                                   offsetTime.toLocalTime());
+                    }else if (val.isZonedTime()) {
+                        OffsetTime    offsetTime = val.asZonedTime();
+                        LocalDateTime ldateTime  = LocalDateTime.of(LocalDate.now(), offsetTime.toLocalTime());
                         return TimestampData.fromLocalDateTime(ldateTime);
                     } else {
                         throw new IllegalArgumentException(
@@ -229,7 +244,7 @@ public class NebulaRowDataConverter implements NebulaConverter<RowData> {
             case TIME_WITHOUT_TIME_ZONE:
                 return (val, idx, row) -> {
                     LocalTime localTime = LocalTime.ofNanoOfDay(val.getInt(idx) * 1_000_000L);
-                    row.setField(idx, localTime.format(DateTimeFormatter.ofPattern("HH:mm:ss")));
+                    row.setField(idx, localTime.toString());
                 };
             case TIMESTAMP_WITH_TIME_ZONE:
             case TIMESTAMP_WITHOUT_TIME_ZONE:

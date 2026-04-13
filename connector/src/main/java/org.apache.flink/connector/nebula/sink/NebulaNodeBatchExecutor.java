@@ -8,7 +8,9 @@ package org.apache.flink.connector.nebula.sink;
 
 import com.vesoft.nebula.driver.graph.data.ResultSet;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.apache.flink.connector.nebula.connection.GraphProvider;
 import org.apache.flink.connector.nebula.options.SinkNodeOptions;
 import org.apache.flink.connector.nebula.utils.NebulaNode;
@@ -56,31 +58,45 @@ public class NebulaNodeBatchExecutor implements NebulaBatchExecutor<Row> {
         }
         NebulaNodes nebulaNodes = new NebulaNodes(schema, nebulaVertexList);
         // generate the write ngql statement
-        String statement = null;
-        switch (executionOptions.getWriteMode()) {
-            case INSERT:
-            case INSERTIGNORE:
-            case INSERTREPLACE:
-            case INSERTUPDATE:
-                statement = nebulaNodes.getInsertStatement(executionOptions.getGraphName(),
-                                                           executionOptions.getWriteMode(),
-                                                           executionOptions.getFlinkFields(),
-                                                           executionOptions.getNebulaFields());
-                break;
-            case UPDATE:
-                statement = nebulaNodes.getUpdateStatement(executionOptions.getGraphName(),
-                                                           executionOptions.getFlinkFields(),
-                                                           executionOptions.getNebulaFields());
-                break;
-            case DELETE:
-            case DETACHDELETE:
-                statement = nebulaNodes.getDeleteStatement(executionOptions.getGraphName(),
-                                                           executionOptions.getWriteMode(),
-                                                           executionOptions.getFlinkFields(),
-                                                           executionOptions.getNebulaFields());
-                break;
-            default:
-                throw new IllegalArgumentException("write mode is not supported");
+        String statement;
+        if (executionOptions.hasCustomGqlTemplate()) {
+            Map<String, String> values = new HashMap<>();
+            values.put("TABLE",
+                       nebulaNodes.buildTableClause(executionOptions.getFlinkFields(),
+                                                    executionOptions.getNebulaFields()));
+            values.put("GRAPH", executionOptions.getGraphName());
+            values.put("TYPE", executionOptions.getNodeType());
+            values.put("LABEL", executionOptions.getNodeType());
+            values.put("WRITE_MODE", executionOptions.getWriteMode().name());
+            values.put("WRITE_MODE_NGQL", executionOptions.getWriteMode().getMode());
+            statement = NebulaGqlTemplateEngine.render(executionOptions.getGqlTemplate(), values);
+        } else {
+            statement = null;
+            switch (executionOptions.getWriteMode()) {
+                case INSERT:
+                case INSERTIGNORE:
+                case INSERTREPLACE:
+                case INSERTUPDATE:
+                    statement = nebulaNodes.getInsertStatement(executionOptions.getGraphName(),
+                                                               executionOptions.getWriteMode(),
+                                                               executionOptions.getFlinkFields(),
+                                                               executionOptions.getNebulaFields());
+                    break;
+                case UPDATE:
+                    statement = nebulaNodes.getUpdateStatement(executionOptions.getGraphName(),
+                                                               executionOptions.getFlinkFields(),
+                                                               executionOptions.getNebulaFields());
+                    break;
+                case DELETE:
+                case DETACHDELETE:
+                    statement = nebulaNodes.getDeleteStatement(executionOptions.getGraphName(),
+                                                               executionOptions.getWriteMode(),
+                                                               executionOptions.getFlinkFields(),
+                                                               executionOptions.getNebulaFields());
+                    break;
+                default:
+                    throw new IllegalArgumentException("write mode is not supported");
+            }
         }
 
         // execute ngql statement

@@ -24,7 +24,7 @@ public class SinkNodeOptions extends ExecutionOptions {
     private SinkNodeOptions(Builder builder) {
         super(builder.graphName, builder.nebulaFields, builder.flinkFields,
               builder.writeMode, builder.batchSize, builder.retryTimes, builder.intervalMs,
-              builder.errorWhenFailed);
+              builder.errorWhenFailed, builder.gqlTemplate);
         this.builder = builder;
         this.nodeType = builder.nodeType;
     }
@@ -53,6 +53,7 @@ public class SinkNodeOptions extends ExecutionOptions {
 
         private int     retryTimes      = DEFAULT_RETRY_TIMES;
         private boolean errorWhenFailed = DEFAULT_ERROR_WHEN_FAILED;
+        private String  gqlTemplate;
 
         public Builder withGraphName(String graphName) {
             this.graphName = graphName;
@@ -96,6 +97,11 @@ public class SinkNodeOptions extends ExecutionOptions {
 
         public Builder withErrorWhenFailed(boolean errorWhenFailed) {
             this.errorWhenFailed = errorWhenFailed;
+            return this;
+        }
+
+        public Builder withGqlTemplate(String gqlTemplate) {
+            this.gqlTemplate = gqlTemplate;
             return this;
         }
 

@@ -19,6 +19,7 @@ public class ExecutionOptions implements Serializable {
     private final int           retryTimes;
     private final long          intervalMs;
     private final boolean       errorWhenFailed;
+    private final String        gqlTemplate;
 
     protected ExecutionOptions(String graphName,
                                List<String> nebulaFields,
@@ -27,7 +28,8 @@ public class ExecutionOptions implements Serializable {
                                int batchSize,
                                int retryTimes,
                                long intervalMs,
-                               boolean errorWhenFailed) {
+                                boolean errorWhenFailed,
+                                String gqlTemplate) {
         this.graphName = graphName;
         this.nebulaFields = nebulaFields;
         this.flinkFields = flinkFields;
@@ -36,6 +38,7 @@ public class ExecutionOptions implements Serializable {
         this.retryTimes = retryTimes;
         this.intervalMs = intervalMs;
         this.errorWhenFailed = errorWhenFailed;
+        this.gqlTemplate = gqlTemplate;
     }
 
     public String getGraphName() {
@@ -68,5 +71,13 @@ public class ExecutionOptions implements Serializable {
 
     public boolean throwErrorWhenFailed() {
         return errorWhenFailed;
+    }
+
+    public String getGqlTemplate() {
+        return gqlTemplate;
+    }
+
+    public boolean hasCustomGqlTemplate() {
+        return gqlTemplate != null && !gqlTemplate.trim().isEmpty();
     }
 }

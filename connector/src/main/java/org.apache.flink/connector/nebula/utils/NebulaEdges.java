@@ -53,8 +53,7 @@ public class NebulaEdges implements Serializable {
                 throw new IllegalArgumentException("insert mode is illegal for insert:"
                                                            + insertMode);
         }
-        String format = "TABLE t{%s} = \n"
-                + "%s \n"
+        String format = "%s\n"
                 + "USE `%s` \n"
                 + "FOR r IN t \n"
                 + "OPTIONAL MATCH (%s@`%s`) WHERE %s "
@@ -62,8 +61,12 @@ public class NebulaEdges implements Serializable {
                 + "%s (%s)-[@`%s`{%s}]->(%s)";
 
         return String.format(format,
-                             getTableHeaders(flinkSrcFields, flinkDstFields, flinkFields),
-                             getTableValues(nebulaSrcPks, nebulaDstPks, nebulaFields),
+                             buildTableClause(flinkSrcFields,
+                                              nebulaSrcPks,
+                                              flinkDstFields,
+                                              nebulaDstPks,
+                                              flinkFields,
+                                              nebulaFields),
                              graphName,
                              SRC_NODE_ALIAS,
                              edgeSchema.getSrcNodeTypeName(),
@@ -76,6 +79,17 @@ public class NebulaEdges implements Serializable {
                              edgeSchema.getEdgeTypeName(),
                              getProperties(nebulaFields),
                              DST_NODE_ALIAS);
+    }
+
+    public String buildTableClause(List<String> flinkSrcFields,
+                                   List<String> nebulaSrcPks,
+                                   List<String> flinkDstFields,
+                                   List<String> nebulaDstPks,
+                                   List<String> flinkFields,
+                                   List<String> nebulaFields) {
+        return String.format("TABLE t{%s} = \n%s ",
+                             getTableHeaders(flinkSrcFields, flinkDstFields, flinkFields),
+                             getTableValues(nebulaSrcPks, nebulaDstPks, nebulaFields));
     }
 
 

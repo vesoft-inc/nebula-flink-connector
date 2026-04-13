@@ -9,7 +9,9 @@ package org.apache.flink.connector.nebula.sink;
 
 import com.vesoft.nebula.driver.graph.data.ResultSet;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.apache.flink.connector.nebula.connection.GraphProvider;
 import org.apache.flink.connector.nebula.options.SinkEdgeOptions;
 import org.apache.flink.connector.nebula.utils.NebulaEdge;
@@ -57,39 +59,63 @@ public class NebulaEdgeBatchExecutor implements NebulaBatchExecutor<Row> {
         }
         NebulaEdges nebulaEdges = new NebulaEdges(schema, nebulaEdgeList);
         // generate the write ngql statement
-        String statement = null;
-        switch (executionOptions.getWriteMode()) {
-            case INSERT:
-            case INSERTIGNORE:
-            case INSERTREPLACE:
-            case INSERTUPDATE:
-                statement = nebulaEdges.getInsertStatement(executionOptions.getGraphName(),
-                                                           executionOptions.getWriteMode(),
-                                                           executionOptions.getFlinkSrcPkFields(),
-                                                           executionOptions.getNebulaSrcPks(),
-                                                           executionOptions.getFlinkDstPkFields(),
-                                                           executionOptions.getNebulaDstPks(),
-                                                           executionOptions.getFlinkFields(),
-                                                           executionOptions.getNebulaFields());
-                break;
-            case UPDATE:
-                statement = nebulaEdges.getUpdateStatement(executionOptions.getGraphName(),
-                                                           executionOptions.getFlinkSrcPkFields(),
-                                                           executionOptions.getNebulaSrcPks(),
-                                                           executionOptions.getFlinkDstPkFields(),
-                                                           executionOptions.getNebulaDstPks(),
-                                                           executionOptions.getFlinkFields(),
-                                                           executionOptions.getNebulaFields());
-                break;
-            case DELETE:
-                statement = nebulaEdges.getDeleteStatement(executionOptions.getGraphName(),
-                                                           executionOptions.getFlinkSrcPkFields(),
-                                                           executionOptions.getNebulaSrcPks(),
-                                                           executionOptions.getFlinkDstPkFields(),
-                                                           executionOptions.getNebulaDstPks());
-                break;
-            default:
-                throw new IllegalArgumentException("write mode is not supported");
+        String statement;
+        if (executionOptions.hasCustomGqlTemplate()) {
+            Map<String, String> values = new HashMap<>();
+            values.put("TABLE",
+                       nebulaEdges.buildTableClause(executionOptions.getFlinkSrcPkFields(),
+                                                    executionOptions.getNebulaSrcPks(),
+                                                    executionOptions.getFlinkDstPkFields(),
+                                                    executionOptions.getNebulaDstPks(),
+                                                    executionOptions.getFlinkFields(),
+                                                    executionOptions.getNebulaFields()));
+            values.put("GRAPH", executionOptions.getGraphName());
+            values.put("TYPE", executionOptions.getEdgeType());
+            values.put("LABEL", executionOptions.getEdgeType());
+            values.put("WRITE_MODE", executionOptions.getWriteMode().name());
+            values.put("WRITE_MODE_NGQL", executionOptions.getWriteMode().getMode());
+            statement = NebulaGqlTemplateEngine.render(executionOptions.getGqlTemplate(), values);
+        } else {
+            statement = null;
+            List<String> flinkSrcPkFields = executionOptions.getFlinkSrcPkFields();
+            List<String> nebulaSrcPks = executionOptions.getNebulaSrcPks();
+            List<String> flinkDstPkFields = executionOptions.getFlinkDstPkFields();
+            List<String> nebulaDstPks = executionOptions.getNebulaDstPks();
+            List<String> flinkFields = executionOptions.getFlinkFields();
+            List<String> nebulaFields = executionOptions.getNebulaFields();
+            switch (executionOptions.getWriteMode()) {
+                case INSERT:
+                case INSERTIGNORE:
+                case INSERTREPLACE:
+                case INSERTUPDATE:
+                    statement = nebulaEdges.getInsertStatement(executionOptions.getGraphName(),
+                                                               executionOptions.getWriteMode(),
+                                                               flinkSrcPkFields,
+                                                               nebulaSrcPks,
+                                                               flinkDstPkFields,
+                                                               nebulaDstPks,
+                                                               flinkFields,
+                                                               nebulaFields);
+                    break;
+                case UPDATE:
+                    statement = nebulaEdges.getUpdateStatement(executionOptions.getGraphName(),
+                                                               flinkSrcPkFields,
+                                                               nebulaSrcPks,
+                                                               flinkDstPkFields,
+                                                               nebulaDstPks,
+                                                               flinkFields,
+                                                               nebulaFields);
+                    break;
+                case DELETE:
+                    statement = nebulaEdges.getDeleteStatement(executionOptions.getGraphName(),
+                                                               flinkSrcPkFields,
+                                                               nebulaSrcPks,
+                                                               flinkDstPkFields,
+                                                               nebulaDstPks);
+                    break;
+                default:
+                    throw new IllegalArgumentException("write mode is not supported");
+            }
         }
 
         // execute ngql statement

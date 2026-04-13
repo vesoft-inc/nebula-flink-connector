@@ -34,7 +34,8 @@ public class SinkEdgeOptions extends ExecutionOptions {
               builder.batchSize,
               builder.retryTimes,
               builder.intervalMs,
-              builder.errorWhenFailed);
+              builder.errorWhenFailed,
+              builder.gqlTemplate);
         this.builder = builder;
         this.edgeType = builder.edgeType;
         this.nebulaSrcPks = builder.nebulaSrcPks;
@@ -87,6 +88,7 @@ public class SinkEdgeOptions extends ExecutionOptions {
         private int           retryTimes       = DEFAULT_RETRY_TIMES;
         private long          intervalMs       = DEFAULT_INTERVAL_MILLIS;
         private boolean       errorWhenFailed  = DEFAULT_ERROR_WHEN_FAILED;
+        private String        gqlTemplate;
 
 
         public Builder withGraphName(String graphName) {
@@ -159,6 +161,11 @@ public class SinkEdgeOptions extends ExecutionOptions {
 
         public Builder withErrorWhenFailed(boolean errorWhenFailed) {
             this.errorWhenFailed = errorWhenFailed;
+            return this;
+        }
+
+        public Builder withGqlTemplate(String gqlTemplate) {
+            this.gqlTemplate = gqlTemplate;
             return this;
         }
 

@@ -33,6 +33,7 @@ public class FlinkConnectorSinkExample {
         env.setParallelism(5);
         DataStream<List<String>> playerSource = constructNodeSourceData(env);
         sinkNodeData(env, playerSource);
+        sinkNodeDataWithTemplateGql(env, playerSource);
         updateNodeData(env, playerSource);
 
         DataStream<List<String>> friendSource = constructEdgeSourceData(env);
@@ -208,6 +209,53 @@ public class FlinkConnectorSinkExample {
             env.execute("Update Nebula Node");
         } catch (Exception e) {
             LOG.error("error when update Nebula Graph Node, ", e);
+            System.exit(-1);
+        }
+    }
+
+    /**
+     * sink Nebula Graph with custom template gql
+     */
+    public static void sinkNodeDataWithTemplateGql(StreamExecutionEnvironment env,
+                                                   DataStream<List<String>> playerSource) {
+        ConnectionOptions connectionOptions = getConnectionOptions();
+        String gqlTemplate = "{{TABLE}} \n"
+                + "USE `{{GRAPH}}` \n"
+                + "FOR r IN t \n"
+                + "INSERT OR REPLACE (@`{{TYPE}}`{"
+                + "`col1`:r.c0,`col2`:r.c1,`col3`: CAST(r.c2 AS INT8),`col4`:CAST(r.c3 AS INT16),"
+                + "`col5`:r.c4,`col6`:r.c5,`col7`:r.c6,`col8`:r.c7,`col9`:r.c8,`col10`:r.c9,"
+                + "`col11`:r.c10,`col12`:r.c11,`col13`:r.c12})";
+
+        SinkNodeOptions sinkNodeOptions =
+                SinkNodeOptions.builder()
+                        .withGraphName("flinkSink")
+                        .withNodeType("person")
+                        .withFlinkFields(Arrays.asList("c0", "c1", "c2", "c3", "c4", "c5", "c6",
+                                                       "c7", "c8", "c9", "c10", "c11", "c12"))
+                        .withNebulaFields(Arrays.asList("col1", "col2", "col3", "col4", "col5",
+                                                        "col6", "col7", "col8", "col9", "col10",
+                                                        "col11", "col12", "col13"))
+                        .withWriteMode(WriteModeEnum.INSERTREPLACE)
+                        .withGqlTemplate(gqlTemplate)
+                        .withBatchSize(10)
+                        .build();
+
+        NebulaNodeBatchOutputFormat outputFormat =
+                new NebulaNodeBatchOutputFormat(connectionOptions, sinkNodeOptions);
+        NebulaSinkFunction<Row> nebulaSinkFunction = new NebulaSinkFunction<>(outputFormat);
+        DataStream<Row> dataStream = playerSource.map(row -> {
+            org.apache.flink.types.Row record = Row.withNames();
+            for (int i = 0; i < row.size(); i++) {
+                record.setField("c" + i, row.get(i));
+            }
+            return record;
+        });
+        dataStream.addSink(nebulaSinkFunction);
+        try {
+            env.execute("Write Nebula with Template GQL");
+        } catch (Exception e) {
+            LOG.error("error when write Nebula Graph with template gql, ", e);
             System.exit(-1);
         }
     }

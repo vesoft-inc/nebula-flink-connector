@@ -75,19 +75,23 @@ public class NebulaNodes implements Serializable {
                 throw new IllegalArgumentException("insert mode is illegal for insert:"
                                                            + insertMode);
         }
-        String format = "TABLE t{%s} = \n"
-                + "%s \n"
+        String format = "%s\n"
                 + "USE `%s` \n"
                 + "FOR r IN t \n"
                 + "%s (@`%s`{%s})";
 
         return String.format(format,
-                             getTableHeaders(flinkFields),
-                             getTableValues(nebulaFields),
+                             buildTableClause(flinkFields, nebulaFields),
                              graphName,
                              insertModeString,
                              nodeSchema.getNodeTypeName(),
                              getProperties(nebulaFields));
+    }
+
+    public String buildTableClause(List<String> flinkFields, List<String> nebulaFields) {
+        return String.format("TABLE t{%s} = \n%s ",
+                             getTableHeaders(flinkFields),
+                             getTableValues(nebulaFields));
     }
 
     /**

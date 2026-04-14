@@ -49,4 +49,8 @@ public enum WriteModeEnum {
     WriteModeEnum(String mode) {
         this.mode = mode;
     }
+
+    public String getMode() {
+        return mode;
+    }
 }

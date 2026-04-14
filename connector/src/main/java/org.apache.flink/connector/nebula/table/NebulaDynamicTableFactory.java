@@ -21,6 +21,7 @@ import org.apache.flink.connector.nebula.options.SinkNodeOptions;
 import org.apache.flink.connector.nebula.options.SourceEdgeOptions;
 import org.apache.flink.connector.nebula.options.SourceExecutionOptions;
 import org.apache.flink.connector.nebula.options.SourceNodeOptions;
+import org.apache.flink.connector.nebula.sink.NebulaGqlTemplateEngine;
 import org.apache.flink.connector.nebula.utils.DataTypeEnum;
 import org.apache.flink.connector.nebula.utils.NebulaConstant;
 import org.apache.flink.connector.nebula.utils.WriteModeEnum;
@@ -154,6 +155,12 @@ public class NebulaDynamicTableFactory implements DynamicTableSourceFactory,
             .noDefaultValue()
             .withDescription("batch commit interval in milliseconds.");
 
+    public static final ConfigOption<String> GQL_TEMPLATE = ConfigOptions
+            .key("gql-template")
+            .stringType()
+            .noDefaultValue()
+            .withDescription("custom ngql template, must include {{TABLE}} placeholder.");
+
     @Override
     public DynamicTableSink createDynamicTableSink(Context context) {
         final FactoryUtil.TableFactoryHelper helper =
@@ -191,6 +198,10 @@ public class NebulaDynamicTableFactory implements DynamicTableSourceFactory,
                     String.format("The value of '%s' option should not be negative, but is %s.",
                                   TIMEOUT.key(), config.get(TIMEOUT)));
         }
+        if (config.getOptional(GQL_TEMPLATE).isPresent()
+                && !config.get(GQL_TEMPLATE).contains(NebulaGqlTemplateEngine.TABLE_PLACEHOLDER)) {
+            throw new IllegalArgumentException("gql-template must contain {{TABLE}} placeholder");
+        }
     }
 
     private ConnectionOptions getConnectionOptions(ReadableConfig config) {
@@ -220,6 +231,7 @@ public class NebulaDynamicTableFactory implements DynamicTableSourceFactory,
                             .withFlinkFields(fields)
                             .withNebulaFields(fields)
                             .withWriteMode(writeMode);
+            config.getOptional(GQL_TEMPLATE).ifPresent(builder::withGqlTemplate);
             config.getOptional(BATCH_SIZE).ifPresent(builder::withBatchSize);
             config.getOptional(BATCH_INTERVAL_MS).ifPresent(builder::withIntervalMs);
             return builder.build();
@@ -247,6 +259,7 @@ public class NebulaDynamicTableFactory implements DynamicTableSourceFactory,
                             .withNebulaSrcPks(nebulaSrcPks)
                             .withNebulaDstPks(nebulaDstPks)
                             .withWriteMode(writeMode);
+            config.getOptional(GQL_TEMPLATE).ifPresent(builder::withGqlTemplate);
             config.getOptional(BATCH_SIZE).ifPresent(builder::withBatchSize);
             config.getOptional(BATCH_INTERVAL_MS).ifPresent(builder::withIntervalMs);
             return builder.build();
@@ -327,6 +340,7 @@ public class NebulaDynamicTableFactory implements DynamicTableSourceFactory,
         set.add(DST_PK_COLUMNS);
         set.add(WRITE_MODE);
         set.add(PK_COLUMNS);
+        set.add(GQL_TEMPLATE);
         return set;
     }
 }

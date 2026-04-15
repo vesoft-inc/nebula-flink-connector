@@ -7,6 +7,7 @@
 package org.apache.flink.connector.nebula.sink;
 
 
+import com.vesoft.nebula.driver.graph.ErrorCode;
 import com.vesoft.nebula.driver.graph.data.ResultSet;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -17,11 +18,13 @@ import org.apache.flink.connector.nebula.options.SinkEdgeOptions;
 import org.apache.flink.connector.nebula.utils.NebulaEdge;
 import org.apache.flink.connector.nebula.utils.NebulaEdgeSchema;
 import org.apache.flink.connector.nebula.utils.NebulaEdges;
+import org.apache.flink.connector.nebula.utils.WriteModeEnum;
 import org.apache.flink.types.Row;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class NebulaEdgeBatchExecutor implements NebulaBatchExecutor<Row> {
+public class NebulaEdgeBatchExecutor extends AbstractNebulaRetryableBatchExecutor<NebulaEdge>
+        implements NebulaBatchExecutor<Row> {
     private static final Logger LOG = LoggerFactory.getLogger(NebulaEdgeBatchExecutor.class);
 
     private final SinkEdgeOptions                    executionOptions;
@@ -54,12 +57,19 @@ public class NebulaEdgeBatchExecutor implements NebulaBatchExecutor<Row> {
 
     @Override
     public String executeBatch(GraphProvider graphProvider) {
-        if (nebulaEdgeList.size() == 0) {
+        if (nebulaEdgeList.isEmpty()) {
             return null;
         }
-        NebulaEdges nebulaEdges = new NebulaEdges(schema, nebulaEdgeList);
-        // generate the write ngql statement
-        String statement;
+        try {
+            return writeEntities(new ArrayList<>(nebulaEdgeList), graphProvider);
+        } finally {
+            nebulaEdgeList.clear();
+        }
+    }
+
+    @Override
+    protected String getGql(List<NebulaEdge> edges) {
+        NebulaEdges nebulaEdges = new NebulaEdges(schema, edges);
         if (executionOptions.hasCustomGqlTemplate()) {
             Map<String, String> values = new HashMap<>();
             values.put("TABLE",
@@ -74,82 +84,89 @@ public class NebulaEdgeBatchExecutor implements NebulaBatchExecutor<Row> {
             values.put("LABEL", executionOptions.getEdgeType());
             values.put("WRITE_MODE", executionOptions.getWriteMode().name());
             values.put("WRITE_MODE_NGQL", executionOptions.getWriteMode().getMode());
-            statement = NebulaGqlTemplateEngine.render(executionOptions.getGqlTemplate(), values);
-        } else {
-            statement = null;
-            List<String> flinkSrcPkFields = executionOptions.getFlinkSrcPkFields();
-            List<String> nebulaSrcPks = executionOptions.getNebulaSrcPks();
-            List<String> flinkDstPkFields = executionOptions.getFlinkDstPkFields();
-            List<String> nebulaDstPks = executionOptions.getNebulaDstPks();
-            List<String> flinkFields = executionOptions.getFlinkFields();
-            List<String> nebulaFields = executionOptions.getNebulaFields();
-            switch (executionOptions.getWriteMode()) {
-                case INSERT:
-                case INSERTIGNORE:
-                case INSERTREPLACE:
-                case INSERTUPDATE:
-                    statement = nebulaEdges.getInsertStatement(executionOptions.getGraphName(),
-                                                               executionOptions.getWriteMode(),
-                                                               flinkSrcPkFields,
-                                                               nebulaSrcPks,
-                                                               flinkDstPkFields,
-                                                               nebulaDstPks,
-                                                               flinkFields,
-                                                               nebulaFields);
-                    break;
-                case UPDATE:
-                    statement = nebulaEdges.getUpdateStatement(executionOptions.getGraphName(),
-                                                               flinkSrcPkFields,
-                                                               nebulaSrcPks,
-                                                               flinkDstPkFields,
-                                                               nebulaDstPks,
-                                                               flinkFields,
-                                                               nebulaFields);
-                    break;
-                case DELETE:
-                    statement = nebulaEdges.getDeleteStatement(executionOptions.getGraphName(),
-                                                               flinkSrcPkFields,
-                                                               nebulaSrcPks,
-                                                               flinkDstPkFields,
-                                                               nebulaDstPks);
-                    break;
-                default:
-                    throw new IllegalArgumentException("write mode is not supported");
-            }
+            return NebulaGqlTemplateEngine.render(executionOptions.getGqlTemplate(), values);
         }
 
-        // execute ngql statement
-        ResultSet execResult = null;
-        long      start;
-        long      end;
-        try {
-            start = System.currentTimeMillis();
-            execResult = graphProvider.execute(statement);
-            end = System.currentTimeMillis();
-        } catch (Exception e) {
-            LOG.error(">>>>>> write data error, ", e);
-            if (executionOptions.throwErrorWhenFailed()) {
-                throw new RuntimeException("write edge failed", e);
-            }
-            nebulaEdgeList.clear();
-            return statement;
+        List<String> flinkSrcPkFields = executionOptions.getFlinkSrcPkFields();
+        List<String> nebulaSrcPks = executionOptions.getNebulaSrcPks();
+        List<String> flinkDstPkFields = executionOptions.getFlinkDstPkFields();
+        List<String> nebulaDstPks = executionOptions.getNebulaDstPks();
+        List<String> flinkFields = executionOptions.getFlinkFields();
+        List<String> nebulaFields = executionOptions.getNebulaFields();
+        switch (executionOptions.getWriteMode()) {
+            case INSERT:
+            case INSERTIGNORE:
+            case INSERTREPLACE:
+            case INSERTUPDATE:
+                return nebulaEdges.getInsertStatement(executionOptions.getGraphName(),
+                                                      executionOptions.getWriteMode(),
+                                                      flinkSrcPkFields,
+                                                      nebulaSrcPks,
+                                                      flinkDstPkFields,
+                                                      nebulaDstPks,
+                                                      flinkFields,
+                                                      nebulaFields);
+            case UPDATE:
+                return nebulaEdges.getUpdateStatement(executionOptions.getGraphName(),
+                                                      flinkSrcPkFields,
+                                                      nebulaSrcPks,
+                                                      flinkDstPkFields,
+                                                      nebulaDstPks,
+                                                      flinkFields,
+                                                      nebulaFields);
+            case DELETE:
+                return nebulaEdges.getDeleteStatement(executionOptions.getGraphName(),
+                                                      flinkSrcPkFields,
+                                                      nebulaSrcPks,
+                                                      flinkDstPkFields,
+                                                      nebulaDstPks);
+            default:
+                throw new IllegalArgumentException("write mode is not supported");
         }
+    }
 
-        if (execResult.isSucceeded()) {
-            LOG.info(">>>>> write edge {} succeed, latency:{{}}ms, response:{{}}ms",
-                     executionOptions.getEdgeType(),
-                     execResult.getLatency() / 1000.0,
-                     (end - start));
-        } else {
-            LOG.error(">>>>> write edge failed: {}", execResult.getErrorMessage());
-            LOG.error(">>>>> failed gql: {}", statement);
-            if (executionOptions.throwErrorWhenFailed()) {
-                throw new RuntimeException("write edge failed:" + execResult.getErrorMessage());
-            }
-            nebulaEdgeList.clear();
-            return statement;
-        }
-        nebulaEdgeList.clear();
-        return null;
+    @Override
+    protected Logger getLogger() {
+        return LOG;
+    }
+
+    @Override
+    protected String getEntityName() {
+        return "edge";
+    }
+
+    @Override
+    protected String getWriteTarget() {
+        return executionOptions.getEdgeType();
+    }
+
+    @Override
+    protected WriteModeEnum getWriteMode() {
+        return executionOptions.getWriteMode();
+    }
+
+    @Override
+    protected boolean throwErrorWhenFailed() {
+        return executionOptions.throwErrorWhenFailed();
+    }
+
+    @Override
+    protected int getRetryTimes() {
+        return executionOptions.getRetryTimes();
+    }
+
+    @Override
+    protected long getRetryIntervalMs() {
+        return executionOptions.getIntervalMs();
+    }
+
+    @Override
+    protected boolean isAlreadyExist(ResultSet resultSet) {
+        return "EDGE_ALREADY_EXIST".equals(resultSet.getErrorCode().name());
+    }
+
+    @Override
+    protected long getAffectedCount(ResultSet resultSet) {
+        return resultSet.getExtraInfo() == null ? 0L : resultSet.getExtraInfo().getAffectedEdges();
     }
 }

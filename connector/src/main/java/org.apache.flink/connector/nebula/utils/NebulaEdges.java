@@ -105,7 +105,7 @@ public class NebulaEdges implements Serializable {
                 + "USE `%s` \n"
                 + "FOR r IN t \n"
                 + "OPTIONAL MATCH (%s@`%s`)-[%s@`%s`]->(%s@`%s`) "
-                + "WHERE %s AND %s \n"
+                + "WHERE %s AND %s%s \n"
                 + "SET %s";
         return String.format(format,
                              getTableHeaders(flinkSrcFields, flinkDstFields, flinkFields),
@@ -119,6 +119,7 @@ public class NebulaEdges implements Serializable {
                              edgeSchema.getDstNodeTypeName(),
                              getSrcPkFilter(nebulaSrcPks),
                              getDstPkFilter(nebulaDstPks),
+                             getMultiEdgeKeysFilter(nebulaFields),
                              getUpdateProperties(nebulaFields));
     }
 
@@ -126,17 +127,18 @@ public class NebulaEdges implements Serializable {
                                      List<String> flinkSrcFields,
                                      List<String> nebulaSrcPks,
                                      List<String> flinkDstFields,
-                                     List<String> nebulaDstPks) {
+                                     List<String> nebulaDstPks,
+                                     List<String> nebulaFields) {
         String format = "TABLE t{%s} = \n"
                 + "%s \n"
                 + "USE `%s` \n"
                 + "FOR r IN t \n"
                 + "OPTIONAL MATCH (%s@`%s`)-[%s@`%s`]->(%s@`%s`) "
-                + "WHERE %s AND %s \n"
+                + "WHERE %s AND %s%s \n"
                 + "DELETE %s";
         return String.format(format,
-                             getPksTableHeaders(flinkSrcFields, flinkDstFields),
-                             getPksTableValues(nebulaSrcPks, nebulaDstPks),
+                             getDeleteTableHeaders(flinkSrcFields, flinkDstFields, nebulaFields),
+                             getDeleteTableValues(nebulaSrcPks, nebulaDstPks),
                              graphName,
                              SRC_NODE_ALIAS,
                              edgeSchema.getSrcNodeTypeName(),
@@ -146,6 +148,7 @@ public class NebulaEdges implements Serializable {
                              edgeSchema.getDstNodeTypeName(),
                              getSrcPkFilter(nebulaSrcPks),
                              getDstPkFilter(nebulaDstPks),
+                             getMultiEdgeKeysFilter(nebulaFields),
                              EDGE_ALIAS);
     }
 
@@ -201,7 +204,9 @@ public class NebulaEdges implements Serializable {
         return propertyString.toString();
     }
 
-    private String getPksTableHeaders(List<String> flinkSrcFields, List<String> flinkDstFields) {
+    private String getDeleteTableHeaders(List<String> flinkSrcFields,
+                                         List<String> flinkDstFields,
+                                         List<String> nebulaFields) {
         List<String> headerNames = new ArrayList<>();
         for (int i = 0; i < flinkSrcFields.size(); i++) {
             headerNames.add("src_" + i);
@@ -209,10 +214,13 @@ public class NebulaEdges implements Serializable {
         for (int i = 0; i < flinkDstFields.size(); i++) {
             headerNames.add("dst_" + i);
         }
+        for (String key : edgeSchema.getMultipleEdgeKeys()) {
+            headerNames.add("c" + nebulaFields.indexOf(key));
+        }
         return String.join(",", headerNames);
     }
 
-    private String getPksTableValues(List<String> nebulaSrcPks, List<String> nebulaDstPks) {
+    private String getDeleteTableValues(List<String> nebulaSrcPks, List<String> nebulaDstPks) {
         List<String> tableRows = new ArrayList<>();
         for (NebulaEdge edge : edges) {
             List<String> rowValues = new ArrayList<>();
@@ -222,6 +230,9 @@ public class NebulaEdges implements Serializable {
             for (int i = 0; i < nebulaDstPks.size(); i++) {
                 rowValues.add(edge.getDstPks().get(nebulaDstPks.get(i)));
             }
+            for (String key : edgeSchema.getMultipleEdgeKeys()) {
+                rowValues.add(edge.getProperties().get(key));
+            }
             tableRows.add("(" + String.join(",", rowValues) + ")");
         }
         return String.join(",", tableRows);
@@ -230,6 +241,9 @@ public class NebulaEdges implements Serializable {
     private String getUpdateProperties(List<String> nebulaFields) {
         StringBuilder propertyString = new StringBuilder();
         for (int index = 0; index < nebulaFields.size(); index++) {
+            if (edgeSchema.getMultipleEdgeKeys().contains(nebulaFields.get(index))) {
+                continue;
+            }
             propertyString
                     .append(EDGE_ALIAS)
                     .append(".`")
@@ -242,6 +256,23 @@ public class NebulaEdges implements Serializable {
             propertyString.deleteCharAt(propertyString.length() - 1);
         }
         return propertyString.toString();
+    }
+
+    private String getMultiEdgeKeysFilter(List<String> nebulaFields) {
+        if (edgeSchema.getMultipleEdgeKeys() == null
+                || edgeSchema.getMultipleEdgeKeys().isEmpty()) {
+            return "";
+        }
+        StringBuilder filter = new StringBuilder();
+        for (String key : edgeSchema.getMultipleEdgeKeys()) {
+            filter.append(" AND ")
+                    .append(EDGE_ALIAS)
+                    .append(".`")
+                    .append(key)
+                    .append("`=r.c")
+                    .append(nebulaFields.indexOf(key));
+        }
+        return filter.toString();
     }
 
     private String getSrcPkFilter(List<String> nebulaSrcPks) {

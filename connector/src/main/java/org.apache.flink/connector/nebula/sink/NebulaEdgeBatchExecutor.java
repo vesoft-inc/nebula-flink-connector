@@ -7,7 +7,6 @@
 package org.apache.flink.connector.nebula.sink;
 
 
-import com.vesoft.nebula.driver.graph.ErrorCode;
 import com.vesoft.nebula.driver.graph.data.ResultSet;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -119,7 +118,8 @@ public class NebulaEdgeBatchExecutor extends AbstractNebulaRetryableBatchExecuto
                                                       flinkSrcPkFields,
                                                       nebulaSrcPks,
                                                       flinkDstPkFields,
-                                                      nebulaDstPks);
+                                                      nebulaDstPks,
+                                                      nebulaFields);
             default:
                 throw new IllegalArgumentException("write mode is not supported");
         }

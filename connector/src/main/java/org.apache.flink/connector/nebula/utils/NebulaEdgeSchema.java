@@ -20,6 +20,7 @@ public class NebulaEdgeSchema {
     private Map<String,String> srcPkDataTypeMap = new HashMap<>();
     private List<String>       dstPkNames       = new ArrayList<>();
     private Map<String, String> dstPkDataTypeMap = new HashMap<>();
+    private List<String>       multipleEdgeKeys = new ArrayList<>();
 
     private List<String> propNames = new ArrayList<>();
     private Map<String,String> properties = new HashMap<>();
@@ -78,6 +79,14 @@ public class NebulaEdgeSchema {
 
     public void setDstPkDataTypeMap(Map<String, String> dstPkDataTypeMap) {
         this.dstPkDataTypeMap = dstPkDataTypeMap;
+    }
+
+    public List<String> getMultipleEdgeKeys() {
+        return multipleEdgeKeys;
+    }
+
+    public void setMultipleEdgeKeys(List<String> multipleEdgeKeys) {
+        this.multipleEdgeKeys = multipleEdgeKeys;
     }
 
     public List<String> getPropNames() {

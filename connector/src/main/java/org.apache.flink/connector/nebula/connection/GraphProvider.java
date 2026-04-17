@@ -189,7 +189,8 @@ public class GraphProvider implements Serializable {
         String graphType = getGraphType(NebulaUtils.escape(graphName));
 
         String descEdgeType = String.format(
-                "CALL describe_graph_type('%s') filter type_name='%s' return type_pattern "
+                "CALL describe_graph_type('%s') filter type_name='%s' return type_pattern,"
+                        + "`primary_key/multiedge_key` "
                         + "next OPTIONAL CALL describe_edge_type('%s','%s') return *",
                 NebulaUtils.escape(graphType),
                 NebulaUtils.escape(edgeType),
@@ -203,12 +204,19 @@ public class GraphProvider implements Serializable {
         }
 
         String              edgeTypePattern = null;
+        List<String>        multipleEdgeKeys = new ArrayList<>();
         List<String>        propNames       = new ArrayList<>();
         Map<String, String> properties      = new HashMap<>();
         while (result.hasNext()) {
             ResultSet.Record record = result.next();
             if (edgeTypePattern == null) {
                 edgeTypePattern = record.get("type_pattern").asString();
+                ValueWrapper edgeMultiKeysValue = record.get("primary_key/multiedge_key");
+                if (edgeMultiKeysValue != null && edgeMultiKeysValue.isList()) {
+                    for (ValueWrapper col : edgeMultiKeysValue.asList()) {
+                        multipleEdgeKeys.add(col.asString());
+                    }
+                }
             }
             ValueWrapper propName = record.get("property_name");
             if (!propName.isNull()) {
@@ -254,6 +262,7 @@ public class GraphProvider implements Serializable {
             dstPkDataType.put(pk, dstNodeSchema.getProperties().get(pk));
         }
         edgeSchema.setDstPkDataTypeMap(dstPkDataType);
+        edgeSchema.setMultipleEdgeKeys(multipleEdgeKeys);
         edgeSchema.setPropNames(propNames);
         edgeSchema.setProperties(properties);
         return edgeSchema;

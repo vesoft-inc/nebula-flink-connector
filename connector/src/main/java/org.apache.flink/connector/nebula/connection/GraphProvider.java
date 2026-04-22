@@ -189,8 +189,9 @@ public class GraphProvider implements Serializable {
         String graphType = getGraphType(NebulaUtils.escape(graphName));
 
         String descEdgeType = String.format(
-                "CALL describe_graph_type('%s') filter type_name='%s' return type_pattern,"
-                        + "`primary_key/multiedge_key` "
+                "CALL describe_graph_type('%s') yield type_name,type_pattern,"
+                        + "`primary_key/multiedge_key` as pkk filter type_name='%s' return "
+                        + "type_pattern, pkk "
                         + "next OPTIONAL CALL describe_edge_type('%s','%s') return *",
                 NebulaUtils.escape(graphType),
                 NebulaUtils.escape(edgeType),
@@ -211,7 +212,7 @@ public class GraphProvider implements Serializable {
             ResultSet.Record record = result.next();
             if (edgeTypePattern == null) {
                 edgeTypePattern = record.get("type_pattern").asString();
-                ValueWrapper edgeMultiKeysValue = record.get("primary_key/multiedge_key");
+                ValueWrapper edgeMultiKeysValue = record.get("pkk");
                 if (edgeMultiKeysValue != null && edgeMultiKeysValue.isList()) {
                     for (ValueWrapper col : edgeMultiKeysValue.asList()) {
                         multipleEdgeKeys.add(col.asString());

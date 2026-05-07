@@ -14,7 +14,7 @@
     <name>nebula flink connector</name>
 
     <properties>
-        <nebula.version>5.3-SNAPSHOT</nebula.version>
+        <nebula.version>5.3.0</nebula.version>
         <flink.version>1.14.4</flink.version>
         <scala.binary.version>2.11</scala.binary.version>
         <compiler.source.version>1.8</compiler.source.version>
